@@ -1,8 +1,8 @@
-# Penjelasan fondasi M1
+# Arsitektur Tutup Buku — M1 dan M2
 
 ## Aliran sederhana
 
-UI membuat contoh data → memanggil service → menerima objek hasil → menampilkan teks. Service tidak mengenal JavaFX/database. Pada M2 repository akan memuat model yang sama dari SQLite; tidak ada repository dummy atau framework tambahan sekarang.
+UI membuat contoh data → memanggil service → menerima objek hasil → menampilkan teks. Service tidak mengenal JavaFX/database. M2 menambahkan SQLite repository untuk akun/akademik; engine M1 tidak diubah.
 
 | Class | Tanggung jawab dan alasan |
 |---|---|
@@ -38,4 +38,37 @@ IP memakai seluruh mata kuliah, termasuk SKS D/E. Missing/invalid SKS atau hasil
 
 ## Batas implementasi
 
-Model User/Semester/Material/Scenario tersimpan, AuthService/PBKDF2, persistence dan reader tidak dibuat pada M1. Smoke test hanya memuat driver JDBC in-memory dan CommonMark+table/code/image/link/escaped HTML; ini bukan bukti penyimpanan akun atau keamanan reader end-to-end. JavaFX WebView baru ditambahkan saat reader M3 dibangun. Tidak ada parser Markdown sendiri, FXML, ORM, server, koneksi cloud, AI atau paid service.
+Secara historis, M1 belum mempunyai auth/persistence dan hanya menguji JDBC in-memory serta CommonMark sebagai smoke test. M2 sekarang mempunyai UserProfile, Semester, Course, AuthService/PBKDF2 dan SQLite dengan tes persistensi pada file sementara. Material/Scenario tersimpan serta reader tetap belum dibuat. Smoke test CommonMark belum membuktikan keamanan reader end-to-end. JavaFX WebView baru ditambahkan saat reader M3 dibangun. Tidak ada parser Markdown sendiri, FXML, ORM, server, koneksi cloud, AI atau paid service.
+
+## Aliran M2
+JavaFX AuthView/WorkspaceView/AcademicView → UiTasks worker → AuthService/AcademicService → interface repository → SqliteRepository → SqliteDatabase → SQLite lokal. Password hash berjalan pada worker yang sama; JavaFX thread hanya membaca input, menampilkan hasil dan dialog konfirmasi. Root form dinonaktifkan selama satu operasi untuk mencegah pergantian akun ketika request lama belum selesai.
+
+| Class M2 | Tanggung jawab |
+|---|---|
+| UserProfile / Semester / Course | Data immutable; Semester memvalidasi nomor/tahun/periode, Course memvalidasi nama/SKS/acuan. Course menyimpan Attendance M1 dan revision |
+| UserSession | NIM akun yang login di memori; requireNim menolak operasi setelah logout. Sesi tidak dipersistenkan |
+| PasswordHasher / PasswordHash | PBKDF2WithHmacSHA256 bawaan Java, 600.000 iterasi, SecureRandom salt 16 byte, output 256 bit. Salt/hash Base64 beserta algoritme/iterasi disimpan. Verifikasi MessageDigest.isEqual; PBEKeySpec dibersihkan |
+| AuthService | Validasi registrasi, trim NIM tanpa parse angka, konfirmasi password, login/logout, edit profil tanpa method mengubah NIM. Buffer char[] dibersihkan dalam finally |
+| AcademicService | Mengambil pemilik dari sesi; memvalidasi masukan sebelum repository. Tidak memuat SQL/JavaFX |
+| AccountRepository / AcademicRepository | Kontrak penyimpanan dua area; tidak ada generic repository/ORM tambahan |
+| SqliteRepository | PreparedStatement untuk seluruh input pengguna; setiap query akademik menyertakan owner_nim dan ID. Mutasi diselesaikan sebelum status berhasil UI |
+| SqliteDatabase | Satu connection diserialkan; FK aktif, busy_timeout 3 detik, transaksi commit/rollback, initialization versi 1 dan pemeriksaan integritas. Tidak menghapus/reset saat error |
+| AppPaths | %LOCALAPPDATA%/TutupBuku/tutup-buku.db; fallback user.home/AppData/Local. TUTUP_BUKU_DATA_DIR untuk folder demo terisolasi |
+| UiTasks / FormSupport | Worker tunggal, callback JavaFX thread, status simpan/gagal, form tetap saat error, konfirmasi hapus dengan Batal sebagai default |
+| DashboardView | Shell dua pilar M1 dipindahkan ke dashboard setelah login. CalculationDemoView tetap contoh tetap, bukan data course yang tersimpan |
+
+## Skema versi 1
+- users: nim TEXT primary key; name/study_program; algorithm/iterations/salt/hash. NIM tidak menjadi angka dan tidak berisi semester.
+- semesters: id, owner_nim FK, semester_number, academic_year, period. UNIQUE(owner_nim, academic_year, period) dan UNIQUE(id, owner_nim).
+- active_semesters: owner_nim primary key dan FK user; composite FK(semester_id, owner_nim) memastikan referensi milik akun. Tabel terpisah menghindari FK melingkar.
+- courses: id, owner_nim, semester_id, name, code, credits TEXT, attendance_met/confirmed/reference, revision. Composite FK ke semester; SKS disimpan dari BigDecimal.toPlainString agar desimal tidak berubah menjadi floating point.
+- ON DELETE CASCADE menghapus course serta referensi aktif ketika semester dihapus dalam satu transaksi. Semester lain/akun lain tetap ada. Jika semester aktif dihapus, tidak memilih semester pengganti otomatis.
+- PRAGMA user_version=1. Versi0 hanya diinisialisasi jika tidak berisi tabel pengguna. Versi lebih baru, schema tak dikenal, atau database rusak ditolak tanpa reset. Tidak ada migrasi destruktif.
+- Tidak ada tabel assessment, grade atau scenario sebelum M4. Nilai kosong belum menjadi E; Course.withoutGrade menghasilkan input engine M1 yang belum lengkap. Attendance course dapat langsung dipakai GradeCalculator M1.
+
+## Keputusan dan batas keamanan
+PBKDF2 dipilih sesuai rekomendasi PRD dan tersedia di JDK tanpa library tambahan; bukan algoritme buatan sendiri. Parameter mengikuti [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). JavaFX PasswordField menyediakan String di memori; field dibersihkan setelah berhasil/logout, buffer service dibersihkan, tetapi Java tidak menjamin semua salinan String terhapus seketika. Tidak ada password/plaintext di database atau log. Login gagal menyampaikan NIM atau password salah, bukan password yang dicoba.
+
+Isolasi ini berlaku melalui aplikasi dan FK, bukan enkripsi database atau perlindungan terhadap orang yang dapat membaca/mengubah file melalui akun Windows yang sama. Akun tidak diverifikasi ke kampus, tidak ada email/cloud, recovery universal, atau penyimpanan sesi otomatis.
+
+Form M2 memakai Simpan eksplisit. Jika save gagal, input tetap dan tombol Simpan dapat dicoba lagi. Refresh daftar adalah aksi terpisah; gagal refresh setelah commit tidak dilaporkan sebagai gagal menyimpan. Tahun akademik memakai YYYY/YYYY berurutan; prodi bebas dan boleh kosong hingga diisi. Layar semester terpilih untuk dilihat tidak otomatis menjadi semester aktif.

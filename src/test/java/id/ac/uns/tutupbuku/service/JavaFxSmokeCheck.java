@@ -1,6 +1,6 @@
 package id.ac.uns.tutupbuku.service;
 
-import id.ac.uns.tutupbuku.ui.TutupBukuApplication;
+import id.ac.uns.tutupbuku.ui.DashboardView;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -33,7 +33,9 @@ class JavaFxSmokeCheck {
         Platform.runLater(() -> {
             Stage stage = new Stage();
             try {
-                new TutupBukuApplication().start(stage);
+                // Fixture shell M1 sekarang berada di dashboard setelah login M2.
+                stage.setScene(new javafx.scene.Scene(new DashboardView(), 1000, 690));
+                stage.show();
                 assertTrue(stage.isShowing());
                 var root = stage.getScene().getRoot();
                 ((Button) root.lookup("#open-learning")).fire();

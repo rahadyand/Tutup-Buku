@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>id.ac.uns</groupId>
     <artifactId>tutup-buku</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <name>Tutup Buku</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
