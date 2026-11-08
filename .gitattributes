@@ -1,0 +1,5 @@
+# Pertahankan format skrip Wrapper saat checkout pada Windows atau Unix.
+* text=auto
+mvnw text eol=lf
+mvnw.cmd text eol=crlf
+*.pdf binary
