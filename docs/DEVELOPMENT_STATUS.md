@@ -1,71 +1,64 @@
-# Status pengembangan — Milestone 2
+# Status pengembangan — Milestone 3
 
-Tanggal verifikasi: **8 November 2026, Asia/Jakarta**. Versi aplikasi **0.2.0-SNAPSHOT**. **M2 selesai; berhenti sebelum M3.** Tidak ada commit/push pada pekerjaan M2.
+Tanggal: **8 November 2026, Asia/Jakarta**. Aplikasi **0.3.0-SNAPSHOT**, schema **2**. **M3 selesai; berhenti sebelum M4.** Perubahan M3 belum di-stage, di-commit atau di-push.
 
-Status historis M1 dipertahankan di [MILESTONE_1_STATUS.md](MILESTONE_1_STATUS.md). PRD 25 halaman dan AGENTS/plan/checklist/arsitektur/status dibaca sebelum keputusan M2. Semua dependensi M1 tetap digunakan; tidak ada framework/layanan baru.
+## Checkpoint M2 sebelum M3
+Atas permintaan pengguna, instruksi/status/diff/remote/outgoing diperiksa.37berkas M2 relevan di-stage,96tes diulang dan lulus. Ignore rule menahan build/cache/tool/database/log/secrets; Maven Wrapper/.mvn tetap dilacak. Pemindaian pola rahasia umum tidak menemukan kecocokan. Tidak ada database/cache/build di commit.
 
-## Yang selesai
+Commit **0ca1b2899bbfff9c057f20f0ba984a807e9a7e2a** — feat: complete milestone 2 accounts and academic persistence — berhasil di-push ke **main**, [rahadyand/Tutup-Buku](https://github.com/rahadyand/Tutup-Buku). git ls-remote mengembalikan hash yang sama sebelum M3 dimulai. Tidak ada force-push, rewrite history atau perubahan visibility. Status historis M2 di [MILESTONE_2_STATUS.md](MILESTONE_2_STATUS.md).
 
-- Registrasi lokal NIM teks, trim, nol awal tetap, unik per perangkat; nama, konfirmasi password, minimum8 karakter. Program studi dilengkapi di profil. Tidak ada pola/panjang NIM dugaan.
-- PBKDF2WithHmacSHA256 Java,600.000 iterasi, salt acak16byte, hash256bit, parameter disimpan. Verifikasi constant-time melalui MessageDigest.isEqual; buffer char[] dibersihkan. Password tidak disimpan/log sebagai plaintext.
-- Login benar/salah dengan pesan generik, logout mengakhiri sesi. Profil nama/prodi editable dan NIM immutable melalui API/UI; prodi teks bebas.
-- CRUD semester bernomor positif, tahun YYYY/YYYY berurutan dan periode Ganjil/Genap. Unik tahun/periode per akun. Pemilihan aktif eksplisit dan persisten; semester lama tidak dihapus.
-- CRUD mata kuliah per semester: nama wajib, kode opsional, SKS positif BigDecimal, desimal koma/titik, kehadiran defaulttrue/asumsi belum diverifikasi, acuan default75%/12dari16 editable. Revision meningkat pada edit.
-- Model Attendance M1 dipakai ulang; Course.withoutGrade menandai belum ada hasil sehingga tidak menghasilkan IP parsial. Mesin hitung dan tes numerik M1 tidak ditulis ulang.
-- SQL terpisah melalui AccountRepository/AcademicRepository dan SqliteRepository. Query berparameter + owner_nim/ID; composite FK melindungi pemilikan referensi aktif dan course.
-- SQLite schema1, initialization atomik, FK aktif, busy_timeout3detik, commit/rollback. CASCADE semester menghapus matkul/referensi aktif terkait saja; kegagalan cascade rollback seluruh perubahan.
-- Database default %LOCALAPPDATA%/TutupBuku/tutup-buku.db (folder pengguna, bukan instalasi); override TUTUP_BUKU_DATA_DIR untuk demo. Semua tes memakai @TempDir atau in-memory.
-- Database rusak, versi lebih baru, versi0 berisi tabel tak dikenal, atau gagal baca tidak dianggap database kosong dan tidak direset.
-- JavaFX: registrasi/login, dashboard dua pilar setelah login, profil, semester/course, active marker, konfirmasi hapus dengan Batal default. Tombol simpan/hapus tetap terlihat, isi panel dapat digulir.
-- Satu worker untuk hash/JDBC, status proses, UI dinonaktifkan selama operasi. Save gagal mempertahankan input; retry memakai tombol Simpan. Refresh daftar merupakan operasi terpisah, tidak mengaburkan keberhasilan commit.
-- README, arsitektur, requirements, plan, backlog dan AGENTS diperbarui. Fitur tertunda tetap tercatat.
+## Implementasi M3
+- Dua jalur terpisah: semester/course/bab/materi dan peminatan/bidang/materi. Materi tepat satu lokasi, owner+parent FK; CRUD dan urutan Naik/Turun. Edit satu materi/salinan tidak memperbarui materi lain.
+- Editor Tulis dan Pratinjau/Baca memakai CommonMark0.24.0+GFM tables. Mendukung heading/paragraf/bold/italic/list/tabel/fenced code/gambar/link. Isi kosong boleh Draf, judul wajib, sumber opsional, revisi/urutan/timestamp tersimpan.
+- Ringkasan hanya heading manual. Kode sebagai teks. Raw HTML di-escape, script halaman disabled, tanpa Java bridge; link hanya http/https absolut tanpa credentials setelah klik, popup/navigasi halaman luar tidak dipakai.
+- PNG/JPEG lokal didekode/divalidasi, batas10MB/16MP, disalin atomik ke assets/{SHA256-NIM}/{UUID}.png/jpg. Referensi relatif; normalisasi/realpath/owner guard; missing/invalid images menjadi placeholder bernama. Tidak ada cleanup aset agresif.
+- Save eksplisit dan autosave2detik pada satu worker, status Belum tersimpan/Menyimpan/Tersimpan/Gagal menyimpan. Materi+note save atomik, CAS material/note revision, generation ack EditorDraft. Gagal save mempertahankan isian/aset dan menahan navigasi.
+- Simpan/Buang perubahan/Batal pada pemilihan lokasi/materi, tab utama/simulasi, logout dan close. Save yang gagal tidak membawa pengguna keluar editor.
+- Completion manual; membuka bacaan tidak menandainya selesai. Chapter/field menghitung materi dalam lokasinya; course menghitung seluruh materi semua bab (2/10=20%, bukan50%). Empty state tanpa pembagian nol.
+- Note teks pribadi terpisah dari isi/ringkasan, satu per material+owner, tersimpan dan konfirmasi hapus. Reorder tidak menghapus note/completion atau menaikkan content revision.
+- Resume per akun menyimpan ID/revisi/rasio0–1/lokasi, debounce700ms dan flush sebelum meninggalkan bacaan. Posisi dipulihkan setelah render. Revisi berubah→awal, deleted material→pesan dan daftar yang tersedia. Tombstone ID sengaja bertahan setelah delete.
+-5contoh singkat asli:3PBO pada course pilihan,2peminatan pada bidang contoh. Disalin eksplisit sekali per akun dalam transaksi+marker, bukan pada setiap login/migrasi; tidak menimpa edit atau mengklaim course lengkap.
+- Migrasi aditif1→2 menambah index/tabel belajar dalam transaksi. Akun/profil/hash/semester/course/active reference M2 dipertahankan. Error migrasi rollback, tanpa reset.
+- Module javafx-web21.0.10 ditambahkan sesuai versi JavaFX proyek; tanpa framework/layanan baru. Tampilan waktu materi WIB, timestamp DB UTC.
+- README/arsitektur/checklist/plan/backlog/AGENTS diperbarui. Academic deletion confirmations mencakup materi/catatan/progres yang ikut cascade. Runtime root assets/ ditambahkan ke ignore jika data dir diarahkan ke root proyek.
 
-## Bukti pengujian otomatis
+## Verifikasi akhir
+Windows x64, JDK21.0.12, Maven3.9.11 melalui Wrapper3.3.4. Semua tes persistence/asset/GUI memakai @TempDir atau in-memory, tidak memakai database AppData pengguna.
 
-Lingkungan: Windows x64, Oracle JDK21.0.12, Maven Wrapper3.3.4/Maven3.9.11, JavaFX21.0.10, SQLite JDBC3.51.0.0, CommonMark0.24.0, JUnit5.12.2. Cache sudah tersedia; verifikasi menggunakan Maven offline.
-
-Setelan perintah:
+Setelan:
 ```powershell
 $env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.12'
 $env:MAVEN_USER_HOME = "$PWD\.tools\maven-user"
 ```
 
-| Perintah aktual | Hasil |
+| Perintah | Hasil aktual |
 |---|---|
-| `.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp clean verify` | BUILD SUCCESS;96tes,0failures,0errors,0skipped; JAR0.2.0-SNAPSHOT dibuat |
-| `.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck' '-DreuseForks=false' test` | BUILD SUCCESS;3tes GUI,0failures,0errors,0skipped |
-| `.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp javafx:run, dengan TUTUP_BUKU_DATA_DIR=$PWD/tmp/m2-launch-check` | Launcher dijalankan, database demo schema1 terbentuk; jendela berjudul Tutup Buku — Milestone 2 ditemukan (dalam keadaan minimized). Alur lengkap layar diverifikasi oleh GUI test terisolasi, bukan uji pengguna manual |
-| git diff --check | Tidak ada whitespace error; warning konversi LF/CRLF dari konfigurasi Git Windows bukan kegagalan |
-| Pemeriksaan source M1 terhadap HEAD | 20 berkas engine domain/service dan tes M1 diperiksa dan tetap sama; hanya fixture smoke GUI disesuaikan ke DashboardView setelah pemindahan shell |
+| `.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp verify` | BUILD SUCCESS;118tes,0failures,0errors,0skipped; JAR0.3.0-SNAPSHOT dibuat |
+| `.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck' '-DreuseForks=false' verify` | BUILD SUCCESS;5tes GUI,0failures,0errors,0skipped |
+| `.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp javafx:run`, TUTUP_BUKU_DATA_DIR=$PWD/tmp/m3-launch-check | Launcher berjalan, database demo dibuat; jendela berjudul Tutup Buku — Milestone3 ditemukan |
+| `git diff --check` | Tidak ada whitespace error; warning LF/CRLF Windows bukan failure |
+| M1 engine/test comparison dan Git index | Mesin hitung/domain/tes numerik tetap; index M3 kosong, HEAD tetap checkpoint M2 |
 
-Rincian 96 tes:
+Rincian118tes default:70M1,26M2,22M3. M3: LearningMigrationTest2, LearningPersistenceTest12, AssetsAndMarkdownTest8. Regresi schema test diperbarui untuk mengharapkan versi2. UI: JavaFxSmokeCheck1, MilestoneTwoFxCheck2, MarkdownReaderFxCheck1, MilestoneThreeFxCheck1.
 
-- M1: GradeCalculatorTest43, TargetPlannerTest15, SemesterGpaServiceTest10, StackCompatibilityTest2 =70.
-- M2: LocalAccountTest8, AcademicPersistenceTest13, DatabaseSafetyTest5 =26.
+Cakupan otomatis M3:
+- Migrasi database v1 berisi akun/hash/profil/semester/course/active semester, login setelah migrasi, reopen idempotent; konflik tabel saat migrasi membuktikan rollback versi dan data.
+- CRUD/order/persistensi, pemilik silang ditolak, satu lokasi XOR, judul sama pada dua jalur tetap independen, starter seed idempotent dan salinan akun lain independen.
+- Progres bab2materi dan8materi, kosong, tambahan materi mengubah penyebut, open tidak complete; note/completion/reopen/reorder.
+- Resume normal, revisi berubah dan materi deleted; pointer akun lain tidak bocor.
+- CAS menolak save lama; trigger kegagalan note rollback seluruh bundle materi+note.
+- PNG dan JPEG tetap ada setelah asal direlokasi, akun lain ditolak, ekstensi palsu/traversal/file/remote/data image ditolak, missing image placeholder, NIM berisi path tidak keluar root; gagal save mempertahankan aset lama dan baru.
+- CommonMark headings/format/list/table/code; raw script/iframe menjadi teks, scheme link berbahaya tidak menjadi anchor.
+- WebView script halaman false, script raw tidak berjalan, perintah internal restore scroll bekerja; link tidak terbuka otomatis dan callback browser hanya setelah click, tanpa navigasi WebView ke website luar.
+- GUI penuh: seed, pilih/baca/edit, save/auto-save, gagal simpan mempertahankan text, Save/Discard/Cancel pada navigasi dan close, manual progress, note delete confirmation, reorder, resume/scroll, deleted fallback, logout/restart, interest path dan marker seed bertahan.
 
-Cakupan M2 otomatis:
+Laporan XML/TXT: target/surefire-reports. Snapshot scene akhir: target/verification/m3-learning.png. Snapshot1280×820 ditinjau; ruang baca, tombol, catatan dan progres terlihat. Snapshot berasal dari scene test, bukan capture aplikasi pengguna lain.
 
-- NIM001234 tetap teks, trim dan duplikat ditolak, konfirmasi/minimum password, login benar/salah/logout, salt/hash berbeda meski password sama, tidak ada kolom plaintext, buffer dibersihkan.
-- Profil terisolasi/tersimpan dan NIM tetap; NIM berisi kutip tidak dieksekusi sebagai SQL.
-- Unik semester per akun, update duplikat tidak mengubah data lama, active selection persisten setelah koneksi ditutup/dibuka, perubahan aktif tidak menghapus course.
-- Akun lain tidak dapat list/update/delete semester/course atau memilih semester aktif akun pertama; FK juga menolak referensi aktif silang melalui SQL langsung.
-- SKS kosong/0/negatif/nonangka ditolak; desimal2,5 diterima. Nama wajib; kode opsional; edit kehadiran/acuan/revision tersimpan dan cocok dengan engine M1.
-- Hapus course/semester terkait tidak menghapus semester/akun lain. Trigger kegagalan delete child membuktikan rollback semester/course/referensi aktif.
-- Mode read-only membuktikan save gagal tidak mengubah profil lama; setelah penyebab diatasi, retry berhasil.
-- File corrupt, unknown schema version dan tabel legacy tidak direset/ditimpa; koneksi tertutup menghasilkan error, bukan daftar kosong sukses.
-- GUI: daftar/login/duplikat/password salah/profil/dua semester/course/SKS salah/kehadiran/logout/pindah akun/restart; batal dan konfirmasi hapus; trigger save gagal mempertahankan field dan tidak menampilkan sukses palsu; startup corrupt dapat dicoba ulang tanpa mengganti file.
-- Regresi shell M1 tetap memeriksa60→55→70 dan C→E→C.
+Catatan eksekusi: dua tes aset mula-mula ditolak sandbox Windows saat rename file sementara; tes yang sama lulus dengan akses normal di luar sandbox, tanpa melonggarkan validasi. Fixture GUI awal mencoba tombol ketika belum aktif; penantian tombol diperbaiki lalu seluruh5tes GUI diulang lulus. Warning unnamed-module pada JavaFX test classpath dan unchecked cast selector pada fixture GUI tercatat; tidak ada exception toolkit pada run akhir.
 
-Laporan XML/TXT: target/surefire-reports. Snapshot scene: target/verification/m2-login.png, m2-academic.png, javafx-shell.png. Gambar login dan akademik ditinjau pada1080×720; tidak ada teks/tombol utama terpotong, form panjang memiliki scrollbar. Snapshot berasal dari scene test sendiri, tidak menangkap aplikasi pengguna lain.
+## Batas verifikasi dan fitur tertunda
+Pemeriksaan visual dilakukan melalui snapshot; alur interaksi adalah tes GUI otomatis. Dialog file chooser pemilihan gambar belum dioperasikan manual; decode/copy/persistence/render gambar diuji otomatis. Belum ada uji usability mahasiswa, skala125%/1366×768, jaringan fisik diputus, komputer kedua, paket jpackage/runtime, benchmark30×20 atau audit keamanan formal.
 
-GUI test pertama gagal karena fixture mencoba hapus tanpa memilih course. Langkah fixture diperbaiki, lalu seluruh3tes GUI diulang dan lulus pada kode/tata letak akhir. Warning JavaFX classpath unnamed module tetap muncul pada tes; tidak ada exception toolkit pada run akhir.
+Aset orphan sengaja dipertahankan; tidak ada cleanup otomatis. Cadangan manual perlu DB+assets. Database tidak dienkripsi seluruhnya, recovery/ganti password belum tersedia. Materi contoh singkat, bukan modul lengkap. Tidak ada LaTeX/PDF/video tertanam/AI/kuis atau skenario nilai tersimpan.
 
-## Pemeriksaan manual dan yang belum diverifikasi
-
-Peninjauan visual dilakukan pada snapshot scene; aplikasi juga dijalankan melalui Maven launcher dengan folder demo terisolasi. Alur tombol/form di atas adalah **tes GUI otomatis**, bukan klaim semua langkah diklik manual atau uji usability mahasiswa. Database AppData pengguna tidak dipakai untuk tes.
-
-Belum dilakukan: uji perangkat kedua, paket jpackage/runtime, jaringan fisik benar-benar diputus, skala125%/1366×768, benchmark30×20, uji usability3–5mahasiswa, full P0 end-to-end, keamanan reader/asset M3 dan skenario M4. Login menggunakan hash aman, tetapi database belum dienkripsi seluruhnya dan tidak ada recovery/ganti password.
-
-## Batas dan milestone berikutnya
-
-M3 **belajar lokal**: jalur kuliah/peminatan, editor/reader CommonMark+tabel, aset lokal, ringkasan manual, progres manual, catatan dan resume. **Belum dimulai.** M4: editor assessment/aktual, nilai huruf/detail tersimpan, draf penilaian, skenario/revisi/perbandingan/manual targetIP. F08G/P1/P2 tetap backlog. Tidak ada AI, hosting, cloud atau paid service.
+Milestone berikutnya **M4 editor nilai aktual/asumsi dan skenario semester tersimpan**. Belum dimulai. F08G/P1/P2 tetap backlog. Tidak ada commit/push perubahan M3.

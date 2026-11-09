@@ -6,7 +6,7 @@ Tenggat 8 Desember 2026. Jadwal berikut target kerja satu pengembang; rekan meny
 |---|---|---|
 | M1 Fondasi (selesai) | 8–10 Nov | Maven Wrapper, shell JavaFX dua pintu, model nilai dan kalkulasi murni, MT01–13, smoke JavaFX/SQLite/Markdown. Tidak ada login/editor/simpan skenario |
 | M2 Akun & akademik lokal (selesai) | 11–17 Nov | SQLite schema/repository, PBKDF2 bersalt+parameter, akun terisolasi, profil, semester aktif, CRUD mata kuliah tanpa assessment; AT01–04 dan restart |
-| M3 Belajar lokal | 18–21 Nov | Jalur kuliah/peminatan, CommonMark+table reader/editor aman, salin aset, konten contoh, selesai/catatan/resume; AT05–07 offline/restart |
+| M3 Belajar lokal (selesai) | 18–21 Nov | Jalur kuliah/peminatan, CommonMark+table reader/editor aman, salin aset, konten contoh, selesai/catatan/resume; AT05–07 offline/restart |
 | M4 Nilai & skenario | 22–30 Nov | Form flat, huruf/detail, aktual vs asumsi, kehadiran, simpan/gandakan/revisi/banding skenario, IP lengkap dan pembanding manual; AT08–12 terintegrasi |
 | M5 Integrasi & distribusi | 1–5 Des | Error simpan AT14, semua P0 offline AT13, UI1366×768/125%, ukur30×20<1detik, paket jpackage runtime Windows, komputer kedua, 3–5 uji pengguna dan bukti |
 | Pembekuan & submission | 6–8 Des | Bekukan fitur, latihan demo7–10menit, sinkron laporan/PPT dengan hasil nyata, source+paket+petunjuk+cadangan |
@@ -25,4 +25,9 @@ Versi dikunci pada pom dan wrapper. Tidak ada Spring, ORM, server, AI, layanan b
 ## Hasil M2
 Akun/profil/semester/mata kuliah persisten, schema versi 1, PBKDF2 bersalt, query pemilik, transaksi hapus dan GUI bekerja. Nomor semester positif; tahun akademik YYYY/YYYY berurutan dipilih sebagai validasi operasional. Semester pertama tidak otomatis aktif: pengguna memilih Jadikan aktif. Penghapusan semester aktif mengosongkan referensi aktif, tanpa memilih semester lain diam-diam. Komponen/nilai tersimpan dan draf penilaian tetap M4.
 
-Milestone berikutnya M3 belajar lokal: dua jalur materi, CommonMark/table, aset PNG/JPEG, ringkasan manual, progres, catatan dan resume. Tidak dimulai dalam pekerjaan M2.
+Checkpoint M2 telah dibuat dan di-push atas permintaan pengguna sebelum M3: 0ca1b2899bbfff9c057f20f0ba984a807e9a7e2a pada main, https://github.com/rahadyand/Tutup-Buku. Hash remote telah diperiksa.
+
+## Hasil M3
+Dua jalur belajar, CRUD/urutan bab/bidang/materi, editor CommonMark, preview aman, impor gambar terkelola, autosave/simpan eksplisit, progres manual, catatan, resume dan koleksi5contoh sudah diimplementasikan. Skema naik1→2 tanpa menghapus data M2. Materi contoh disalin sekali per akun atas klik pengguna setelah memilih course; tidak membuat course/semester atau menimpa data saat login.
+
+M3 berhenti setelah verifikasi. Milestone berikutnya **M4 nilai dan skenario tersimpan**; belum dimulai. Tidak ada commit/push M3 pada pekerjaan ini.

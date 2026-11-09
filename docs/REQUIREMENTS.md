@@ -1,16 +1,16 @@
 # Checklist kebutuhan PRD v1.1
 
-Seluruh 25 halaman dibaca pada 8 November 2026 dan ditinjau ulang untuk M2. P0 adalah target produk akhir, bukan klaim milestone 1 selesai. `parsial` berarti hanya bagian domain yang dicakup M1. Aturan akademik ini mengikuti PRD, belum diverifikasi sebagai kebijakan resmi fakultas.
+Seluruh 25 halaman dibaca pada 8 November 2026 dan ditinjau ulang untuk M2/M3. P0 adalah target produk akhir, bukan klaim milestone 1 selesai. `parsial` berarti hanya bagian domain yang dicakup M1. Aturan akademik ini mengikuti PRD, belum diverifikasi sebagai kebijakan resmi fakultas.
 
 | ID fitur / rincian PRD | Prioritas | Perilaku yang wajib dipertahankan | Status / milestone |
 |---|---|---|---|
-| F01 / ACC-01, ACC-02 | P0 | NIM teks unik setelah trim, nol awal tetap, tanpa pola dugaan; password hash+salt+parameter; registrasi/konfirmasi, login/logout, isolasi akun; tanpa recovery universal | Selesai M2; isolasi materi/catatan menunggu M3 |
+| F01 / ACC-01, ACC-02 | P0 | NIM teks unik setelah trim, nol awal tetap, tanpa pola dugaan; password hash+salt+parameter; registrasi/konfirmasi, login/logout, isolasi akun; tanpa recovery universal | Selesai M2; isolasi materi/catatan ditambahkan M3 |
 | F02 / ACA-01 | P0 | Nama/prodi editable; semester aktif milik akun; tahun/periode unik; semester lama tetap; mata kuliah nama/SKS >0, kode opsional; konfirmasi hapus turunan | Selesai M2, termasuk persistensi dan GUI |
 | F03 | P0 | Dashboard dua pintu setara Modul dan Simulasi; kosong bukan IP nol | Dashboard setelah login M2; integrasi dua pilar penuh M3–M4 |
-| F04 / LEARN-01,02,03 | P0 | Materi bawaan disalin per akun dan materi pengguna; Markdown judul/teks/list/tabel/kode/gambar/link; editor+preview, aset PNG/JPEG disalin, rumus gambar, sumber/urutan/revisi | Belum / M3 |
-| F05 / LEARN-01 | P0 | Kuliah→bab→materi terpisah dari peminatan→bidang→materi; satu pemilik, salinan independen | Belum / M3 |
-| F06 / LEARN-04,05 | P0 | Selesai manual, progres dari jumlah materi; nol materi berlabel kosong; lanjut materi/posisi setelah restart; tangani materi dihapus/berubah | Belum / M3 |
-| F07 / LEARN-06 | P0 | Catatan teks pribadi per akun/materi terpisah dari isi; konfirmasi hapus; gagal simpan mempertahankan edit | Belum / M3 |
+| F04 / LEARN-01,02,03 | P0 | Materi bawaan disalin per akun dan materi pengguna; Markdown judul/teks/list/tabel/kode/gambar/link; editor+preview, aset PNG/JPEG disalin, rumus gambar, sumber/urutan/revisi | Selesai M3, persistence dan GUI |
+| F05 / LEARN-01 | P0 | Kuliah→bab→materi terpisah dari peminatan→bidang→materi; satu pemilik, salinan independen | Selesai M3, persistence dan GUI |
+| F06 / LEARN-04,05 | P0 | Selesai manual, progres dari jumlah materi; nol materi berlabel kosong; lanjut materi/posisi setelah restart; tangani materi dihapus/berubah | Selesai M3, persistence dan GUI |
+| F07 / LEARN-06 | P0 | Catatan teks pribadi per akun/materi terpisah dari isi; konfirmasi hapus; gagal simpan mempertahankan edit | Selesai M3, persistence dan GUI |
 | F08 / GRADE-01,02,03 | P0 | Nama komponen bebas tanpa UTS/UAS wajib; flat total tepat 100%; skor earned/max desimal; kosong ≠0; bobot0 informatif; draft invalid boleh disimpan, hitung ditahan | Domain / M1; CRUD / M4 |
 | F08G / GRADE-01 | P1 | Satu tingkat kelompok, induk dan anak masing-masing total100%; bobot efektif daun; gerbang normalisasi/konversi/solver/skenario flat telah lulus | Ditunda bersyarat |
 | F09 / GRADE-03, SCN-01,02 | P0 | Huruf langsung atau detail; hanya satu mode aktif, data mode lain tetap; aktual/perkiraan terpisah; tanpa skor angka buatan dari huruf | Domain / M1; mode tersimpan / M4 |
@@ -44,9 +44,21 @@ M1: MT01–MT13 pada domain, AT08/11/12 bagian logika; flat setara contoh MT14 d
 
 ## Kriteria M2 yang diverifikasi
 - ACC-01: NIM teks unik setelah trim, registrasi/konfirmasi, hash bersalt, login benar/salah, logout. Password minimal 8 karakter mengikuti asumsi PRD; tidak ada email/cloud/recovery universal.
-- ACC-02: kepemilikan semester, course, profil dan referensi aktif dibatasi akun; ID akun lain ditolak oleh service/repository/FK. Materi/catatan/nilai pengguna belum dibuat.
+- ACC-02: kepemilikan semester, course, profil dan referensi aktif dibatasi akun; ID akun lain ditolak oleh service/repository/FK. Materi/catatan pengguna ditambahkan M3; nilai pengguna masih M4.
 - ACA-01: CRUD semester/mata kuliah, nama/prodi editable, NIM immutable pada API profil; unik tahun/periode per akun; active semester bertahan setelah restart. SKS positif, termasuk desimal; kode opsional.
 - GRADE-04 bagian M2: default kehadiran true/confirmed=false dan acuan editable awal 75% atau 12/16; tidak ada kalkulasi absensi. Model Attendance dan adapter CourseResult kompatibel engine M1.
 - Kualitas M2: schema versi 1, FK aktif, query berparameter, transaksi cascade, lokasi AppData, worker UI, retry dan input tetap saat simpan gagal, konfirmasi hapus dengan Batal sebagai tombol default.
 - Rekomendasi teknis: interface AccountRepository/AcademicRepository dengan satu SqliteRepository; tanpa ORM/framework baru. Referensi aktif memakai tabel active_semesters agar FK memastikan semester milik akun.
 - Asumsi operasional: tahun YYYY/YYYY berurutan, prodi boleh kosong sebelum dilengkapi, pemilihan aktif eksplisit; hapus semester aktif mengosongkan referensi aktif. Form akademik disimpan melalui tombol Simpan; autosave materi tetap untuk M3.
+
+## Kriteria M3 yang diverifikasi
+- LEARN-01/F04–F05: kuliah→semester→course→bab→materi dan peminatan→bidang→materi terpisah. CHECK tepat satu lokasi, composite FK owner/parent, CRUD dan tombol urut Naik/Turun; salinan contoh tiap akun independen.
+- LEARN-02: CommonMark0.24.0+GFM table, heading/paragraf/list/bold/italic/kode/gambar/link. Tulis dan Pratinjau/Baca; kode tidak dijalankan. HTML raw di-escape, script halaman disabled; URL gambar eksternal/file dan link selain http/https ditolak.
+- Aset PNG/JPEG didekode/divalidasi dan disalin ke dataDirectory/assets/pemilik dengan referensi relatif; gambar asal boleh pindah. Missing/invalid references menjadi placeholder bernama. Tidak ada cleanup agresif aset.
+- LEARN-03: judul wajib, sumber opsional, urutan/revisi/timestamp, isi kosong berlabel Draf. Simpan eksplisit dan autosave2detik; status Belum tersimpan/Menyimpan/Tersimpan/Gagal menyimpan. Save lama ditolak CAS; simpan gagal tidak mengosongkan buffer. Simpan/Buang/Batal pada navigasi/logout/close.
+- Koleksi asli5materi:3PBO pada course pilihan dan2peminatan. Tombol salin sekali per akun, dalam transaksi dengan marker; tidak menyalin pada setiap login/migrasi, tidak menimpa edit.
+- LEARN-04/F06: selesai/incomplete manual; membuka materi tidak menyelesaikannya. Course menghitung total materi seluruh bab; contoh2selesai dari10=20%, bukan50%. Empty state tanpa pembagian nol.
+- LEARN-05/F06: posisi gulir0–1 dan revisi per akun; Lanjutkan Membaca memulihkan setelah render. Revisi berubah→awal; materi dihapus→penjelasan dan daftar jalur/folder yang masih tersedia.
+- LEARN-06/F07: satu catatan teks pribadi terpisah per materi, persistensi dan konfirmasi hapus; input dipertahankan saat gagal. Ringkasan tetap heading manual dalam markdown.
+- Migrasi schema1→2 mempertahankan akun/profil/semester/course/active selection M2. Seluruh tes memakai database/aset sementara; full usability dan paket Windows tetap M5.
+- Keputusan implementasi: batas gambar10MB/16juta piksel, nama file UUID dan folder hash NIM; material+note disimpan atomik; reorder tidak menaikkan content revision. Aset yang tidak lagi dirujuk sengaja tidak dibersihkan pada M3.

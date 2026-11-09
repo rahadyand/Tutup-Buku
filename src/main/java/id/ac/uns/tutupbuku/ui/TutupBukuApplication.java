@@ -18,6 +18,9 @@ public final class TutupBukuApplication extends Application {
     private UiTasks tasks;
     private BorderPane root;
     private Label status;
+    private WorkspaceView workspace;
+    private UserSession session;
+    private boolean closing;
     public TutupBukuApplication() { this(AppPaths.databaseFile()); }
     public TutupBukuApplication(Path databaseFile) { this.databaseFile = databaseFile; }
 
@@ -31,10 +34,13 @@ public final class TutupBukuApplication extends Application {
         root.setBottom(footer); tasks = new UiTasks(root);
         Button retry = button("retry-storage", "Coba lagi membuka penyimpanan"); retry.setOnAction(event -> initializeStorage());
         root.setCenter(form(heading("Membuka Tutup Buku"), note("Jika penyimpanan gagal dibuka, data tidak direset.\nLokasi: " + databaseFile.toAbsolutePath()), retry));
-        stage.setTitle("Tutup Buku — Milestone 2"); stage.setScene(new Scene(root, 1080, 720));
+        stage.setTitle("Tutup Buku — Milestone 3"); stage.setScene(new Scene(root, 1280, 820));
         stage.setMinWidth(900); stage.setMinHeight(620);
         stage.setOnCloseRequest(event -> {
             if (root.isDisable()) { event.consume(); status.setText("Tunggu proses selesai sebelum menutup aplikasi."); }
+            else if (!closing && workspace != null) {
+                event.consume(); workspace.requestLeave(() -> { closing = true; stage.close(); });
+            }
         });
         stage.show(); initializeStorage();
     }
@@ -42,17 +48,20 @@ public final class TutupBukuApplication extends Application {
     private void initializeStorage() {
         tasks.run(status, () -> new SqliteDatabase(databaseFile), opened -> {
             database = opened;
-            var repository = new SqliteRepository(database); var session = new UserSession();
+            var repository = new SqliteRepository(database); session = new UserSession();
             var auth = new AuthService(repository, new PasswordHasher(), session);
             var academic = new AcademicService(repository, session);
             showLogin(auth, academic);
         });
     }
     private void showLogin(AuthService auth, AcademicService academic) {
+        workspace = null;
         status.setText("");
         root.setCenter(new AuthView(auth, tasks, profile -> {
             status.setText("");
-            root.setCenter(new WorkspaceView(auth, academic, tasks, profile, () -> showLogin(auth, academic)));
+            var learning = new LearningService(new SqliteLearningRepository(database), session, new AssetStore(databaseFile.toAbsolutePath().getParent()));
+            workspace = new WorkspaceView(auth, academic, learning, tasks, profile, link -> getHostServices().showDocument(link), () -> showLogin(auth, academic));
+            root.setCenter(workspace);
         }));
     }
     @Override public void stop() {

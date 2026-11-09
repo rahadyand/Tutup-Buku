@@ -35,3 +35,6 @@ credentials*.json
 *.pfx
 *.jks
 *.keystore
+
+# Aset pengguna jika folder data diarahkan ke root proyek; aset source di resources tetap dapat dilacak.
+/assets/

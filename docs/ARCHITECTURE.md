@@ -1,4 +1,4 @@
-# Arsitektur Tutup Buku — M1 dan M2
+# Arsitektur Tutup Buku — M1, M2, M3
 
 ## Aliran sederhana
 
@@ -38,7 +38,7 @@ IP memakai seluruh mata kuliah, termasuk SKS D/E. Missing/invalid SKS atau hasil
 
 ## Batas implementasi
 
-Secara historis, M1 belum mempunyai auth/persistence dan hanya menguji JDBC in-memory serta CommonMark sebagai smoke test. M2 sekarang mempunyai UserProfile, Semester, Course, AuthService/PBKDF2 dan SQLite dengan tes persistensi pada file sementara. Material/Scenario tersimpan serta reader tetap belum dibuat. Smoke test CommonMark belum membuktikan keamanan reader end-to-end. JavaFX WebView baru ditambahkan saat reader M3 dibangun. Tidak ada parser Markdown sendiri, FXML, ORM, server, koneksi cloud, AI atau paid service.
+Secara historis, M1 belum mempunyai auth/persistence dan hanya menguji JDBC in-memory serta CommonMark sebagai smoke test. M2 sekarang mempunyai UserProfile, Semester, Course, AuthService/PBKDF2 dan SQLite dengan tes persistensi pada file sementara. M3 sekarang menambahkan Material/reader; Scenario tersimpan tetap M4. Smoke test CommonMark belum membuktikan keamanan reader end-to-end. JavaFX WebView21.0.10 ditambahkan pada M3. Tidak ada parser Markdown sendiri, FXML, ORM, server, koneksi cloud, AI atau paid service.
 
 ## Aliran M2
 JavaFX AuthView/WorkspaceView/AcademicView → UiTasks worker → AuthService/AcademicService → interface repository → SqliteRepository → SqliteDatabase → SQLite lokal. Password hash berjalan pada worker yang sama; JavaFX thread hanya membaca input, menampilkan hasil dan dialog konfirmasi. Root form dinonaktifkan selama satu operasi untuk mencegah pergantian akun ketika request lama belum selesai.
@@ -72,3 +72,42 @@ PBKDF2 dipilih sesuai rekomendasi PRD dan tersedia di JDK tanpa library tambahan
 Isolasi ini berlaku melalui aplikasi dan FK, bukan enkripsi database atau perlindungan terhadap orang yang dapat membaca/mengubah file melalui akun Windows yang sama. Akun tidak diverifikasi ke kampus, tidak ada email/cloud, recovery universal, atau penyimpanan sesi otomatis.
 
 Form M2 memakai Simpan eksplisit. Jika save gagal, input tetap dan tombol Simpan dapat dicoba lagi. Refresh daftar adalah aksi terpisah; gagal refresh setelah commit tidak dilaporkan sebagai gagal menyimpan. Tahun akademik memakai YYYY/YYYY berurutan; prodi bebas dan boleh kosong hingga diisi. Layar semester terpilih untuk dilihat tidak otomatis menjadi semester aktif.
+
+## Aliran M3 dan class penting
+LearningView/MaterialEditor → LearningService → LearningRepository → SqliteLearningRepository/AssetStore. UiTasks tetap satu worker dan menghitung operasi blocking yang masih berjalan; pekerjaan bookmark ringan memakai antrean yang sama tanpa mengunci form. Pemilik bookmark ditangkap saat request dibuat agar antrean lama tidak berganti akun.
+
+| Class | Peran |
+|---|---|
+| LearningLocation / LearningFolder | Kind CHAPTER atau INTEREST, parent ID, nama/urutan; bab mempunyai course, bidang independen dari semester/course |
+| Material / MaterialReading | Materi immutable berisi markdown/source/urutan/revisi/timestamp; reading membungkus completion/note/noteRevision terpisah |
+| LearningProgress | Jumlah selesai/total, empty state tanpa pembagian; course menghitung semua materi dalam semua bab |
+| ReadingBookmark / ResumeResult | Material ID, content revision, scroll ratio dan lokasi terakhir; hasil resume membawa pesan/fallback |
+| EditorDraft | Buffer mutable yang memisahkan data tersimpan dari isian; generation dan ack mencegah hasil lama menghilangkan edit baru |
+| LearningSchema | Migrasi aditif dan atomik1→2, validasi tabel/kolom baru |
+| SqliteLearningRepository | Query owner+ID, CRUD/order, CAS save bundle materi+note, progress, bookmark, starter initialization dalam transaksi |
+| AssetStore | Decode PNG/JPEG, batas10MB/16MP, UUID, direktori SHA256(NIM), resolve/realpath guard, copy atomik dan data URI untuk renderer |
+| MarkdownRenderer | Parser CommonMark/GFM table yang sudah ada; visitor membatasi link/gambar, escape rawHTML, template CSS/CSP lokal |
+| MarkdownReader | WebView script halaman disabled, tanpa bridgeJava. DOM click membuka link http/https via HostServices setelah klik; tidak memuat halaman luar |
+| MaterialEditor | Tulis/Preview, buffer, status simpan, autosave2detik, Save/Discard/Cancel, note/completion, restore/capture scroll |
+| LearningView | Sidebar semester/course atau peminatan, folder/material lists, CRUD/ordering, progress, starter button dan resume |
+
+## Skema versi2 dan migrasi
+Tabel M2 tidak dihapus/diganti. Migrasi menambah unique index courses(id,owner_nim), learning_chapters, interest_fields, materials, learning_state, last_reading dan learning_seed lalu menetapkan user_version2 dalam satu transaksi. Jika gagal, rollback; data akun/password/profil/semester/course/active semester tetap. Versi lebih baru/tidak dikenal tetap ditolak, tanpa reset.
+
+materials memiliki chapter_id ATAU field_id dengan CHECK XOR dan composite FK parent+owner. learning_state memiliki unique material+owner untuk note/completed/note_revision, cascade saat materi dihapus. courses→chapters→materials→state memakai FK cascade; interest terpisah. Konfirmasi hapus course/semester diperluas untuk menjelaskan materi/catatan/progres yang ikut terhapus.
+
+last_reading memiliki FK pemilik, tetapi material_id sengaja tidak di-FK agar ID terakhir menjadi tombstone setelah delete. Resume mencari material dengan owner yang sama; jika hilang menampilkan pesan lalu daftar yang masih tersedia. learning_seed adalah marker unik per akun, dibuat bersama5salinan contoh dalam satu transaksi setelah tombol salin dikonfirmasi.
+
+## Save, revisi dan navigasi
+Simpan/auto-save mengirim snapshot EditorDraft ke worker tunggal. UPDATE memakai expected material revision dan note revision. Judul/markdown/source yang berubah menaikkan material revision/timestamp; note-only update hanya menaikkan note revision. Material dan note disimpan dalam transaksi yang sama, completion terpisah. Reorder mengubah position, bukan content revision, sehingga note dan resume tidak hilang.
+
+Ack sukses memperbarui base dan menandai generasi yang tersimpan. Error tidak memanggil reset/ack, sehingga input tetap. Autosave2detik berhenti setelah error sampai pengguna mencoba lagi atau mengedit. Navigasi di learning, tab utama, tab simulasi, logout dan close memakai dialog Simpan/Buang/Batal. Save gagal menahan navigasi. Batal mempertahankan editor; Buang kembali ke snapshot tersimpan.
+
+Bookmark didebounce700ms pada scroll/mouse/key, serta di-flush sebelum meninggalkan bacaan. Restorasi dilakukan setelah WebEngine SUCCEEDED. Rasio0–1 menyesuaikan panjang viewport; content revision berubah mengembalikan ke0. Waktu disimpan UTC (Instant) dan ditampilkan WIB.
+
+## Rendering dan aset
+HTML raw di-escape oleh CommonMark, bukan dibersihkan dengan regex buatan sendiri. Tidak ada kode materi dieksekusi. Script halaman WebView dimatikan. executeScript hanya digunakan untuk ekspresi tetap milik aplikasi yang membaca/mengatur posisi gulir dengan angka rasio; tidak pernah memasukkan markdown atau teks pengguna. Tidak ada Java object bridge ke halaman.
+
+Image nodes diubah menjadi dataURI dari PNG/JPEG pemilik yang telah lolos validasi, atau teks placeholder berisi referensi yang hilang/ditolak. Renderer menolak remote images, file://, traversal, dataURI buatan pengguna dan aset akun lain. CSP default-src none, img-src data, style-src inline milik aplikasi membatasi pemuatan resource. Link hanya http/https absolut tanpa credentials; DOM listener preventDefault lalu membuka browser melalui callback setelah klik. Formula memakai gambar, tanpa LaTeX/video/PDF/AI/kuis.
+
+File dipilih lewat chooser, didekode ImageIO, disalin ke assets/{SHA256-NIM}/{UUID}.png/jpg, lalu referensi relatif dimasukkan ke markdown. NIM tidak dipakai langsung sebagai path. Resolve memeriksa pola, pemilik, normalized path dan realpath. Tidak ada penghapusan aset setelah edit/delete materi; orphan files mungkin tersisa dan cleanup ditunda. Salin folder database dan assets bersama jika membuat cadangan manual; referensi tidak bergantung pada lokasi file gambar asli.

@@ -34,7 +34,7 @@ public final class SqliteDatabase implements AutoCloseable {
             }
             int version;
             try (ResultSet result = statement.executeQuery("PRAGMA user_version")) { result.next(); version = result.getInt(1); }
-            if (version > 1) throw new SQLException("Versi database lebih baru dari aplikasi.");
+            if (version > 2) throw new SQLException("Versi database lebih baru dari aplikasi.");
             if (version == 0) {
                 try (ResultSet result = statement.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")) {
                     if (result.next()) throw new SQLException("Database versi 0 berisi tabel yang tidak dikenal; tidak ditimpa.");
@@ -90,6 +90,8 @@ public final class SqliteDatabase implements AutoCloseable {
             statement.executeQuery("SELECT id, owner_nim, semester_number, academic_year, period FROM semesters LIMIT 0").close();
             statement.executeQuery("SELECT owner_nim, semester_id FROM active_semesters LIMIT 0").close();
             statement.executeQuery("SELECT id, owner_nim, semester_id, name, code, credits, attendance_met, attendance_confirmed, attendance_reference, revision FROM courses LIMIT 0").close();
+            if (version < 2) LearningSchema.migrate(database);
+            LearningSchema.validate(database);
             try (ResultSet result = statement.executeQuery("PRAGMA foreign_key_check")) {
                 if (result.next()) throw new SQLException("Relasi database tidak konsisten.");
             }
