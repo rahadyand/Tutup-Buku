@@ -1,4 +1,10 @@
-# Catatan kandidat rilis 0.5.0-rc1
+# Catatan kandidat rilis 0.5.1-rc1
+
+Hardening sesudah M5: layar Semester & mata kuliah dimuat ulang setelah guard ketika dibuka kembali. Kehadiran yang baru disimpan melalui Simulasi Nilai kini terbaca sebelum edit nama/SKS, sehingga form lama tidak menimpanya. Regresi lintas layar membuktikan kehadiran false/confirmed true tetap tersimpan setelah metadata berubah.
+
+Engine/skema/dependency tetap. Regresi baru:163tes default,8GUI+1benchmark, serta1pengulangan skala proses125% lulus. Ada oracle hitung independen, uji revisi bobot/order dan integrasi generasi draft dengan DB. Audit dan bahan laporan/OOP/presentasi/kit penerimaan tersedia di repository. Penerimaan manusia belum dinyatakan selesai.
+
+## Fondasi M5 yang dipertahankan
 
 M5 menjaga lingkup P0: akun lokal, akademik multi-semester, dua jalur materi, Markdown/gambar/catatan/completion/resume, aktual/target/skenario/IP. Skema tetap3 dan engine nilai M1 tetap.
 

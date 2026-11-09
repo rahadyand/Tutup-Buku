@@ -115,6 +115,23 @@ class LearningPersistenceTest {
         assertThrows(StorageException.class, () -> learning.save(new Material(id, folder.location(), "Gagal", "Gagal", "", 0, newer.material().revision(), ""), "Gagal", newer.noteRevision()));
         assertEquals("Baru", learning.open(id).material().title()); assertEquals("Baru", learning.open(id).note());
     }
+    @Test void newerEditorInputSurvivesEarlierSaveAcknowledgmentAndPersistsOnNextSave() {
+        var folder = chapter("Antrean"); var original = create(folder.location(), "Awal");
+        var draft = new EditorDraft(original);
+        draft.edit("Judul", "Isi A", "", "Catatan A"); var first = draft.snapshot();
+        draft.edit("Judul", "Isi B", "", "Catatan B");
+        var savedA = learning.save(first.material(), first.note(), first.noteRevision());
+        draft.acknowledge(first, savedA);
+        assertTrue(draft.dirty()); assertEquals("Isi B", draft.snapshot().material().markdown());
+        var next = draft.snapshot();
+        var savedB = learning.save(next.material(), next.note(), next.noteRevision());
+        draft.acknowledge(next, savedB);
+        assertFalse(draft.dirty());
+        assertEquals("Isi B", learning.open(original.material().id()).material().markdown());
+        assertEquals("Catatan B", learning.open(original.material().id()).note());
+        assertThrows(IllegalArgumentException.class, () -> learning.save(first.material(), first.note(), first.noteRevision()));
+        assertEquals("Isi B", learning.open(original.material().id()).material().markdown());
+    }
     @Test void seedIsIdempotentIndependentPerAccountAndDoesNotOverwriteEdits() {
         assertTrue(learning.initializeStarter(courseId)); assertFalse(learning.initializeStarter(courseId));
         var chapter = learning.folders(LearningLocation.Kind.CHAPTER, courseId).getFirst();

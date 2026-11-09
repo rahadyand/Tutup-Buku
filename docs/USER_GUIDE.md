@@ -1,4 +1,4 @@
-# Panduan Tutup Buku 0.5.0-rc1 — Windows x64
+# Panduan Tutup Buku 0.5.1-rc1 — Windows x64
 
 ## Membuka paket
 1. Ekstrak seluruh ZIP memakai **Extract All**, misalnya ke `D:\Aplikasi Saya\TutupBuku`. Jangan menjalankan EXE langsung dari tampilan ZIP.

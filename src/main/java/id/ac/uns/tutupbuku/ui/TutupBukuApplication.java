@@ -54,7 +54,7 @@ public final class TutupBukuApplication extends Application {
                                 "Jika penyimpanan gagal dibuka, data tidak direset.\nLokasi: "
                                         + databaseFile.toAbsolutePath()),
                         retry));
-        stage.setTitle("Tutup Buku — Kandidat Rilis 0.5.0");
+        stage.setTitle("Tutup Buku — Kandidat Rilis 0.5.1-rc1");
         stage.setScene(new Scene(root, 1280, 820));
         stage.setMinWidth(760);
         stage.setMinHeight(480);

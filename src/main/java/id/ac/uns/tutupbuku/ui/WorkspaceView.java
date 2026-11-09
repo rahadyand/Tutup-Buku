@@ -127,6 +127,12 @@ final class WorkspaceView extends BorderPane {
                                         if (selected == dashboard) {
                                             learningView.refresh();
                                             gradeView.refresh();
+                                        } else if (selected.getContent() == academicView) {
+                                            // Kehadiran juga bisa diubah di editor aktual. Muat
+                                            // ulang
+                                            // setelah guard agar form lama tidak menimpanya saat
+                                            // edit SKS.
+                                            academicView.refresh();
                                         }
                                     });
                         });
@@ -143,7 +149,7 @@ final class WorkspaceView extends BorderPane {
                 profile.activeSemesterId().isPresent()
                         ? "Semester aktif dipilih. Lihat penandanya di Semester & mata kuliah."
                         : "Belum ada semester aktif. Buat atau pilih semester di Semester & mata"
-                              + " kuliah.");
+                                + " kuliah.");
     }
 
     void requestLeave(Runnable action) {

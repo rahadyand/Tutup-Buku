@@ -1,5 +1,6 @@
 package id.ac.uns.tutupbuku.service;
 
+import static id.ac.uns.tutupbuku.service.TestData.equalNumber;
 import static id.ac.uns.tutupbuku.service.TestData.n;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -458,6 +459,24 @@ class GradePlanningPersistenceTest {
     }
 
     @Test
+    void weightAndOrderChangesInvalidateSnapshotWithoutChangingSavedBasis() {
+        three();
+        var saved = service.save(draft());
+        item("uts", "UTS", "25", "", "100", 1);
+        assertTrue(service.review(service.open(saved.id())).outdated());
+        equalNumber("30", input(service.open(saved.id())).basis().components().get(1).weight());
+        var refreshed = service.refresh(saved);
+        assertFalse(service.review(refreshed).outdated());
+        assertTrue(service.review(service.open(saved.id())).outdated());
+        var accepted = service.save(refreshed);
+        service.moveComponent(course, "uts", -1);
+        assertTrue(service.review(service.open(accepted.id())).outdated());
+        assertEquals(
+                "tasks", input(service.open(accepted.id())).basis().components().getFirst().id());
+        assertEquals("uts", service.courses(semester).getFirst().components().getFirst().id());
+    }
+
+    @Test
     void deletedAndAddedCoursesLeaveHistoricalSnapshotsUntilRefresh() {
         three();
         var saved = service.save(draft());
@@ -550,7 +569,7 @@ class GradePlanningPersistenceTest {
                     try (var s = c.createStatement()) {
                         s.execute(
                                 "CREATE TRIGGER reject_snapshot BEFORE INSERT ON scenario_items"
-                                    + " BEGIN SELECT RAISE(ABORT,'fixture failure'); END");
+                                        + " BEGIN SELECT RAISE(ABORT,'fixture failure'); END");
                     }
                     return null;
                 });
