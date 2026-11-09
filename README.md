@@ -1,14 +1,14 @@
-# Tutup Buku — Milestone 3
+# Tutup Buku — Milestone 4
 
-Aplikasi desktop Java untuk final project PBO semester 3, mahasiswa Fakultas Teknologi Informasi dan Sains Data UNS. Tenggat produk: **8 Desember 2026**. UI dan penjelasan berbahasa Indonesia.
+Aplikasi desktop Java untuk final project PBO semester 3, mahasiswa Fakultas Teknologi Informasi dan Sains Data UNS. Tenggat produk: **8 Desember 2026**. UI dan dokumentasi berbahasa Indonesia.
 
-M3 menambahkan **materi Markdown, gambar lokal, progres manual, catatan dan lanjut membaca** di atas akun/akademik M2. Dua pintu dashboard tetap setara: Modul Belajar dan Simulasi Nilai. Mesin hitung M1 tetap; editor nilai dan skenario tersimpan masih M4.
+M1–M4 menyediakan akun lokal, profil/semester/mata kuliah, materi Markdown dan **nilai aktual, target banyak komponen, skenario tersimpan serta IP semester**. Dua area dashboard tetap **Modul Belajar** dan **Simulasi Nilai**. Tidak ada layanan cloud/AI.
 
-## Setup Windows
+## Setup, build, test dan run Windows
 
-JDK **21** diperlukan, bukan hanya JRE. Lingkungan terverifikasi: Oracle JDK21.0.12 Windows x64. Maven global tidak diperlukan; Wrapper3.3.4 mengunci Maven3.9.11 beserta SHA-256.
+Perlu JDK **21**, bukan hanya JRE. Terverifikasi di Oracle JDK21.0.12 Windows x64. Maven global tidak diperlukan: Maven Wrapper3.3.4 mengunci Maven3.9.11 beserta checksum SHA-256.
 
-Buka PowerShell di folder proyek:
+Buka PowerShell pada folder proyek:
 
 ```powershell
 $env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.12'
@@ -20,123 +20,110 @@ javac -version
 .\mvnw.cmd javafx:run
 ```
 
-Sesuaikan JAVA_HOME jika lokasi JDK berbeda; jangan tambahkan bin ke JAVA_HOME. Build pertama memerlukan internet untuk Maven/dependensi. Aplikasi inti M3 tidak memerlukan internet, email, akun cloud atau layanan berbayar.
+Sesuaikan JAVA_HOME dengan lokasi JDK. Build pertama memerlukan internet untuk Maven/dependensi; alur inti aplikasi bekerja lokal. Hasil build `target/tutup-buku-0.4.0-SNAPSHOT.jar` belum paket mandiri/fat JAR; jalankan melalui **javafx:run**, bukan java -jar. Paket Windows ber-runtime dan komputer kedua adalah M5.
 
-Hasil build: `target/tutup-buku-0.3.0-SNAPSHOT.jar`. Ini belum paket mandiri/fat JAR: gunakan **javafx:run**, bukan java -jar. Paket Windows dengan runtime dan uji komputer kedua tetap M5.
-
-## Memakai cache sesi pengembangan ini
-
-Cache sesi Codex berada di proyek agar tidak menulis ke cache global. Untuk menjalankan sekarang tanpa mengunduh ulang:
+Cache sesi pengembangan ini berada di proyek:
 
 ```powershell
 $env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.12'
 $env:MAVEN_USER_HOME = "$PWD\.tools\maven-user"
-.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o clean verify
 .\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o javafx:run
 ```
 
-Jika menyalin source tanpa cache, hilangkan -o pada build pertama. Folder .m2/, .tools/, target/, tmp/ dan database/log diabaikan Git; .mvn/wrapper/ serta skrip Wrapper tetap source yang dilacak.
+Hilangkan -o pada unduhan pertama jika cache belum ada. Git mengabaikan .m2/, .tools/, target/, tmp/, database, aset pengguna, log dan rahasia; **.mvn/wrapper/** dan skrip Wrapper tetap dilacak. Tidak perlu alat format lokal untuk membangun aplikasi.
 
-## Lokasi data dan akun
+## Data lokal dan migrasi
 
-Default Windows: **%LOCALAPPDATA%\TutupBuku\tutup-buku.db**. Database dibuat saat aplikasi dibuka, di luar folder instalasi. Jika LOCALAPPDATA tidak tersedia, fallback adalah user.home/AppData/Local/TutupBuku. Tidak ada login otomatis setelah restart: pilihan semester aktif tetap tersimpan, sesi login tidak.
-
-Untuk mencoba pada folder demo terpisah:
+Default **%LOCALAPPDATA%\TutupBuku\tutup-buku.db**; fallback user.home/AppData/Local/TutupBuku. Demo terisolasi:
 
 ```powershell
-$env:TUTUP_BUKU_DATA_DIR = "$PWD\tmp\demo-m2"
+$env:TUTUP_BUKU_DATA_DIR = "$PWD\tmp\demo-m4"
 .\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o javafx:run
 ```
 
-Untuk kembali ke lokasi normal pada PowerShell yang sama:
+Untuk kembali ke lokasi biasa, `Remove-Item Env:TUTUP_BUKU_DATA_DIR -ErrorAction SilentlyContinue` hanya menghapus variabel sesi, tidak menghapus file. Tes selalu menggunakan database/aset sementara, bukan database AppData Anda.
 
-```powershell
-Remove-Item Env:TUTUP_BUKU_DATA_DIR -ErrorAction SilentlyContinue
-```
+Skema otomatis dimigrasikan **1→2→3** secara aditif dan transaksional per versi. M4 tidak mengubah file gambar/bacaan M3. Database rusak, versi tak dikenal, dan gagal migrasi dilaporkan **tanpa reset**. Tutup aplikasi sebelum menyalin cadangan manual, lalu salin database **beserta folder assets**.
 
-Perintah ini hanya menghapus variabel lingkungan sesi, **tidak menghapus file database**. Jendela yang dibuka untuk verifikasi pengembang menggunakan tmp/m3-launch-check, bukan database AppData Anda. Tutup jendela itu sebelum membuka sesi normal.
+Password memakai PBKDF2-HMAC-SHA256 bawaan Java, 600.000 iterasi, salt acak16byte, hasil256bit; parameter tersimpan. NIM adalah teks yang di-trim, nol awal tetap. Database tidak dienkripsi seluruhnya. Tidak ada email, recovery universal atau login otomatis setelah restart.
 
-Password disimpan sebagai PBKDF2-HMAC-SHA256 bersalt acak, bukan plaintext. Hash256bit, salt16byte, 600.000 iterasi serta nama algoritme disimpan agar verifikasi dapat diulang. Ini memakai implementasi Java, sesuai pilihan PRD dan parameter [OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). File database tidak dienkripsi seluruhnya; orang yang dapat mengakses file melalui akun Windows yang sama dapat membaca data profil/akademik. Tidak ada recovery password/email atau password universal.
+## Mencoba akun, profil dan akademik (M2)
 
-## Alur mencoba M2 secara manual
+1. Daftar NIM, nama, password minimal8karakter dan konfirmasi. Coba NIM sama dan password login salah untuk melihat validasi.
+2. Masuk; edit nama/prodi di **Profil**. NIM tetap. Prodi boleh kosong sampai dilengkapi.
+3. **Semester & mata kuliah** → Semester baru. Nomor positif, tahun YYYY/YYYY berurutan, Ganjil/Genap. Tahun/periode unik per akun.
+4. **Jadikan aktif** menyimpan referensi aktif; semester lama tidak hilang. Layar perencanaan dapat melihat semester mana pun tanpa mengubah referensi ini.
+5. Buat mata kuliah: nama dan SKS positif, kode opsional, acuan kehadiran dapat diedit. Centang awal berarti asumsi belum terverifikasi.
+6. Edit/hapus memakai pilihan daftar. Hapus selalu dikonfirmasi dan menjelaskan data turunan. Keluar/masuk akun lain untuk memeriksa isolasi; restart untuk memeriksa persistensi.
 
-1. Buka tab **Daftar**, isi NIM (misalnya 001234), nama, password minimal8 karakter dan konfirmasinya. NIM disimpan sebagai teks setelah trim; tidak diasumsikan panjang/pola kampus.
-2. Setelah berhasil daftar, **Masuk**. Coba password salah terlebih dahulu: pesan generik muncul tanpa mengubah data.
-3. Buka **Profil**, edit nama/program studi lalu Simpan. NIM tidak dapat diubah. Program studi teks bebas; boleh kosong sampai dilengkapi.
-4. Buka **Semester & mata kuliah**, klik Semester baru. Isi nomor positif, tahun akademik seperti2026/2027 dan Ganjil/Genap, lalu Simpan semester. Tahun akhir harus tepat satu setelah tahun awal. Kombinasi tahun/periode unik dalam akun.
-5. Pilih semester dan **Jadikan aktif**. Melihat semester lain tidak otomatis mengganti semester aktif.
-6. Klik **Mata kuliah baru**. Isi nama, kode opsional dan SKS positif. Kosong/0/negatif ditolak; koma/titik desimal diterima. Checkbox kehadiran awal dicentang dan berlabel asumsi belum diverifikasi; acuan dapat diedit, tanpa absensi otomatis.
-7. Pilih item pada daftar untuk mengedit, lalu Simpan. Jika simpan gagal, isian tetap ada: periksa penyimpanan dan klik **Simpan** lagi. Muat ulang daftar merupakan aksi terpisah.
-8. Buat semester kedua, ubah semester aktif, lalu kembali ke semester pertama: mata kuliah lama tetap tersedia. Hapus memunculkan konfirmasi; Batal tidak mengubah data. Hapus semester menghapus mata kuliahnya; jika aktif, referensi aktif dikosongkan tanpa memilih pengganti otomatis.
-9. Keluar, daftar akun kedua dan masuk: data akun pertama tidak terlihat.
-10. Tutup aplikasi dan jalankan lagi. Login akun pertama: profil, semester, mata kuliah, kehadiran dan pilihan aktif tetap tersedia.
+## Mencoba Modul Belajar (M3)
 
-Tombol simpan/hapus berada di bagian bawah panel; isi form panjang dapat digulir. Error penyimpanan ditampilkan, tanpa reset data atau status sukses palsu. Operasi hash/JDBC berjalan pada worker; selama proses, form dinonaktifkan dan penutupan jendela menunggu proses selesai.
+1. Pilih Kuliah → Semester → Mata kuliah → tambah bab; atau Peminatan → tambah bidang tanpa ketergantungan semester.
+2. **Salin 5 materi contoh (sekali)** menyalin3pengantar PBO ke course pilihan dan2peminatan, setelah konfirmasi. Koleksi asli singkat, bukan course lengkap; tidak ada seed otomatis saat login/migrasi.
+3. Buat materi, judul wajib dan sumber opsional. Tab Tulis mendukung Markdown heading/list/bold/italic/tabel/fenced code/link. Isi kosong boleh Draf.
+4. Pratinjau/Baca menampilkan kode sebagai teks. Ringkasan manual memakai heading `## Ringkasan`.
+5. **Sisipkan gambar lokal** mengimpor PNG/JPEG (≤10MB, ≤16juta piksel) ke assets/pemilik/UUID. Rumus memakai gambar; file asli dapat dipindah setelah salinan berhasil.
+6. Catatan pribadi terpisah dari isi. Simpan eksplisit atau autosave2detik. Jika gagal, teks tetap; Simpan dapat dicoba lagi.
+7. Selesai ditandai manual. Progres course menghitung semua materi, bukan rata-rata bab. Membuka bacaan tidak menyelesaikannya.
+8. Gulir, pindah/logout/restart, lalu **Lanjutkan Membaca**. Isi berubah → awal; bacaan dihapus → penjelasan. Naik/Turun mengatur urutan.
+9. Navigasi/logout/close yang meninggalkan edit belum tersimpan menawarkan Simpan/Buang/Batal. Hapus catatan/materi meminta konfirmasi.
 
-Dashboard Modul Belajar sekarang membuka fitur M3. Simulasi Nilai mempunyai contoh 60→55→70 dan checkbox demo C→E→C dari M1; **contoh itu terpisah dari checkbox kehadiran course yang tersimpan**.
+HTML raw di-escape, script halaman WebView disabled, tanpa Java bridge. Gambar hanya aset lokal milik akun; traversal/file URL/gambar luar ditolak. Link http/https dibuka di browser setelah klik, sehingga link luar bisa memerlukan internet. Aset tak terpakai tidak dihapus otomatis.
 
-## Pengujian otomatis
+## Mencoba Simulasi Nilai (M4)
+
+1. Buka **Simulasi nilai**, pilih semester. **Komponen & aktual** → pilih mata kuliah.
+2. Tambah Tugas20%, UTS30%, UAS50% dengan perolehan kosong. Nama bebas; UTS/UAS tidak wajib. Maksimum boleh disiapkan lebih dahulu. Simpan tiap komponen; Naik/Turun/Hapus tersedia.
+3. Bobot salah tetap boleh disimpan sebagai **draf**, tetapi total harus tepat100% sebelum hasil detail dihitung. 99,99/100,01 tidak dinormalisasi.
+4. **Skenario, target & IP** → Skenario baru, beri nama, target IP0–4, target detail angka60 atau huruf minimum C. **Hitung target & IP**: semua komponen bebas mendapat saran60 (skala normalisasi0–100).
+5. Centang Kunci asumsi Tugas, isi80, Hitung: saran UTS/UAS55. **Simpan skenario**.
+6. Kembali **Komponen & aktual**, pilih UTS, isi perolehan30/maksimum100, Simpan. Aktual tidak pernah berasal dari saran solver.
+7. Kembali skenario, Hitung: **USANG/PERLU DITINJAU**. **Tinjau/perbarui basis** menjelaskan perubahan; konfirmasi **Perbarui draf** → saran UAS70. Tinjau lalu **Simpan**. Kunci untuk komponen yang kini aktual/terhapus dibuang saat refresh; target dan kunci lain tetap.
+8. Actual earned/max misalnya8/10,35/40,84,5/100 didukung. Kosong berarti belum diketahui;0 adalah nilai aktual.84,5 tetap A-.
+9. **Mode penilaian aktif** memilih Detail atau Huruf langsung. Huruf aktual dimasukkan pada tab aktual, estimasi pada skenario. Data mode tidak aktif tetap disimpan, hanya mode aktif dihitung. Huruf aktual tersedia mengalahkan estimasi huruf dalam mode langsung.
+10. Kehadiran awal asumsi terpenuhi. Uncheck skenario memaksa efektif E/0 tanpa menghapus hasil asal; check kembali memulihkannya. Tab aktual juga menyediakan penanda bahwa kehadiran telah diverifikasi.
+11. Coba target mustahil, kontribusi sudah cukup atau semua komponen terkunci (W=0). Pesan menjelaskan keadaan; kebutuhan>100 tidak dipotong menjadi100. Skor/bobot aktual tidak diubah.
+12. IP hanya muncul jika **semua** mata kuliah snapshot memiliki SKS dan huruf efektif. Mata kuliah belum lengkap menghalangi IP; D/E tetap masuk penyebut. Label simulasi dipakai jika masih ada asumsi nilai/kehadiran.
+13. Duplikasi skenario menghasilkan salinan independen; ubah nama/estimasi/target, Simpan, buka lagi. Hapus skenario tidak menghapus aktual.
+14. Pilih skenario pembanding dan **Bandingkan tersimpan**. Tabel menampilkan nama/SKS/huruf efektif dan kedua IP; perubahan harus disimpan dahulu. Basis berbeda/usang diberi peringatan historis.
+15. Restart/login lagi: aktual, mode, target, kunci, snapshot dan skenario tetap. Jika simpan gagal, form tetap dan navigasi dengan Simpan yang gagal ditahan.
+
+Target huruf berarti **minimum ambang bawah** PRD, bukan janji mendapat tepat huruf tersebut. Saran aman dibulatkan ke atas2desimal; konversi huruf dan keputusan target IP tidak memakai pembulatan tampilan. Target IP bersifat pembanding manual, tanpa pencarian kombinasi antar-matkul/IPK.
+
+Snapshot yang usang tetap dapat dibaca/digandakan sebagai historis. Refresh mengubah draf saja; tidak mengganti snapshot tersimpan sampai Simpan. Menghapus course mempertahankan snapshot lama bertanda usang; menghapus semester menghapus semua skenario semester itu setelah konfirmasi.
+
+## Tes dan bukti
 
 ```powershell
 .\mvnw.cmd clean verify
-.\mvnw.cmd '-Dtest=LocalAccountTest,AcademicPersistenceTest,DatabaseSafetyTest' test
+.\mvnw.cmd '-Dtest=GradePlanningPersistenceTest,GradeMigrationTest' test
+.\mvnw.cmd '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck' '-DreuseForks=false' verify
 ```
 
-Default: **118 tes lulus** (96 M1/M2 dan22 M3), tanpa kegagalan/error/skipped pada verifikasi akhir. Tes persistence memakai SQLite nyata di @TempDir, bukan database pengguna.
+Tambahkan parameter cache di atas jika memakai cache sesi ini. Default **137 tes**:118 regresi M1–M3 +19 M4 (17 persistensi/perencanaan,2migrasi). GUI opt-in **6 tes**; fork terpisah karena tiap kelas menutup toolkit. Hasil final dan perintah persis dicatat pada [status pengembangan](docs/DEVELOPMENT_STATUS.md). Laporan di target/surefire-reports; gambar di target/verification. Tes GUI meluncurkan aplikasi asli dengan SQLite sementara, termasuk kegagalan simpan yang sengaja disisipkan.
 
-Pengujian JavaFX opsional memerlukan desktop aktif:
-
-```powershell
-.\mvnw.cmd '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck' '-DreuseForks=false' test
-```
-
-Total **5 tes GUI lulus**: satu regresi shell M1, dua alur M2, satu reader aman dan satu alur lengkap M3. Fork terpisah diperlukan karena tiap kelas menutup toolkit JavaFX. Test M2 membuat data fiktif di @TempDir, memeriksa registrasi/login/profil/akademik/logout/restart, batal/hapus, isolasi akun, input tetap pada simpan gagal dan startup database rusak. Snapshot terdapat di target/verification/m2-login.png dan m2-academic.png; laporan XML/TXT di target/surefire-reports.
-
-Tambahkan '-Dmaven.repo.local=.m2/repository' dan -o untuk memakai cache lokal sesi ini. Warning JavaFX `classes were loaded from 'unnamed module'` pada test classpath tercatat; pemeriksaan akhir tidak mencetak exception toolkit. GUI test otomatis dan peninjauan gambar **bukan uji usability manual mahasiswa**. Pengujian jaringan benar-benar diputus, skala125%, komputer kedua, paket mandiri dan benchmark tetap belum dilakukan.
+Pemeriksaan otomatis dan tinjauan gambar bukan uji usability mahasiswa. Skala125%, komputer kedua, jaringan fisik diputus, benchmark30×20 dan paket mandiri belum diverifikasi. Warning JavaFX unnamed module/unchecked cast pada kode tes dicatat; bukan kegagalan tes.
 
 ## Membaca kode
 
-- domain/: Score/AssessmentItem/LetterGrade/Attendance serta UserProfile/Semester/Course.
-- service/: kalkulasi M1 tetap murni; AuthService dan AcademicService memakai interface repository, UserSession menyimpan NIM sesi.
-- security/: PasswordHasher dan PasswordHash.
-- persistence/: AccountRepository/AcademicRepository, SqliteRepository (SQL berparameter), SqliteDatabase (FK/transaksi/schema versi1), AppPaths.
-- ui/: TutupBukuApplication, AuthView, WorkspaceView, AcademicView, DashboardView, UiTasks.
-- src/test/: kalkulasi M1, integration SQLite dan opt-in GUI.
+- `domain`: model immutable dan validasi; AssessmentComponent/ActualCourse untuk aktual, ScenarioCourse/SemesterScenario untuk snapshot dan asumsi.
+- `service`: GradeCalculator, TargetPlanner dan SemesterGpaService M1 tetap; GradePlanningService mengoordinasikan evaluasi, review/refresh dan repository. AuthService/AcademicService/LearningService tetap.
+- `persistence`: SqliteGradeRepository menyimpan data aktual dan snapshot pada tabel terpisah, query berparameter + owner dari UserSession; GradeSchema migrasi2→3; SqliteDatabase transaksi/rollback.
+- `ui`: GradeView, ActualGradePane, ScenarioPane dan GradeForms; UiTasks memindahkan pekerjaan JDBC/hash ke worker. Handler hanya menangkap input/memanggil service/menampilkan hasil.
 
-`record` adalah class data immutable; constructor memvalidasi input. `Optional.empty()` berarti belum ada nilai/referensi, bukan angka0. SKS disimpan sebagai teks desimal dari BigDecimal; kehadiran memakai model M1. Referensi aktif memakai FK owner+semester agar tidak menunjuk semester akun lain.
+`record` adalah class data immutable. `Optional.empty()` berarti belum ada nilai, bukan0. Semua nilai/bobot/SKS memakai BigDecimal. Tidak ada Spring, ORM, FXML atau dependency aplikasi baru pada M4.
 
-## Dokumentasi dan batas milestone
+## Dokumen dan checkpoint
 
-- [Kebutuhan dan ID PRD](docs/REQUIREMENTS.md)
+- [Checklist ID kebutuhan PRD](docs/REQUIREMENTS.md)
 - [Rencana milestone](docs/IMPLEMENTATION_PLAN.md)
-- [Status pengembangan/bukti verifikasi](docs/DEVELOPMENT_STATUS.md)
-- [Arsitektur dan penjelasan class](docs/ARCHITECTURE.md)
-- [Backlog lengkap](docs/BACKLOG.md)
-- [Status historis M1](docs/MILESTONE_1_STATUS.md)
-- [Status historis M2](docs/MILESTONE_2_STATUS.md)
+- [Status dan verifikasi](docs/DEVELOPMENT_STATUS.md)
+- [Arsitektur dan class](docs/ARCHITECTURE.md)
+- [Backlog](docs/BACKLOG.md)
+- [Status historis M1](docs/MILESTONE_1_STATUS.md), [M2](docs/MILESTONE_2_STATUS.md), [M3](docs/MILESTONE_3_STATUS.md)
 - [Konvensi proyek](AGENTS.md)
 
-Source starter M1 dan riwayat commit tidak ditulis ulang. Salinan README/settings starter tetap di docs. Checkpoint M2 sudah di-push atas permintaan pengguna sebelum M3: [0ca1b28](https://github.com/rahadyand/Tutup-Buku/commit/0ca1b2899bbfff9c057f20f0ba984a807e9a7e2a), branch main. Perubahan M3 tidak di-commit/push. Milestone berikutnya **M4 nilai dan skenario**, belum dimulai.
+Checkpoint M3: [04d580d](https://github.com/rahadyand/Tutup-Buku/commit/04d580d61473596f9a39f95dafee21c8a6265dcf), main. M4 diminta untuk di-commit/push setelah lolos gerbang verifikasi; status akhir tercatat di DEVELOPMENT_STATUS dan Git. Berikutnya **M5 integrasi, distribusi Windows dan uji pengguna**, dimulai hanya atas permintaan. Starter lama `src/App.java` dan salinan konfigurasi awal tetap dipertahankan.
 
-Stack tetap Java21, JavaFX21.0.10, SQLite JDBC3.51.0.0, CommonMark0.24.0+GFM tables dan JUnit5.12.2; tanpa framework baru. Referensi primer: [OpenJFX](https://openjfx.io/openjfx-docs/), [Maven Wrapper](https://maven.apache.org/tools/wrapper/), [SQLite FK](https://www.sqlite.org/foreignkeys.html), [SQLite user_version](https://www.sqlite.org/pragma.html#pragma_user_version), [CommonMark](https://github.com/commonmark/commonmark-java). CommonMark BSD2-Clause; SQLite JDBC Apache2.0; OpenJFX GPLv2+Classpath Exception; JUnit EPL2.0; Maven Apache2.0. Sertakan pemberitahuan lisensi komponen saat distribusi M5.
-
-## Mencoba fitur M3
-1. Masuk dengan akun lokal. Buat semester/course PBO melalui tab akademik jika belum ada, lalu buka Modul Belajar dan Muat ulang daftar.
-2. Jalur **Kuliah**: pilih Semester dan Mata kuliah, isi nama bab lalu Tambah. Jalur **Peminatan**: pilih Peminatan, isi nama bidang lalu Tambah; bidang ini tidak bergantung semester/course.
-3. Atau pilih course lalu **Salin5materi contoh (sekali)** dan konfirmasi:3pengantarPBO masuk course pilihan,2pengantar peminatan masuk bidang contoh. Ini koleksi asli yang singkat, bukan course lengkap. Tombol tidak menggandakan atau menimpa contoh pada login berikutnya.
-4. Pilih bab/bidang dan **Materi baru**. Pada tab **Tulis**, isi judul, sumber opsional dan Markdown. Heading, list, bold/italic, tabel dan fenced code tersedia. Isi kosong boleh disimpan sebagai Draf; judul tetap wajib.
-5. Buka **Pratinjau/Baca** untuk membaca. Kode ditampilkan sebagai teks; HTML/script raw tidak dieksekusi. Ringkasan ditulis manual sebagai heading `## Ringkasan`, bukan generator.
-6. **Sisipkan gambar lokal** membuka chooser PNG/JPEG. File didekode, dibatasi10MB/16juta piksel, lalu disalin ke folder assets akun. Ref relatif dimasukkan ke markdown. Gambar asal boleh dipindah setelah salinan berhasil; rumus menggunakan gambar. Aset hilang/ditolak menampilkan placeholder bernama.
-7. Isi **Catatan pribadi** yang terpisah dari markdown. Simpan materi & catatan atau tunggu autosave2detik. Status menunjukkan Belum tersimpan/Menyimpan/Tersimpan/Gagal menyimpan. Jika gagal, teks tetap ada; perbaiki masalah lalu klik Simpan lagi.
-8. Tandai **Selesai** secara manual. Membuka materi tidak menandainya selesai. Progres course memakai semua materi dari semua bab:2selesai dari2+8materi berarti20%, bukan50%. Empty collections berlabel Belum ada materi.
-9. Gunakan Naik/Turun untuk urutan bab/bidang/materi. Catatan dan reading revision tetap. Hapus memberi konfirmasi turunan yang ikut dihapus; aset tidak dibersihkan otomatis.
-10. Gulir saat membaca, pindah layar/logout/tutup aplikasi, lalu buka lagi dan **Lanjutkan Membaca**. Posisi dipulihkan setelah render. Jika isi berubah, kembali ke awal; materi dihapus menghasilkan penjelasan dan daftar yang masih tersedia.
-11. Meninggalkan editor yang belum tersimpan memunculkan **Simpan / Buang perubahan / Batal**, termasuk saat logout atau close. Simpan yang gagal tidak membawa Anda meninggalkan editor. Batal mempertahankan isian.
-12. Buat akun kedua untuk memeriksa materi/catatan/progres terpisah; jika menyalin contoh, salinannya dapat diedit secara independen.
-
-## Data M3 dan keamanan reader
-Schema SQLite otomatis naik1→2 secara atomik, tanpa reset akun/profil/semester/course M2. Tidak ada seed otomatis saat login/migrasi. Aset berada pada dataDirectory/assets/{SHA256-NIM}/{UUID}.png/jpg; database menyimpan referensi relatif. Cadangan manual perlu menyalin DB **dan** assets. Tidak ada cleanup aset agresif; gambar yang tidak dirujuk bisa tersisa.
-
-CommonMark+GFM tables tetap pustaka yang sama; tambahan runtime hanya javafx-web21.0.10. Script halaman WebView dimatikan dan tidak ada Java bridge. Gambar eksternal, file URL, traversal path dan aset akun lain ditolak. Link http/https dibuka di browser hanya setelah klik; koneksi internet mungkin diperlukan. Perintah internal pembacaan/restore scroll tidak pernah menerima kode dari markdown.
-
-Tes baru: LearningMigrationTest2, LearningPersistenceTest12 dan AssetsAndMarkdownTest8. Tes GUI M3 mencakup autosave, perubahan belum tersimpan, save failure, progres/note/resume/restart, aman dari script dan link eksplisit. Snapshot: target/verification/m3-learning.png. Seluruh database dan aset tes terisolasi. Dialog file chooser pemilihan gambar, usability, skala125%, jaringan fisik diputus dan paket komputer kedua belum diuji manual; decoder/copy/ownership/render gambar diuji otomatis.
+Stack terkunci Java21, JavaFX21.0.10, SQLite JDBC3.51.0.0, CommonMark0.24.0+GFM tables, JUnit5.12.2. Lisensi dan rujukan: [OpenJFX](https://openjfx.io/openjfx-docs/) GPLv2+Classpath Exception, [Maven Wrapper](https://maven.apache.org/tools/wrapper/) Apache2.0, [SQLite JDBC](https://github.com/xerial/sqlite-jdbc) Apache2.0, [CommonMark](https://github.com/commonmark/commonmark-java) BSD2-Clause, JUnit EPL2.0. Sertakan pemberitahuan lisensi saat distribusi M5.

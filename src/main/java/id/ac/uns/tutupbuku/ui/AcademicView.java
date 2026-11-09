@@ -61,7 +61,7 @@ final class AcademicView extends BorderPane {
         deleteSemester.setOnAction(event -> {
             Semester selected = semesters.getSelectionModel().getSelectedItem();
             if (selected == null) { semesterStatus.setText("Pilih semester yang akan dihapus."); return; }
-            if (!confirm(this, "Hapus semester?", "Hapus " + selected + " beserta mata kuliah, bab, materi kuliah, catatan dan status selesainya? Jika aktif, pilihan aktif dikosongkan. Semester lain dan peminatan tetap tersimpan; aset gambar tidak dibersihkan.")) return;
+            if (!confirm(this, "Hapus semester?", "Hapus " + selected + " beserta mata kuliah, komponen/nilai aktual, semua skenario, bab, materi kuliah, catatan dan status selesainya? Jika aktif, pilihan aktif dikosongkan. Semester lain dan peminatan tetap tersimpan; aset gambar tidak dibersihkan.")) return;
             tasks.run(semesterStatus, () -> { academic.deleteSemester(selected.id()); return null; }, ignored -> { semesterStatus.setText("Semester dan mata kuliah terkait dihapus."); refresh(); });
         });
         Button newCourse = button("new-course", "Mata kuliah baru");
@@ -71,7 +71,7 @@ final class AcademicView extends BorderPane {
         deleteCourse.setOnAction(event -> {
             Semester selectedSemester = semesters.getSelectionModel().getSelectedItem(); Course selected = courses.getSelectionModel().getSelectedItem();
             if (selected == null || selectedSemester == null) { courseStatus.setText("Pilih mata kuliah yang akan dihapus."); return; }
-            if (!confirm(this, "Hapus mata kuliah?", "Hapus mata kuliah " + selected.name() + " beserta bab, materi kuliah, catatan dan status selesainya? Mata kuliah lain dan peminatan tetap tersimpan; aset gambar tidak dibersihkan.")) return;
+            if (!confirm(this, "Hapus mata kuliah?", "Hapus mata kuliah " + selected.name() + " beserta komponen/nilai aktual, bab, materi kuliah, catatan dan status selesainya? Snapshot skenario lama tetap tersedia sebagai data historis dan perlu ditinjau. Mata kuliah lain dan peminatan tetap tersimpan; aset gambar tidak dibersihkan.")) return;
             tasks.run(courseStatus, () -> { academic.deleteCourse(selectedSemester.id(), selected.id()); return null; }, ignored -> { courseStatus.setText("Mata kuliah dihapus."); loadCourses(); });
         });
         Button reload = button("reload-academic", "Muat ulang daftar"); reload.setOnAction(event -> refresh());

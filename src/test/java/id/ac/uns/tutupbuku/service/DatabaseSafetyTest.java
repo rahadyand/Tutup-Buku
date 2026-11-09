@@ -43,7 +43,7 @@ class DatabaseSafetyTest {
         try (var database = new SqliteDatabase(directory.resolve("schema.db"))) {
             database.read(connection -> {
                 try (var statement = connection.createStatement()) {
-                    try (var result = statement.executeQuery("PRAGMA user_version")) { result.next(); assertEquals(2, result.getInt(1)); }
+                    try (var result = statement.executeQuery("PRAGMA user_version")) { result.next(); assertEquals(3, result.getInt(1)); }
                     try (var result = statement.executeQuery("PRAGMA foreign_keys")) { result.next(); assertEquals(1, result.getInt(1)); }
                 }
                 return null;

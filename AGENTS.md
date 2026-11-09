@@ -16,7 +16,7 @@
 - PBKDF2WithHmacSHA256 bawaan Java: 600.000 iterasi, salt acak 16 byte, hash 256 bit. Jangan menurunkan parameter untuk mempercepat tes. AuthService membersihkan buffer char[] setelah operasi; jangan mencetak password/hash.
 - UI meneruskan data ke service melalui worker UiTasks; pemilik query akademik berasal dari UserSession. Query matkul/semester wajib difilter pemilik bersama ID. Logout membuang sesi, bukan data.
 - Database default %LOCALAPPDATA%/TutupBuku/tutup-buku.db; TUTUP_BUKU_DATA_DIR untuk folder demo terisolasi. Semua tes memakai @TempDir atau in-memory, tidak boleh database default pengguna.
-- Skema memakai PRAGMA user_version (saat ini 2), FK aktif dan transaksi. Versi tak dikenal/korup/gagal simpan harus dilaporkan, tanpa reset atau database pengganti diam-diam. Migrasi berikutnya harus mempertahankan data.
+- Skema memakai PRAGMA user_version (saat ini 3), FK aktif dan transaksi. Versi tak dikenal/korup/gagal simpan harus dilaporkan, tanpa reset atau database pengganti diam-diam. Migrasi berikutnya harus mempertahankan data.
 - Konfirmasi sebelum hapus; simpan gagal mempertahankan form. Tahun akademik M2: YYYY/YYYY berurutan, nomor semester positif, prodi teks bebas dan boleh kosong sampai dilengkapi.
 
 - M3: materi hanya memiliki chapter_id ATAU field_id; query dan FK tetap dibatasi owner_nim. Catatan/completion terpisah dari markdown; course progress berdasarkan jumlah semua materi, bukan rata-rata bab.
@@ -25,3 +25,9 @@
 - Referensi gambar relatif assets/{SHA256-NIM}/{UUID}.png/jpg; validasi decode PNG/JPEG, ukuran≤10MB,≤16juta piksel, path dan realpath. Jangan hapus aset saat save/delete materi gagal/berhasil; cleanup aset belum dibuat.
 - Save materi+catatan atomik, CAS material revision/note revision; urutan tidak mengubah content revision. EditorDraft mempertahankan input/dirty state saat error; autosave2detik di antrean worker tunggal. Simpan/Buang/Batal berlaku saat berpindah/logout/menutup jendela.
 - Resume menyimpan rasio0–1 dan revisi; setelah render selesai, pulihkan rasio. Jika revisi berubah kembali ke0; ID terakhir dipertahankan setelah delete agar ada penjelasan. Waktu database UTC; tampilan materi WIB/Asia-Jakarta.
+
+- M4: aktual assessment_components/course_actual_grades terpisah dari snapshot scenario_courses/scenario_items. Solver tidak menulis nilai aktual. Mode DETAIL/DIRECT menyimpan inactive data.
+- Course.revision naik atomik pada edit komponen/aktual/order/SKS. Snapshot tidak otomatis direbase: review menjelaskan perubahan; refresh hanya draft sampai Simpan.
+- Scenario.version adalah CAS saat save header+children dalam transaksi. Duplikasi ID baru independen; historical course tanpa live FK sengaja bertahan setelah course delete, tetapi semester delete menghapus skenario.
+- RULE_VERSION=1 menyimpan versi aturan, berbeda dari user_version3. Skenario usang selalu berlabel historis; perbandingan memeriksa semester/set/revisi, bukan IP parsial.
+- Simpan nilai eksplisit, input gagal dipertahankan. GradeView guard digabung learning guard untuk tab/dashboard/logout/close. Uji GUI opsional -Dtest=MilestoneFourFxCheck; tiap kelas GUI perlu -DreuseForks=false.

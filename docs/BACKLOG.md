@@ -1,6 +1,6 @@
 # Backlog yang dipertahankan
 
-M2 akun/profil/semester/mata kuliah/SQLite dan M3 belajar lokal selesai. P0 yang belum dibuat **bukan fitur opsional**: CRUD nilai, skenario tersimpan, revisi, perbandingan/manual target IP (M4); penanganan gagal simpan, distribusi offline dan uji Windows (M5). Rincian lengkap di REQUIREMENTS.
+M1–M4 selesai: akun/akademik, belajar lokal, CRUD nilai, target, snapshot skenario/revisi/perbandingan/manual IP. Pemulihan gagal simpan sudah diuji per area. Gerbang produk yang masih wajib: integrasi akhir, distribusi offline dan pengujian Windows/pengguna (M5); bukan fitur opsional. Rincian di REQUIREMENTS.
 
 P1 bersyarat: F08G pengelompokan satu tingkat (hanya setelah engine dan skenario flat stabil), F14 pencarian judul, F15 backup/restore UI. Jika tak masuk sebelum pembekuan, tetap prioritas versi berikutnya.
 
@@ -17,6 +17,8 @@ Seluruh pengembangan PRD hlm24 dan pembatasan hlm4/19 dipertahankan:
 
 F16–F20 adalah kelompok ID P2 dari PRD; dokumen tidak memberi pemetaan satu-ke-satu tiap nomor. Jangan mengarang pemetaan rinci. Target banyak komponen dalam satu matkul tetap P0; yang ditunda adalah optimasi otomatis antar-matkul.
 
-M2 belum menambahkan ganti password atau recovery lokal; fitur akun lanjutan tetap backlog. Form penilaian, nilai aktual, draf assessment dan skenario tersimpan masih M4. Konfirmasi hapus M2 mencakup data akademik yang saat ini ada; M3 sudah memperluas cascade dan pesan konfirmasi untuk bab/materi/catatan/progres. M4 harus menambahkan turunan assessment/skenario secara aman.
+M2 belum menambahkan ganti password atau recovery lokal; fitur akun lanjutan tetap backlog. Form penilaian, nilai aktual, draf assessment dan skenario tersimpan sudah dibuat M4. Konfirmasi hapus M2 mencakup data akademik yang saat ini ada; M3 sudah memperluas cascade dan pesan konfirmasi untuk bab/materi/catatan/progres. M4 menambah cascade assessment/skenario: hapus semester menghapus skenarionya; hapus course mempertahankan snapshot historis berlabel usang.
 
 M3 selesai: Markdown/tabel/kode, gambar lokal terkelola, Ringkasan manual, progres, catatan, resume, dan5materi contoh. Yang tetap ditunda: cleanup/garbage collection aset, paket modul portabel melalui UI, full-text search/fitur P1/P2. Aset tidak dihapus otomatis ketika referensinya hilang agar save gagal tidak menghilangkan gambar. Tidak ada LaTeX, PDF, video tertanam, AI atau kuis pada M3.
+
+M4 selesai: flat saja; grouped weighting tetap P1 bersyarat. Selanjutnya M5 (hanya atas permintaan): distribusi Windows+runtime dan lisensi, uji komputer kedua, benchmark30course×20komponen, UI1366×768/125%, jaringan fisik diputus, usability3–5orang dan finalisasi bukti laporan. Ekspor/banding lebih dari2skenario, autosave nilai, undo/delete recovery dan penyuntingan bersamaan lintas beberapa instance aplikasi bukan lingkup M4. Simpan skenario bersifat eksplisit dan CAS menolak save versi lama.

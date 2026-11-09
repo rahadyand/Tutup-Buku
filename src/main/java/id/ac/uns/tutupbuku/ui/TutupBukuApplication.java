@@ -34,7 +34,7 @@ public final class TutupBukuApplication extends Application {
         root.setBottom(footer); tasks = new UiTasks(root);
         Button retry = button("retry-storage", "Coba lagi membuka penyimpanan"); retry.setOnAction(event -> initializeStorage());
         root.setCenter(form(heading("Membuka Tutup Buku"), note("Jika penyimpanan gagal dibuka, data tidak direset.\nLokasi: " + databaseFile.toAbsolutePath()), retry));
-        stage.setTitle("Tutup Buku — Milestone 3"); stage.setScene(new Scene(root, 1280, 820));
+        stage.setTitle("Tutup Buku — Milestone 4"); stage.setScene(new Scene(root, 1280, 820));
         stage.setMinWidth(900); stage.setMinHeight(620);
         stage.setOnCloseRequest(event -> {
             if (root.isDisable()) { event.consume(); status.setText("Tunggu proses selesai sebelum menutup aplikasi."); }
@@ -60,7 +60,8 @@ public final class TutupBukuApplication extends Application {
         root.setCenter(new AuthView(auth, tasks, profile -> {
             status.setText("");
             var learning = new LearningService(new SqliteLearningRepository(database), session, new AssetStore(databaseFile.toAbsolutePath().getParent()));
-            workspace = new WorkspaceView(auth, academic, learning, tasks, profile, link -> getHostServices().showDocument(link), () -> showLogin(auth, academic));
+            var planning = new GradePlanningService(new SqliteGradeRepository(database), session);
+            workspace = new WorkspaceView(auth, academic, learning, planning, tasks, profile, link -> getHostServices().showDocument(link), () -> showLogin(auth, academic));
             root.setCenter(workspace);
         }));
     }

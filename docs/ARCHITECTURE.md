@@ -1,8 +1,8 @@
-# Arsitektur Tutup Buku — M1, M2, M3
+# Arsitektur Tutup Buku — M1–M4
 
 ## Aliran sederhana
 
-UI membuat contoh data → memanggil service → menerima objek hasil → menampilkan teks. Service tidak mengenal JavaFX/database. M2 menambahkan SQLite repository untuk akun/akademik; engine M1 tidak diubah.
+UI menangkap input → service memvalidasi/mengoordinasikan → repository mengakses SQLite → hasil immutable ditampilkan. Service tidak mengenal JavaFX/SQL; engine perhitungan tetap murni. M2 menambahkan SQLite repository untuk akun/akademik; engine M1 tidak diubah.
 
 | Class | Tanggung jawab dan alasan |
 |---|---|
@@ -32,13 +32,13 @@ Input adalah desimal eksak. Pembagian seperti2/3 berulang; jika setiap normalisa
 
 Saran aman dibulatkan **ke atas2desimal** pada skala100. Ini pilihan ketelitian input M1, contoh56,666… menjadi56,67; 56,66 tetap69,996/C+. Saran adalah nilai normalisasi, bukan angka perolehan pada skala asal. Konversi ke skala perolehan jika nanti ditampilkan perlu ketelitian input yang eksplisit.
 
-Mustahil jika kebutuhan eksak>100: statusIMPOSSIBLE, raw x tetap tersedia dan saran kosong. Jika x≤0: saran0, target sudah aman dari kontribusi terkunci. Jika W=0: banding K dengan T tanpa pembagian. Bobot tidak sah dan input di luar rentang melempar IllegalArgumentException dengan pesan Indonesia. Draf boleh disimpan nantinya, tetapi tidak boleh dikalkulasi sampai struktur valid.
+Mustahil jika kebutuhan eksak>100: statusIMPOSSIBLE, raw x tetap tersedia dan saran kosong. Jika x≤0: saran0, target sudah aman dari kontribusi terkunci. Jika W=0: banding K dengan T tanpa pembagian. Bobot tidak sah dan input di luar rentang melempar IllegalArgumentException dengan pesan Indonesia. Draf boleh disimpan pada M4, tetapi tidak boleh dikalkulasi sampai struktur valid.
 
 IP memakai seluruh mata kuliah, termasuk SKS D/E. Missing/invalid SKS atau hasil efektif kosong mengeluarkan `GpaResult` tanpa angka/delta/keputusan target serta daftar masalah. E karena kehadiran boleh menyelesaikan hasil efektif meski nilai akademik belum lengkap (PRD GPA-01). Target dibanding melalui `weightedPoints − target×totalCredits`, sebelum pembagian, sehingga tampilan2,73 dari30/11 tetap belum mencapai target2,73. Perubahan kehadiran menghitung objek hasil baru; nilai asal pada input tidak berubah.
 
 ## Batas implementasi
 
-Secara historis, M1 belum mempunyai auth/persistence dan hanya menguji JDBC in-memory serta CommonMark sebagai smoke test. M2 sekarang mempunyai UserProfile, Semester, Course, AuthService/PBKDF2 dan SQLite dengan tes persistensi pada file sementara. M3 sekarang menambahkan Material/reader; Scenario tersimpan tetap M4. Smoke test CommonMark belum membuktikan keamanan reader end-to-end. JavaFX WebView21.0.10 ditambahkan pada M3. Tidak ada parser Markdown sendiri, FXML, ORM, server, koneksi cloud, AI atau paid service.
+Secara historis, M1 belum mempunyai auth/persistence dan hanya menguji JDBC in-memory serta CommonMark sebagai smoke test. M2 sekarang mempunyai UserProfile, Semester, Course, AuthService/PBKDF2 dan SQLite dengan tes persistensi pada file sementara. M3 menambahkan Material/reader; M4 menambahkan aktual dan Scenario tersimpan. Reader M3 diuji terpisah dengan tes keamanan/JavaFX. JavaFX WebView21.0.10 ditambahkan pada M3. Tidak ada parser Markdown sendiri, FXML, ORM, server, koneksi cloud, AI atau paid service.
 
 ## Aliran M2
 JavaFX AuthView/WorkspaceView/AcademicView → UiTasks worker → AuthService/AcademicService → interface repository → SqliteRepository → SqliteDatabase → SQLite lokal. Password hash berjalan pada worker yang sama; JavaFX thread hanya membaca input, menampilkan hasil dan dialog konfirmasi. Root form dinonaktifkan selama satu operasi untuk mencegah pergantian akun ketika request lama belum selesai.
@@ -55,7 +55,7 @@ JavaFX AuthView/WorkspaceView/AcademicView → UiTasks worker → AuthService/Ac
 | SqliteDatabase | Satu connection diserialkan; FK aktif, busy_timeout 3 detik, transaksi commit/rollback, initialization versi 1 dan pemeriksaan integritas. Tidak menghapus/reset saat error |
 | AppPaths | %LOCALAPPDATA%/TutupBuku/tutup-buku.db; fallback user.home/AppData/Local. TUTUP_BUKU_DATA_DIR untuk folder demo terisolasi |
 | UiTasks / FormSupport | Worker tunggal, callback JavaFX thread, status simpan/gagal, form tetap saat error, konfirmasi hapus dengan Batal sebagai default |
-| DashboardView | Shell dua pilar M1 dipindahkan ke dashboard setelah login. CalculationDemoView tetap contoh tetap, bukan data course yang tersimpan |
+| DashboardView | Shell dua pilar M1 dipindahkan ke dashboard setelah login. CalculationDemoView tetap fixture M1; runtime login memakai GradeView dengan course yang tersimpan |
 
 ## Skema versi 1
 - users: nim TEXT primary key; name/study_program; algorithm/iterations/salt/hash. NIM tidak menjadi angka dan tidak berisi semester.
@@ -111,3 +111,62 @@ HTML raw di-escape oleh CommonMark, bukan dibersihkan dengan regex buatan sendir
 Image nodes diubah menjadi dataURI dari PNG/JPEG pemilik yang telah lolos validasi, atau teks placeholder berisi referensi yang hilang/ditolak. Renderer menolak remote images, file://, traversal, dataURI buatan pengguna dan aset akun lain. CSP default-src none, img-src data, style-src inline milik aplikasi membatasi pemuatan resource. Link hanya http/https absolut tanpa credentials; DOM listener preventDefault lalu membuka browser melalui callback setelah klik. Formula memakai gambar, tanpa LaTeX/video/PDF/AI/kuis.
 
 File dipilih lewat chooser, didekode ImageIO, disalin ke assets/{SHA256-NIM}/{UUID}.png/jpg, lalu referensi relatif dimasukkan ke markdown. NIM tidak dipakai langsung sebagai path. Resolve memeriksa pola, pemilik, normalized path dan realpath. Tidak ada penghapusan aset setelah edit/delete materi; orphan files mungkin tersisa dan cleanup ditunda. Salin folder database dan assets bersama jika membuat cadangan manual; referensi tidak bergantung pada lokasi file gambar asli.
+
+## Aliran M4
+
+GradeView → ActualGradePane/ScenarioPane → UiTasks → GradePlanningService → GradeRepository/SqliteGradeRepository → SqliteDatabase. GradePlanningService menggabungkan data dengan **GradeCalculator, TargetPlanner, SemesterGpaService M1 yang tidak diubah**. UI hanya membaca/memformat input, mengatur form dan dialog. Tidak ada SQL atau rumus solver/IP di handler.
+
+| Class M4 | Peran |
+|---|---|
+| EvaluationMode | DETAIL atau DIRECT; tepat satu mode aktif |
+| AssessmentComponent | UUID, nama, bobot, perolehan Optional, maksimum Optional, urutan. Maksimum boleh disiapkan sebelum aktual; item() mengadaptasi ke AssessmentItem M1 |
+| ActualCourse | Course terkini, mode/huruf aktual, daftar komponen immutable; tidak mempunyai asumsi solver |
+| ScenarioCourse | Salinan ActualCourse sebagai basis + mode aktif skenario, estimasi huruf, target angka/huruf, kehadiran dan map kunci normalisasi |
+| SemesterScenario | Nama, semester, target IP, version untuk CAS, ruleVersion, waktu UTC dan daftar snapshot course |
+| ScenarioReview | Perubahan struktur/revisi dibanding data live; dipakai penanda usang dan dialog review |
+| ScenarioEvaluation | Hasil per-course dengan TargetPlan/GradeResult serta satu GpaResult lengkap dan review |
+| GradePlanningService | CRUD melalui repository, evaluasi aktual/skenario, perbandingan basis, duplikasi, deteksi perubahan, refresh draft |
+| SqliteGradeRepository | SQL berparameter dibatasi owner+ID; mutasi aktual + revision atomik, save header/children snapshot atomik dan CAS |
+| GradeSchema | Migrasi aditif 2→3 dalam transaksi dan validasi kolom |
+| GradeView / ActualGradePane | Pemilihan semester, editor komponen/urutan/skor earned-max, mode/huruf aktual dan konfirmasi kehadiran |
+| ScenarioPane / GradeForms | Form snapshot/asumsi, kunci, target, hasil IP, review/refresh, CRUD/duplikasi/perbandingan, Save/Discard/Cancel |
+
+### Aktual, asumsi dan hasil
+
+ActualCourse dibaca dari courses, assessment_components, course_actual_grades. Nilai kosong menghasilkan Optional.empty, bukan0. Input earned/max dipertahankan, normalisasi memakai Score M1. Total bobot salah boleh disimpan; hasil detail menjadi draf belum sah. Mode DIRECT tidak memerlukan struktur detail100%; mode DETAIL tidak menghitung huruf aktual yang tersimpan sebagai data mode tidak aktif.
+
+Evaluasi skenario detail menjalankan TargetPlanner pada snapshot actual + lockedScores, lalu menggabungkan **map sementara** kunci dan saran untuk GradeCalculator. Tidak ada perintah save aktual dalam jalur ini. Saran >100 tidak dibuat: status mustahil/raw kebutuhan tetap terlihat; hasil akademik tidak lengkap kecuali ada effective E karena kehadiran. W=0 memakai status engine, tanpa pembagian nol.
+
+Mode huruf skenario memakai huruf aktual pada snapshot bila tersedia; jika tidak, memakai estimatedLetter milik skenario. Tidak pernah mengubah huruf menjadi skor angka rekaan. Mengganti mode tidak menghapus data mode lain. Saran/kunci detail tidak dihitung dalam mode huruf.
+
+Attendance berisi met/confirmed. Perubahan skenario dari data aktual adalah asumsi belum terverifikasi. Override E mempertahankan underlyingLetter/underlyingScore. Jika semua grade dan kehadiran telah aktual/terverifikasi, IP berlabel Berdasarkan Input Aktual; selain itu IP Simulasi. IP historis selalu diberi penanda snapshot usang.
+
+### Skema versi3
+
+- assessment_components: id UUID, owner_nim/course_id composite FK→courses, nama/bobot/earned/maximum/position; nilai desimal TEXT.
+- course_actual_grades: satu mode aktif dan Optional letter per owner/course; kedua mode tidak saling menghapus.
+- grade_scenarios: header owner/semester/name/target_gpa/version/rule_version/updated_at; FK owner+semester.
+- scenario_courses: snapshot nama/kode/SKS/revision/attendance, mode/huruf aktual, mode/estimasi/target/attendance skenario.
+- scenario_items: salinan komponen dan earned/max, locked_score terpisah serta suggested_score hasil engine saat save.
+
+Snapshot course **tidak mempunyai FK ke course live**: course yang dihapus tetap terbaca historis. FK snapshot→scenario dan scenario→semester tetap CASCADE. Hapus course menghapus aktual+materi turunan dan menjadikan skenario usang; hapus semester menghapus seluruh skenario semester setelah konfirmasi. Tidak ada cleanup assets.
+
+Snapshot disimpan sebagai tabel relasional agar mudah diinspeksi dan tidak memerlukan parser/serializer JSON baru. GradeRepository memeriksa course baru berasal dari semester/pemilik yang sesuai; snapshot historis yang diduplikasi harus berasal dari data tersimpan pemilik yang sama.
+
+### Revisi dan review eksplisit
+
+Setiap edit aktual, komponen/bobot/urutan atau course/SKS menaikkan courses.revision. Skenario menyimpan revisi basis dan set ID course. review membandingkan set/revisi: course ditambah/dihapus, SKS, identitas, komponen/nilai atau kehadiran berubah. Menyimpan ulang data yang sama boleh tetap menandai revisi baru (pilihan konservatif).
+
+Open/Hitung tidak mengganti basis. Dialog Tinjau/perbarui menjelaskan perubahan. refresh membuat **draft baru di memori** dengan basis terkini, mempertahankan mode/target dan kunci pada komponen yang masih unknown dengan bobot positif, membuang kunci yang kini aktual/terhapus. Estimasi huruf dibuang ketika huruf aktual baru tersedia. Course baru ditambah, course dihapus dikeluarkan. Pengguna meninjau lalu Simpan; refresh sendiri tidak menulis database.
+
+Duplikasi membuat header dan baris snapshot baru dengan ID independen. Save existing memakai WHERE id+owner+expected version, lalu mengganti children dalam satu transaksi. Versi berubah/gagal insert menyebabkan rollback header dan children. Draft/form tetap agar retry tidak kehilangan input; konflik versi meminta buka ulang.
+
+Target IP0–4 hanya dibandingkan manual. Perbandingan dua snapshot tersimpan menunjukkan union course, SKS kedua sisi, huruf efektif dan IP. Semester/set/revisi/aturan berbeda atau usang ditandai, tanpa mengganti salah satu basis. Tidak ada optimasi antar-course atau IPK.
+
+### Batas dan pemulihan
+
+Data milik akun berasal dari UserSession, tidak dari field UI. Semua mutasi memakai owner dan ID; FK menguatkan isolasi. UiTasks menjaga satu worker dan memblok pergantian sesi saat operasi. Simpan gagal mempertahankan form; navigasi dengan pilihan Simpan yang gagal ditahan. Form aktual dan skenario tetap terpisah ketika berpindah subtab.
+
+Migrasi2→3 hanya membuat tabel/index baru, menetapkan user_version3 di transaksi yang sama. Collision/gagal DDL rollback ke2; tidak mereset akun, belajar, catatan/progres atau mengganti database. RULE_VERSION=1 memisahkan versi rumus dari versi skema agar perubahan kebijakan berikutnya dapat ditandai.
+
+Grouped weighting, backup/restore UI, IPK, optimasi kombinasi, PDF, AI, kuis, packaging/benchmark/usability tetap di backlog. M4 tidak menambah dependency aplikasi; formatter lokal hanya alat pengembangan pada .tools yang diabaikan.
