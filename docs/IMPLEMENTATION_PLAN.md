@@ -8,10 +8,10 @@ Tenggat 8 Desember 2026. Jadwal berikut target kerja satu pengembang; rekan meny
 | M2 Akun & akademik lokal (selesai) | 11–17 Nov | SQLite schema/repository, PBKDF2 bersalt+parameter, akun terisolasi, profil, semester aktif, CRUD mata kuliah tanpa assessment; AT01–04 dan restart |
 | M3 Belajar lokal (selesai) | 18–21 Nov | Jalur kuliah/peminatan, CommonMark+table reader/editor aman, salin aset, konten contoh, selesai/catatan/resume; AT05–07 offline/restart |
 | M4 Nilai & skenario (selesai) | 22–30 Nov | Form flat, huruf/detail, aktual vs asumsi, kehadiran, simpan/gandakan/revisi/banding skenario, IP lengkap dan pembanding manual; AT08–12 terintegrasi |
-| M5 Integrasi & distribusi | 1–5 Des | Error simpan AT14, semua P0 offline AT13, UI1366×768/125%, ukur30×20<1detik, paket jpackage runtime Windows, komputer kedua, 3–5 uji pengguna dan bukti |
+| M5 Kandidat lokal (selesai; gerbang lapangan pending) | 1–5 Des | Error simpan AT14, semua P0 offline AT13, UI1366×768/125%, ukur30×20<1detik, paket jpackage runtime Windows, komputer kedua, 3–5 uji pengguna dan bukti |
 | Pembekuan & submission | 6–8 Des | Bekukan fitur, latihan demo7–10menit, sinkron laporan/PPT dengan hasil nyata, source+paket+petunjuk+cadangan |
 
-M1 berhenti setelah build/test dan peluncuran shell diverifikasi. M1–M4 telah diimplementasikan berurutan atas permintaan pengguna; pekerjaan berhenti setelah M4. M3 dan M4 sama penting untuk produk final; urutan dipakai agar fondasi data tersedia. F08G/F14/F15 hanya setelah seluruh P0 stabil dan masih ada waktu, jika tidak pindahkan ke versi berikutnya.
+M1 berhenti setelah build/test dan peluncuran shell diverifikasi. M1–M4 telah diimplementasikan berurutan atas permintaan pengguna; pekerjaan berhenti setelah M5. M3 dan M4 sama penting untuk produk final; urutan dipakai agar fondasi data tersedia. F08G/F14/F15 hanya setelah seluruh P0 stabil dan masih ada waktu, jika tidak pindahkan ke versi berikutnya.
 
 ## Bentuk kode M1
 
@@ -35,4 +35,6 @@ M3 di-checkpoint sebelum M4: 04d580d61473596f9a39f95dafee21c8a6265dcf, main; pus
 ## Hasil M4
 Editor flat/aktual, draft bobot, mode huruf/detail, target multi-komponen, snapshot skenario/revisi/review/refresh/duplikasi/perbandingan dan IP lengkap telah diimplementasikan. Skema naik2→3 tanpa reset M2/M3; engine M1 tetap. Pengujian service/persistensi/migrasi dan JavaFX dicatat pada DEVELOPMENT_STATUS. Commit/push M4 hanya setelah verifikasi akhir sesuai permintaan pengguna.
 
-Milestone berikutnya **M5 integrasi dan distribusi**: uji1366×768/125%, benchmark30×20, paket jpackage beserta lisensi, komputer kedua/offline fisik, usability3–5mahasiswa dan bukti laporan. Belum dimulai; jangan lanjut otomatis.
+M5 telah diminta dan menghasilkan kandidat0.5.0-rc1: integrasi/guard/default aktif, reviewmulti-course, tata letak, benchmark30×20, app-imageZIP ber-runtime beserta lisensi/panduan, audit dan uji EXE ekstraksi/restart. Rincian bukti pada DEVELOPMENT_STATUS dan INTEGRATION_REVIEW.
+
+Gerbang lapangan masih membutuhkan pengguna: komputer Windows kedua, offline fisik, Windows125% nyata dan usability3–5mahasiswa. Ini penerimaan kandidat yang sama, bukan izin memulai fitur baru. Setelah pengguna meninjau hasil, perbaiki hanya masalah yang terkonfirmasi. Laporan/PPT akhir tidak ditulis otomatis; latihan demo9menit tersedia di DEMO_SCRIPT.

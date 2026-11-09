@@ -38,3 +38,6 @@ credentials*.json
 
 # Aset pengguna jika folder data diarahkan ke root proyek; aset source di resources tetap dapat dilacak.
 /assets/
+
+# App-image/ZIP kandidat rilis disimpan lokal, tidak masuk riwayat source.
+/releases/

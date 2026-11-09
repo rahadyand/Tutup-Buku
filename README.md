@@ -1,8 +1,8 @@
-# Tutup Buku — Milestone 4
+# Tutup Buku — Kandidat Windows 0.5.0-rc1
 
 Aplikasi desktop Java untuk final project PBO semester 3, mahasiswa Fakultas Teknologi Informasi dan Sains Data UNS. Tenggat produk: **8 Desember 2026**. UI dan dokumentasi berbahasa Indonesia.
 
-M1–M4 menyediakan akun lokal, profil/semester/mata kuliah, materi Markdown dan **nilai aktual, target banyak komponen, skenario tersimpan serta IP semester**. Dua area dashboard tetap **Modul Belajar** dan **Simulasi Nilai**. Tidak ada layanan cloud/AI.
+M1–M5 menyediakan akun lokal, profil/semester/mata kuliah, materi Markdown dan **nilai aktual, target banyak komponen, skenario tersimpan serta IP semester**. Dua area dashboard tetap **Modul Belajar** dan **Simulasi Nilai**. Tidak ada layanan cloud/AI.
 
 ## Setup, build, test dan run Windows
 
@@ -20,7 +20,7 @@ javac -version
 .\mvnw.cmd javafx:run
 ```
 
-Sesuaikan JAVA_HOME dengan lokasi JDK. Build pertama memerlukan internet untuk Maven/dependensi; alur inti aplikasi bekerja lokal. Hasil build `target/tutup-buku-0.4.0-SNAPSHOT.jar` belum paket mandiri/fat JAR; jalankan melalui **javafx:run**, bukan java -jar. Paket Windows ber-runtime dan komputer kedua adalah M5.
+Sesuaikan JAVA_HOME dengan lokasi JDK. Build pertama memerlukan internet untuk Maven/dependensi; alur inti aplikasi bekerja lokal. Hasil build `target/tutup-buku-0.5.0-rc1.jar` belum paket mandiri/fat JAR; jalankan melalui **javafx:run**, bukan java -jar. Paket Windows ber-runtime tersedia melalui script M5; pengujian komputer kedua tetap perlu hasil pengguna.
 
 Cache sesi pengembangan ini berada di proyek:
 
@@ -98,12 +98,12 @@ Snapshot yang usang tetap dapat dibaca/digandakan sebagai historis. Refresh meng
 ```powershell
 .\mvnw.cmd clean verify
 .\mvnw.cmd '-Dtest=GradePlanningPersistenceTest,GradeMigrationTest' test
-.\mvnw.cmd '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck' '-DreuseForks=false' verify
+.\mvnw.cmd '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck,MilestoneFiveFxCheck' '-DreuseForks=false' verify
 ```
 
-Tambahkan parameter cache di atas jika memakai cache sesi ini. Default **137 tes**:118 regresi M1–M3 +19 M4 (17 persistensi/perencanaan,2migrasi). GUI opt-in **6 tes**; fork terpisah karena tiap kelas menutup toolkit. Hasil final dan perintah persis dicatat pada [status pengembangan](docs/DEVELOPMENT_STATUS.md). Laporan di target/surefire-reports; gambar di target/verification. Tes GUI meluncurkan aplikasi asli dengan SQLite sementara, termasuk kegagalan simpan yang sengaja disisipkan.
+Tambahkan parameter cache di atas jika memakai cache sesi ini. Default **138 tes**:137 baseline +1regresi verifikasi kehadiran. GUI opt-in **7 tes**; fork terpisah karena tiap kelas menutup toolkit. Hasil final dan perintah persis dicatat pada [status pengembangan](docs/DEVELOPMENT_STATUS.md). Laporan di target/surefire-reports; gambar di target/verification. Tes GUI meluncurkan aplikasi asli dengan SQLite sementara, termasuk kegagalan simpan yang sengaja disisipkan.
 
-Pemeriksaan otomatis dan tinjauan gambar bukan uji usability mahasiswa. Skala125%, komputer kedua, jaringan fisik diputus, benchmark30×20 dan paket mandiri belum diverifikasi. Warning JavaFX unnamed module/unchecked cast pada kode tes dicatat; bukan kegagalan tes.
+Pemeriksaan otomatis dan tinjauan gambar bukan uji usability mahasiswa. Ukuran jendela target1366×768 dan skala proses JavaFX125% diperiksa tanpa mengubah Windows; benchmark30×20 diukur dan paket mandiri diuji terpisah. Komputer kedua, skala Windows125% nyata, jaringan fisik diputus dan usability masih perlu hasil pengguna. Warning JavaFX unnamed module/unchecked cast pada kode tes dicatat; bukan kegagalan tes.
 
 ## Membaca kode
 
@@ -124,6 +124,41 @@ Pemeriksaan otomatis dan tinjauan gambar bukan uji usability mahasiswa. Skala125
 - [Status historis M1](docs/MILESTONE_1_STATUS.md), [M2](docs/MILESTONE_2_STATUS.md), [M3](docs/MILESTONE_3_STATUS.md)
 - [Konvensi proyek](AGENTS.md)
 
-Checkpoint M3: [04d580d](https://github.com/rahadyand/Tutup-Buku/commit/04d580d61473596f9a39f95dafee21c8a6265dcf), main. M4 diminta untuk di-commit/push setelah lolos gerbang verifikasi; status akhir tercatat di DEVELOPMENT_STATUS dan Git. Berikutnya **M5 integrasi, distribusi Windows dan uji pengguna**, dimulai hanya atas permintaan. Starter lama `src/App.java` dan salinan konfigurasi awal tetap dipertahankan.
+Checkpoint M4: [cf37dbe](https://github.com/rahadyand/Tutup-Buku/commit/cf37dbea4e0de35b729808ef130e21c065c9f04a). Checkpoint M3: [04d580d](https://github.com/rahadyand/Tutup-Buku/commit/04d580d61473596f9a39f95dafee21c8a6265dcf), main. M4 sudah di-push dan hash baseline diperiksa sebelum M5; checkpoint M5 dilakukan setelah gerbang lokal lulus, dengan hasil pada DEVELOPMENT_STATUS/Git. M5 menyiapkan kandidat lokal dan lembar penerimaan; tidak melanjutkan fitur baru atau laporan akademik otomatis. Starter lama `src/App.java` dan salinan konfigurasi awal tetap dipertahankan.
 
 Stack terkunci Java21, JavaFX21.0.10, SQLite JDBC3.51.0.0, CommonMark0.24.0+GFM tables, JUnit5.12.2. Lisensi dan rujukan: [OpenJFX](https://openjfx.io/openjfx-docs/) GPLv2+Classpath Exception, [Maven Wrapper](https://maven.apache.org/tools/wrapper/) Apache2.0, [SQLite JDBC](https://github.com/xerial/sqlite-jdbc) Apache2.0, [CommonMark](https://github.com/commonmark/commonmark-java) BSD2-Clause, JUnit EPL2.0. Sertakan pemberitahuan lisensi saat distribusi M5.
+
+## Paket Windows M5
+
+Penerima mengekstrak seluruh ZIP lalu membuka **TutupBuku/TutupBuku.exe**. Java, Maven dan IDE tidak diperlukan. Data normal tetap di %LOCALAPPDATA%/TutupBuku; folder paket boleh diganti tanpa memindahkan data. Override TUTUP_BUKU_DATA_DIR tetap untuk demo terisolasi.
+
+[Petunjuk pengguna](docs/USER_GUIDE.md), [catatan rilis/batas](docs/RELEASE_NOTES.md), [checklist penerimaan](docs/RELEASE_ACCEPTANCE.md), [demo9menit](docs/DEMO_SCRIPT.md), [inventaris lisensi](docs/THIRD_PARTY_NOTICES.md) dan [tinjauan integrasi](docs/INTEGRATION_REVIEW.md).
+
+Untuk menghasilkan paket dari source pada Windows x64:
+```powershell
+.\scripts\Prepare-PackagingTools.ps1
+.\scripts\Build-Windows.ps1
+# Setelah cache terisi, build berikutnya dapat tanpa unduhan:
+.\scripts\Build-Windows.ps1 -Offline
+```
+
+Script mengunci Temurin21.0.13+9 dan SDK OpenJFX21.0.10 beserta SHA256 pada .tools, tidak mengubah Java global. Internet hanya diperlukan untuk persiapan alat/dependency pertama. Runtime Temurin dipakai untuk distribusi; Java aplikasi tetap21. Perbedaan patch dari OracleJDK21.0.12 baseline terdokumentasi dan seluruh regresi diulang pada Temurin.
+
+Build-Windows memakai profil Maven windows-package (dependency-plugin3.8.1, runtime scope), menjalankan verify, membuat runtime jlink dan app-image jpackage, menyalin guide/legal, mengaudit file, lalu ZIP+checksum. Folder keluaran **releases/TutupBuku-0.5.0-rc1-TANGGAL-WAKTU/** selalu baru, tidak menghapus/menimpa rilis sebelumnya. releases/ diabaikan Git. Tidak ada upload GitHub Release otomatis.
+
+`-SkipBuild` hanya untuk mengemas ulang dokumentasi/source yang sudah diverifikasi dengan JAR/runtime-libs yang tersedia; bukan pengganti tes. Lihat BUILD-INFO dan SHA256SUMS dalam image, serta .zip.sha256 di sebelah ZIP. Sumber/tes/JDK pengembang/cache/database/aset pengguna tidak dibawa.
+
+Uji khusus:
+```powershell
+.\mvnw.cmd '-Dtest=CalculationPerformanceCheck' test
+.\mvnw.cmd '-Dtest=MilestoneFiveFxCheck' '-DargLine=-Dglass.win.uiScale=125%' verify
+```
+Tambahkan JAVA_HOME/MAVEN_USER_HOME dan parameter cache seperti bagian setup. Skala di atas berlaku pada proses tes, bukan pengaturan layar global. Bukti terakhir, lokasi artefak dan kondisi pemeriksaan launcher dicatat di DEVELOPMENT_STATUS.
+
+Audit ulang ZIP tanpa mengubah paket:
+```powershell
+.\scripts\Verify-WindowsPackage.ps1 -Zip 'releases\NAMA_FOLDER\TutupBuku-0.5.0-rc1-windows-x64.zip'
+# Tambahkan -Launch untuk menjalankan EXE ekstraksi pada data sementara baru,
+# JAVA_HOME/MAVEN_HOME kosong dan PATH terbatas. Tutup jendela agar script selesai.
+```
+Script mengekstrak ke folder berspasi baru, memeriksa manifest hash/isi/JAR/runtime. Jangan menganggap audit ini menggantikan pengujian GUI, jaringan fisik atau komputer kedua.

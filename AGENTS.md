@@ -31,3 +31,8 @@
 - Scenario.version adalah CAS saat save header+children dalam transaksi. Duplikasi ID baru independen; historical course tanpa live FK sengaja bertahan setelah course delete, tetapi semester delete menghapus skenario.
 - RULE_VERSION=1 menyimpan versi aturan, berbeda dari user_version3. Skenario usang selalu berlabel historis; perbandingan memeriksa semester/set/revisi, bukan IP parsial.
 - Simpan nilai eksplisit, input gagal dipertahankan. GradeView guard digabung learning guard untuk tab/dashboard/logout/close. Uji GUI opsional -Dtest=MilestoneFourFxCheck; tiap kelas GUI perlu -DreuseForks=false.
+
+- M5 kandidat0.5.0-rc1: Launcher main biasa untuk jpackage/classpath; Java21 tetap. Runtime distribusi Temurin21.0.13+9 pinned+SHA256 di scripts/Prepare-PackagingTools.ps1, bukan Java global.
+- scripts/Build-Windows.ps1 membuat folder releases bertimestamp baru dan tidak menghapus artefak lama. Jangan commit ZIP/runtime, jangan publikasi GitHub Release otomatis. Sertakan guide/legal/hash.
+- AcademicService menjaga konfirmasi kehadiran saat metadata saja berubah. Guard profil/akademik digabung guard M3/M4; kegagalan save tidak meneruskan navigasi.
+- Uji skala lewat -Dglass.win.uiScale=125% hanya proses tes; jangan ubah skala/resolusi/jaringan global. Komputer kedua/offline fisik/usability harus dilabeli pending sampai hasil nyata ada.

@@ -19,6 +19,12 @@ public record ActualCourse(
         return components.stream().map(AssessmentComponent::item).toList();
     }
 
+    public java.math.BigDecimal totalWeight() {
+        return components.stream()
+                .map(AssessmentComponent::weight)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
     @Override
     public String toString() {
         return course.toString();

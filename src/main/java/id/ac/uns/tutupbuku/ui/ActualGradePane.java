@@ -83,7 +83,18 @@ final class ActualGradePane extends BorderPane {
                             (o, a, b) -> {
                                 if (!filling) componentDirty = true;
                             });
-        mode.valueProperty().addListener((o, a, b) -> markSettings());
+        mode.valueProperty()
+                .addListener(
+                        (o, a, b) -> {
+                            if (filling || a == null || b == null) return;
+                            if (!GradeForms.confirmMode(this, b)) {
+                                filling = true;
+                                mode.setValue(a);
+                                filling = false;
+                                return;
+                            }
+                            markSettings();
+                        });
         letter.valueProperty().addListener((o, a, b) -> markSettings());
         attendance.selectedProperty().addListener((o, a, b) -> markSettings());
         confirmed.selectedProperty().addListener((o, a, b) -> markSettings());
@@ -118,7 +129,7 @@ final class ActualGradePane extends BorderPane {
                                             this,
                                             "Hapus komponen?",
                                             "Nilai aktual komponen ikut dihapus. Snapshot skenario"
-                                                + " lama dipertahankan dan perlu ditinjau."))
+                                                    + " lama dipertahankan dan perlu ditinjau."))
                                         return;
                                     long course = current.course().id();
                                     String id = selected.id();
@@ -137,8 +148,8 @@ final class ActualGradePane extends BorderPane {
                         heading("Nilai aktual"),
                         note(
                                 "Masukkan hasil yang benar-benar diperoleh. Asumsi dan target"
-                                    + " dikelola pada Skenario. Mode yang tidak aktif tetap"
-                                    + " disimpan."),
+                                        + " dikelola pada Skenario. Mode yang tidak aktif tetap"
+                                        + " disimpan."),
                         field("Mode penilaian aktif", mode),
                         field("Huruf aktual (alternatif detail)", letter),
                         clearLetter,
@@ -149,9 +160,8 @@ final class ActualGradePane extends BorderPane {
                         heading("Komponen bobot rata / flat"),
                         note(
                                 "Nama bebas; UTS/UAS tidak wajib. Draf boleh disimpan, tetapi bobot"
-                                    + " harus tepat 100% untuk hasil akhir. Bobot 0% bersifat"
-                                    + " informasi."),
-                        total,
+                                        + " harus tepat 100% untuk hasil akhir. Bobot 0% bersifat"
+                                        + " informasi."),
                         components,
                         new FlowPane(6, 6, newItem, delete, up, down),
                         field("Nama komponen", name),
@@ -163,6 +173,8 @@ final class ActualGradePane extends BorderPane {
         SplitPane split = new SplitPane(courses, scroll(body));
         split.setDividerPositions(0.25);
         setCenter(split);
+        total.setPadding(new javafx.geometry.Insets(6));
+        setTop(total);
     }
 
     void load(long semester, List<ActualCourse> values) {

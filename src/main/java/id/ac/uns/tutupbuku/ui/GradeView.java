@@ -19,6 +19,11 @@ final class GradeView extends BorderPane {
     private final ActualGradePane actual;
     private final ScenarioPane scenarios;
     private boolean filling;
+    private Long preferredSemester;
+
+    void preferSemester(java.util.Optional<Long> id) {
+        preferredSemester = id.orElse(null);
+    }
 
     GradeView(AcademicService academic, GradePlanningService planning, UiTasks tasks) {
         this.academic = academic;
@@ -29,13 +34,16 @@ final class GradeView extends BorderPane {
         semesters.setId("grade-semester");
         Button refresh = button("grade-refresh", "Muat ulang data");
         refresh.setOnAction(e -> guard(this::refresh));
-        setTop(
-                form(
-                        new FlowPane(10, 6, field("Semester perencanaan", semesters), refresh),
+        VBox header =
+                new VBox(
+                        6,
+                        new FlowPane(10, 6, new Label("Semester perencanaan"), semesters, refresh),
                         note(
                                 "Nilai aktual dan asumsi skenario tersimpan terpisah. IP hanya"
-                                    + " dihitung setelah semua mata kuliah memiliki hasil"
-                                    + " efektif.")));
+                                        + " dihitung setelah semua mata kuliah memiliki hasil"
+                                        + " efektif."));
+        header.setPadding(new javafx.geometry.Insets(8));
+        setTop(header);
         Tab actualTab = new Tab("Komponen & aktual", actual),
                 scenarioTab = new Tab("Skenario, target & IP", scenarios);
         TabPane tabs = new TabPane(actualTab, scenarioTab);
@@ -64,7 +72,10 @@ final class GradeView extends BorderPane {
     }
 
     void refresh() {
-        Long id = semesters.getValue() == null ? null : semesters.getValue().id();
+        Long id =
+                semesters.getValue() == null
+                        ? preferredSemester
+                        : Long.valueOf(semesters.getValue().id());
         tasks.run(
                 status,
                 academic::semesters,

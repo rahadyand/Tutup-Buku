@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>id.ac.uns</groupId>
     <artifactId>tutup-buku</artifactId>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.5.0-rc1</version>
     <name>Tutup Buku</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -50,6 +50,7 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId><artifactId>maven-jar-plugin</artifactId><version>3.4.2</version>
+                <configuration><archive><manifest><mainClass>id.ac.uns.tutupbuku.ui.Launcher</mainClass><addClasspath>true</addClasspath></manifest></archive></configuration>
             </plugin>
             <plugin>
                 <groupId>org.openjfx</groupId><artifactId>javafx-maven-plugin</artifactId><version>0.0.8</version>
@@ -57,4 +58,15 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>windows-package</id>
+            <build><plugins><plugin>
+                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-dependency-plugin</artifactId><version>3.8.1</version>
+                <executions><execution><id>runtime-libraries</id><phase>package</phase><goals><goal>copy-dependencies</goal></goals>
+                    <configuration><includeScope>runtime</includeScope><outputDirectory>${project.build.directory}/runtime-libs</outputDirectory></configuration>
+                </execution></executions>
+            </plugin></plugins></build>
+        </profile>
+    </profiles>
 </project>

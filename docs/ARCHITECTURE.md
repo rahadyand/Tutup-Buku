@@ -1,4 +1,4 @@
-# Arsitektur Tutup Buku — M1–M4
+# Arsitektur Tutup Buku — M1–M5
 
 ## Aliran sederhana
 
@@ -170,3 +170,19 @@ Data milik akun berasal dari UserSession, tidak dari field UI. Semua mutasi mema
 Migrasi2→3 hanya membuat tabel/index baru, menetapkan user_version3 di transaksi yang sama. Collision/gagal DDL rollback ke2; tidak mereset akun, belajar, catatan/progres atau mengganti database. RULE_VERSION=1 memisahkan versi rumus dari versi skema agar perubahan kebijakan berikutnya dapat ditandai.
 
 Grouped weighting, backup/restore UI, IPK, optimasi kombinasi, PDF, AI, kuis, packaging/benchmark/usability tetap di backlog. M4 tidak menambah dependency aplikasi; formatter lokal hanya alat pengembangan pada .tools yang diabaikan.
+
+## Integrasi dan distribusi M5
+
+Rumus/skema3 tetap. AcademicService mempertahankan attendance.confirmed ketika hanya metadata berubah dan met sama. AcademicView melindungi dua form secara terpisah; WorkspaceView menggabungkan guard akademik/profil dengan guard materi/nilai. Callback Simpan baru meneruskan navigasi setelah operasi berhasil. Default semester belajar/nilai menggunakan referensi aktif bila belum ada pilihan tampilan sebelumnya.
+
+ScenarioPane mempertahankan course terpilih setelah save/refresh. GradeForms hanya memformat sumber/kelulusan/pendekatan selisih; keputusan nilai tetap engine. Perubahan mode mendapat dialog penjelasan hasil yang dihitung, data inactive tetap. Jumlah bobot/konteks tidak tenggelam bersama form panjang.
+
+MaterialEditor menempatkan note pada panel yang dapat dilipat; completion/status tetap terlihat. Sidebar belajar dapat digulir. Ukuran awal dibatasi visual bounds JavaFX dalam logical pixels, tanpa mengubah DPI Windows. Tes memaksa skala proses125% saja dan menargetkan ukuran jendela fisik1366×768.
+
+Launcher adalah main biasa yang memanggil Application.launch; ini memungkinkan jpackage nonmodular/classpath tanpa pemeriksaan main subclass JavaFX oleh launcher JDK. Dependency JAR tetap resmi, tidak dibuat fat JAR atau dimodifikasi. Manifest mencatat main/classpath.
+
+scripts/Prepare-PackagingTools.ps1 mengambil arsip pinned+SHA256; Build-Windows.ps1 menjalankan verify+runtime dependency copy melalui profil Maven windows-package, jlink modul JDK yang diperlukan dan jpackage app-image. Temurin21.0.13+9 portable digunakan untuk alat/runtime, tanpa instalasi global. Runtime legal dan legal OpenJFX/pustaka disalin, bukan mengemas JDK pengembang penuh. Tidak ada dependency test/framework baru pada aplikasi.
+
+Setiap rilis memakai folder timestamp baru; ZIP/generated runtime di releases diabaikan Git. Staging hanya menerima project JAR dan13JAR runtime yang dikenali, kemudian guide/legal/hash. Database/assets/Git/cache/secrets/development source tidak disalin dari workspace. Data selalu AppPaths di luar image; proses launcher diuji dengan JAVA_HOME/MAVEN_HOME kosong, PATH terbatas dan override demo.
+
+FxTestSupport hanya utilitas tes M4/M5 di source test; tidak masuk JAR aplikasi. CalculationPerformanceCheck memakai30×20 di @TempDir, mencatat engine+review SQLite di luar setup/hash/render. Angka hasil adalah kondisi mesin pengembang, bukan janji semua perangkat.

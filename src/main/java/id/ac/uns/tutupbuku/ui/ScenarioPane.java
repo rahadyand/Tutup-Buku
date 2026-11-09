@@ -38,6 +38,7 @@ final class ScenarioPane extends BorderPane {
     private ScenarioCourse current;
     private long semester;
     private boolean filling, dirty;
+    private final Label context = status("scenario-context");
 
     private record LockRow(CheckBox locked, TextField score, Label suggestion) {}
 
@@ -57,7 +58,18 @@ final class ScenarioPane extends BorderPane {
         saved.setPlaceholder(note("Belum ada skenario tersimpan."));
         for (TextField field : List.of(name, gpaTarget, numericTarget))
             field.textProperty().addListener((o, a, b) -> changed());
-        mode.valueProperty().addListener((o, a, b) -> changed());
+        mode.valueProperty()
+                .addListener(
+                        (o, a, b) -> {
+                            if (filling || a == null || b == null) return;
+                            if (!GradeForms.confirmMode(this, b)) {
+                                filling = true;
+                                mode.setValue(a);
+                                filling = false;
+                                return;
+                            }
+                            changed();
+                        });
         estimate.valueProperty().addListener((o, a, b) -> changed());
         attendance.selectedProperty().addListener((o, a, b) -> changed());
         targetLetter.valueProperty().addListener((o, a, b) -> changed());
@@ -197,6 +209,17 @@ final class ScenarioPane extends BorderPane {
                         new FlowPane(6, 6, create, duplicate, delete));
         VBox.setVgrow(saved, Priority.ALWAYS);
         left.setMinWidth(210);
+        TitledPane formula =
+                new TitledPane(
+                        "Bagaimana saran target dihitung?",
+                        note(
+                                "Kontribusi tetap K berasal dari aktual dan asumsi terkunci. W"
+                                    + " adalah bobot komponen bebas. Saran x = (target − K) / W,"
+                                    + " sama untuk semua yang bebas. Ini satu pilihan merata, bukan"
+                                    + " satu-satunya kombinasi. Saran minimum aman dibulatkan ke"
+                                    + " atas 2 desimal; nilai aktual tidak dibulatkan untuk"
+                                    + " konversi huruf."));
+        formula.setExpanded(false);
         VBox body =
                 form(
                         heading("Rencana semester"),
@@ -216,18 +239,19 @@ final class ScenarioPane extends BorderPane {
                                 estimate),
                         clearEstimate,
                         field("Jenis target detail", targetKind),
-                        field("Target nilai angka", numericTarget),
-                        field("Target huruf minimum (ambang bawah PRD)", targetLetter),
+                        field("Minimal mencapai nilai angka", numericTarget),
+                        field("Minimal mencapai huruf (ambang bawah PRD)", targetLetter),
+                        formula,
                         attendance,
                         note(
                                 "Centang awal adalah asumsi. Perubahan kehadiran skenario belum"
-                                    + " terverifikasi. Bobot 0% tidak memerlukan nilai/kunci."),
+                                        + " terverifikasi. Bobot 0% tidak memerlukan nilai/kunci."),
                         rows,
                         courseResult,
                         heading("Bandingkan dua skenario"),
                         note(
                                 "Simpan perubahan terlebih dahulu. Perbandingan mengambil dua"
-                                    + " snapshot tersimpan; basis usang diberi peringatan."),
+                                        + " snapshot tersimpan; basis usang diberi peringatan."),
                         field("Skenario pembanding", comparison),
                         compare,
                         comparisonContent,
@@ -235,6 +259,8 @@ final class ScenarioPane extends BorderPane {
         SplitPane split = new SplitPane(left, scroll(body));
         split.setDividerPositions(0.27);
         setCenter(split);
+        context.setPadding(new javafx.geometry.Insets(6));
+        setTop(context);
         show(null);
     }
 
@@ -263,6 +289,7 @@ final class ScenarioPane extends BorderPane {
     }
 
     private void show(SemesterScenario value) {
+        long courseId = current == null ? 0 : current.basis().course().id();
         draft = value;
         dirty = false;
         current = null;
@@ -270,7 +297,17 @@ final class ScenarioPane extends BorderPane {
         name.setText(value == null ? "" : value.name());
         gpaTarget.setText(value == null ? "3" : GradeForms.number(value.targetGpa()));
         courses.getItems().setAll(value == null ? List.of() : value.courses());
-        courses.getSelectionModel().selectFirst();
+        courses.getSelectionModel()
+                .select(
+                        value == null
+                                ? null
+                                : value.courses().stream()
+                                        .filter(c -> c.basis().course().id() == courseId)
+                                        .findFirst()
+                                        .orElse(
+                                                value.courses().isEmpty()
+                                                        ? null
+                                                        : value.courses().getFirst()));
         filling = false;
         showCourse(courses.getValue());
         gpaResult.setText("");
@@ -280,12 +317,22 @@ final class ScenarioPane extends BorderPane {
                         : value.id() == 0
                                 ? "Draf baru belum disimpan."
                                 : "Snapshot tersimpan. Tekan Hitung untuk memeriksa basis dan"
-                                      + " hasil.");
+                                        + " hasil.");
         comparisonContent.getChildren().clear();
         if (value != null) calculate();
     }
 
     private void showCourse(ScenarioCourse value) {
+        context.setText(
+                value == null
+                        ? "Buat atau buka skenario."
+                        : "Skenario: "
+                                + name.getText()
+                                + " · "
+                                + value.basis().course().name()
+                                + " · Jumlah bobot "
+                                + GradeForms.number(value.basis().totalWeight())
+                                + "%");
         current = value;
         filling = true;
         locks.clear();
@@ -355,7 +402,11 @@ final class ScenarioPane extends BorderPane {
     }
 
     private void changed() {
-        if (!filling && draft != null) dirty = true;
+        if (!filling && draft != null) {
+            dirty = true;
+            status.setText(
+                    "Belum disimpan — hitung untuk melihat hasil terbaru, lalu Simpan skenario.");
+        }
     }
 
     private void capture() {
@@ -431,7 +482,9 @@ final class ScenarioPane extends BorderPane {
                         + gpa.displayValue()
                         + " · Target "
                         + GradeForms.number(value.scenario().targetGpa())
-                        + gpa.difference().map(d -> " · Selisih " + GradeForms.number(d)).orElse("")
+                        + gpa.difference()
+                                .map(d -> " · Selisih " + GradeForms.approximation(d))
+                                .orElse("")
                         + gpa.targetReached()
                                 .map(
                                         reached ->
@@ -454,7 +507,7 @@ final class ScenarioPane extends BorderPane {
                                                     .setText(
                                                             row.locked().isSelected()
                                                                     ? "Asumsi terkunci (bukan"
-                                                                          + " aktual)"
+                                                                            + " aktual)"
                                                                     : c.targetPlan()
                                                                             .map(
                                                                                     p ->
@@ -532,7 +585,7 @@ final class ScenarioPane extends BorderPane {
                                         dirty = true;
                                         status.setText(
                                                 "Basis diperbarui pada draf. Tinjau hasil lalu"
-                                                    + " Simpan skenario.");
+                                                        + " Simpan skenario.");
                                     });
                     });
         } catch (IllegalArgumentException error) {
@@ -596,11 +649,11 @@ final class ScenarioPane extends BorderPane {
                                                                                 .basis()
                                                                                 .course()
                                                                                 .credits())),
-                                                GradeForms.letter(left.grade().effectiveLetter()),
+                                                GradeForms.comparisonGrade(left.grade()),
                                                 other == null
                                                         ? "Tidak ada"
-                                                        : GradeForms.letter(
-                                                                other.grade().effectiveLetter())));
+                                                        : GradeForms.comparisonGrade(
+                                                                other.grade())));
                     }
                     right.values()
                             .forEach(
@@ -619,9 +672,8 @@ final class ScenarioPane extends BorderPane {
                                                                                             .course()
                                                                                             .credits()),
                                                                     "Tidak ada",
-                                                                    GradeForms.letter(
-                                                                            c.grade()
-                                                                                    .effectiveLetter()))));
+                                                                    GradeForms.comparisonGrade(
+                                                                            c.grade()))));
                     table.setPrefHeight(240);
                     comparisonContent
                             .getChildren()

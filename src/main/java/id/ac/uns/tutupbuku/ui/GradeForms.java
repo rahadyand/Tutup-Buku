@@ -17,6 +17,12 @@ final class GradeForms {
         return n.stripTrailingZeros().toPlainString().replace('.', ',');
     }
 
+    static String approximation(BigDecimal n) {
+        return n.stripTrailingZeros().scale() > 6
+                ? "≈" + number(n.setScale(6, java.math.RoundingMode.HALF_UP))
+                : number(n);
+    }
+
     static String letter(Optional<LetterGrade> grade) {
         return grade.map(LetterGrade::label).orElse("Belum lengkap");
     }
@@ -30,6 +36,10 @@ final class GradeForms {
                 + letter(grade.effectiveLetter())
                 + " · "
                 + (grade.estimated() ? "Simulasi/asumsi" : "Input aktual")
+                + " · Status: "
+                + grade.effectiveLetter()
+                        .map(g -> g.isPassing() ? "Lulus" : "Tidak lulus")
+                        .orElse("Belum lengkap")
                 + (grade.issues().isEmpty() ? "" : "\n" + String.join("\n", grade.issues()));
     }
 
@@ -68,13 +78,15 @@ final class GradeForms {
         Alert dialog =
                 new Alert(
                         Alert.AlertType.CONFIRMATION,
-                        "Ada perubahan nilai/skenario yang belum disimpan.",
+                        "Ada perubahan formulir yang belum disimpan.",
                         keep,
                         drop,
                         cancel);
         dialog.initOwner(owner.getScene().getWindow());
         dialog.setTitle("Perubahan belum disimpan");
         dialog.setHeaderText("Simpan sebelum berpindah?");
+        ((Button) dialog.getDialogPane().lookupButton(keep)).setDefaultButton(false);
+        ((Button) dialog.getDialogPane().lookupButton(cancel)).setDefaultButton(true);
         dialog.showAndWait()
                 .ifPresent(
                         choice -> {
@@ -84,5 +96,26 @@ final class GradeForms {
                                 action.run();
                             }
                         });
+    }
+
+    static boolean confirmMode(Node owner, EvaluationMode mode) {
+        ButtonType apply = new ButtonType("Gunakan mode ini", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancel = new ButtonType("Batal", ButtonBar.ButtonData.CANCEL_CLOSE);
+        Alert dialog =
+                new Alert(
+                        Alert.AlertType.CONFIRMATION,
+                        "Hasil yang dipakai untuk nilai/IP: "
+                                + mode
+                                + ". Data mode lainnya tetap disimpan tetapi tidak ikut dihitung.",
+                        apply,
+                        cancel);
+        dialog.initOwner(owner.getScene().getWindow());
+        dialog.setTitle("Ganti mode penilaian");
+        dialog.setHeaderText("Gunakan " + mode + "?");
+        return dialog.showAndWait().filter(apply::equals).isPresent();
+    }
+
+    static String comparisonGrade(GradeResult grade) {
+        return letter(grade.effectiveLetter()) + " · " + (grade.estimated() ? "Asumsi" : "Aktual");
     }
 }

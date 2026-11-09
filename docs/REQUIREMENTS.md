@@ -1,6 +1,6 @@
 # Checklist kebutuhan PRD v1.1
 
-Seluruh 25 halaman dibaca pada 8 November 2026 dan ditinjau ulang untuk M2–M4. P0 adalah target produk akhir, bukan klaim milestone 1 selesai. `parsial` berarti hanya bagian domain yang dicakup M1. Aturan akademik ini mengikuti PRD, belum diverifikasi sebagai kebijakan resmi fakultas.
+Seluruh 25 halaman dibaca pada 8 November 2026 dan ditinjau ulang untuk M2–M5. P0 adalah target produk akhir, bukan klaim milestone 1 selesai. `parsial` berarti hanya bagian domain yang dicakup M1. Aturan akademik ini mengikuti PRD, belum diverifikasi sebagai kebijakan resmi fakultas.
 
 | ID fitur / rincian PRD | Prioritas | Perilaku yang wajib dipertahankan | Status / milestone |
 |---|---|---|---|
@@ -36,7 +36,7 @@ Seluruh 25 halaman dibaca pada 8 November 2026 dan ditinjau ulang untuk M2–M4.
 
 **Rekomendasi teknis yang dipilih:** JavaFX/Maven/SQLite JDBC/CommonMark; lapisan sederhana; BigDecimal; Maven Wrapper. Versi setelah inspeksi: JDK21.0.12 tersedia; JavaFX21.0.10, Maven3.9.11, SQLite JDBC3.51.0.0, CommonMark0.24.0 beserta ekstensi tabel. Pasangan diuji melalui build/smoke test, bukan dianggap sudah cocok dari PRD.
 
-**Asumsi operasional:** password minimal 8 karakter dan prodi teks bebas sudah diterapkan M2. M3 memakai 3 materi PBO+2 peminatan asli, autosave2detik, rasio gulir0–1; minimum jendela900×620. Target layar1366×768/skala125% tetap gerbang M5. M2 memilih PBKDF2-HMAC-SHA256 600.000 iterasi, salt acak 16 byte, hash 256 bit; seluruh parameter disimpan.
+**Asumsi operasional:** password minimal 8 karakter dan prodi teks bebas sudah diterapkan M2. M3 memakai 3 materi PBO+2 peminatan asli, autosave2detik, rasio gulir0–1; minimum jendela760×480 pada M5; ukuran awal mengikuti visual bounds. Jendela target1366×768 dan skala proses125% diperiksa; Windows125% nyata tetap gerbang pengguna. M2 memilih PBKDF2-HMAC-SHA256 600.000 iterasi, salt acak 16 byte, hash 256 bit; seluruh parameter disimpan.
 
 ## Pemetaan penerimaan
 
@@ -74,3 +74,21 @@ M1: MT01–MT13 pada domain, AT08/11/12 bagian logika; flat setara contoh MT14 d
 - Kualitas: migrasi2→3 transaksional menjaga M2/M3, rollback saat gagal; SQL owner+ID dan prepared statements, CAS skenario, pemisahan persistence/service/UI. Database/aset tes sementara.
 - Gerbang bukti: GradePlanningPersistenceTest17, GradeMigrationTest2, seluruh regresi118, MilestoneFourFxCheck1 +5GUI regresi. Detail perintah/hasil akhir di DEVELOPMENT_STATUS.
 - Tetap tertunda: F08G grouped P1, IPK, optimasi antar-course, distribusi/usability/benchmark M5. Selesainya fitur M4 tidak menyatakan seluruh nonfungsional produk final selesai.
+
+## Tinjauan penerimaan M5 (9 November 2026)
+
+Pemetaan per kebutuhan/tes dan defek terkonfirmasi ada di [INTEGRATION_REVIEW.md](INTEGRATION_REVIEW.md); ini membedakan bukti perilaku dari jumlah tes.
+
+| Kelompok | Diimplementasikan | Bukti yang dijalankan | Masih pending |
+|---|---|---|---|
+| F01–F03 / AT01–04 | Akun/profil/aktif/akademik/dashboard; guard edit diperluas | Regresi unit/SQLite dan M2/M5GUI; registrasi/login paket nyata setelah restart | Usability oleh mahasiswa |
+| F04–F07 / AT05–07 | Dua jalur, Markdown aman, gambar/note/completion/resume | M3/M5GUI + decoder/owner; paket mengimpor PNG via chooser asli, close/reopen menampilkan gambar/note/completion/resume | Uji pada komputer kedua; jaringan fisik diputus |
+| F08–F13 / AT08–12, MT01–13 | Flat/aktual/target/snapshot/revisi/banding/IP/kehadiran | Regresi domain/persistensi dan M4/M5GUI, termasuk multi-course dan perubahan SKS | Pengujian paket oleh pengguna pada perangkat kedua |
+| AT14 | Rollback/input tetap/retry/guard/migrasi | DatabaseSafety/LearningMigration/GradeMigration dan error nyata melalui trigger pada suite GUI | Perilaku disk/antivirus berbeda di perangkat lain |
+| AT13 / distribusi | ZIP app-image + runtime/deps/legal/panduan; data di luar instalasi | EXE hasil ekstraksi di path berspasi, JAVA_HOME/MAVEN_HOME kosong dan PATHSystem32; normal close/reopen exit0; audit hash/file | **Putus jaringan fisik, link luar gagal wajar, komputer kedua** |
+| Responsivitas | Worker dan engine dipertahankan |30×20; cold21,738ms, median5,606ms, max8,762ms pada mesin ini | Benchmark perangkat penerima |
+| Keterbacaan | Sidebar scroll, note lipat, header/window adaptif | Jendela targetfisik1366×768; prosesJavaFX1,25; screenshot ditinjau, tanpa ubah Windows | Windows1366×768/125% nyata dan uji keyboard mahasiswa |
+
+Default138tes +7GUI +benchmark1 lulus; tes skala125% mengulang alurM5 secara terpisah. F08G/MT14 grouped tidak diaktifkan; semua P1/P2 tetap deferred. Simpan nilai/skenario eksplisit mengikuti instruksi pengguna M4; autosave materi2detik tetap. Retry menggunakan Simpan yang sama sesudah pesan gagal.
+
+Kandidat lokal tersedia untuk penerimaan; jangan menyatakan seluruh P0 penerimaan lapangan selesai sampai AT13 dan pemeriksaan pengguna tercatat. Lembar pelaksanaan: [RELEASE_ACCEPTANCE.md](RELEASE_ACCEPTANCE.md).
