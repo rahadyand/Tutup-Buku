@@ -100,3 +100,11 @@ Diff/ignore/daftar file/pola rahasia umum ditinjau sebelum staging; .mvn/Wrapper
 - Verifikasi data normal AppData pada perangkat pengguna; pengujian pengembang sengaja memakai override demo agar tidak menyentuh database nyata.
 
 Kandidat lokal siap dicoba, **penerimaan akhir pengumpulan belum dinyatakan selesai**. Ikuti RELEASE_ACCEPTANCE, laporkan masalah nyata sebelum pembekuan. Grouped/PDF/AI/kuis/backupUI/IPK/optimasi dan semua penundaan tetap BACKLOG. Tidak melanjutkan milestone/fitur/laporan/PPT otomatis.
+
+## Penutupan verifikasi kandidat0.5.1-rc1 — 10 November 2026
+
+Lingkup kelanjutan dipersempit pengguna: selesai verifikasi paket, bukan lanjut laporan/presentasi. Checkpoint executable30d257a649d6c653e0c3daa59735af1123f9654e sudah di-push sebelumnya. Tidak ada perubahan executable atau pengulangan regresi/build pada kelanjutan ini. Hasil163tes default,8GUI+benchmark1 dan skala proses1 dari9November tetap bukti historis revisi yang sama.
+
+Run kedua EXE ekstraksi yang tertunda dilanjutkan: login00051, aktual Proyek paket100%/8/10 dan skenario Rencana Paket051/target3/IP Simulasi3,70 berhasil dibuka. Tutup normal exit0. Read-only DB membuktikan akun/aktif/course3SKS/note/completion dan snapshot tetap; integrity/FK sah. Seluruh227file ZIP sama hash dengan ekstraksi yang diuji, JAR sama target terverifikasi. ZIP95.921.473byte SHA256 BDA1BB4A92669ABA67680562638D355790E5D0EBE12447704F260A3DA36ED411, folder releases/TutupBuku-0.5.1-rc1-20261109-224207. Tidak regenerasi/unggah binary. Rincian di HARDENING_VERIFICATION.md.
+
+H-02 belum selesai: log run kedua memuat IndexOutOfBoundsException JavaFXListView; pemicu belum pasti. Pembacaan data/skenario tetap berhasil dan exit0, tanpa kehilangan data teramati; bukan klaim bebas bug. Lihat KNOWN_ISSUES. Gerbang komputer kedua/offline fisik/Windows125% nyata/usability masih NOT PERFORMED. Draf audit/kit/academic yang sudah ada dipertahankan di working tree dan tidak dimasukkan checkpoint penutupan terbatas ini. Panduan/status/verifikasi/known issues saja diperbarui. Commit/push akhir diverifikasi pada Git; jika jaringan menolak, catat blokir dan pertahankan commit lokal.

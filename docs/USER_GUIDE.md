@@ -52,3 +52,9 @@ $env:TUTUP_BUKU_DATA_DIR = "$env:LOCALAPPDATA\TutupBuku-Demo"
 Ini memakai folder demo terpisah; bukan data normal. Pada PowerShell yang sama, `Remove-Item Env:TUTUP_BUKU_DATA_DIR` mengembalikan pilihan lokasi normal untuk peluncuran berikutnya, tanpa menghapus berkas.
 
 Untuk uji jaringan terputus/komputer kedua/skala Windows125%, ikuti RELEASE_ACCEPTANCE.md. Pengembang tidak mengubah pengaturan global tersebut secara otomatis.
+
+## Hasil pemeriksaan kandidat ini — 10 November 2026
+
+ZIP0.5.1-rc1 bertimestamp20261109-224207 sudah diuji melalui EXE ekstraksi dengan data demo terisolasi. Nilai aktual8/10, course3SKS, semester aktif dan skenario tersimpan bertargetIP3 tetap terbaca setelah tutup/buka ulang; IP Simulasi tetap3,70. Seluruh227file ZIP cocok dengan ekstraksi yang diuji. Path/hash dan batas bukti ada di HARDENING_VERIFICATION.md pada repository. Dokumen panduan repository ini diperbarui sesudah paket dibuat; ZIP tidak dibangun ulang.
+
+Log uji memuat exception internal JavaFX daftar yang belum dipastikan pemicunya, meskipun data tetap dan aplikasi ditutup normal. Jika daftar bermasalah, catat urutan klik dan pesan, tutup normal bila memungkinkan, cadangkan DB+assets ketika aplikasi tertutup, lalu laporkan. Jangan menghapus/reset DB. Kandidat belum dinyatakan selesai penerimaan lapangan: komputer kedua, internet fisik terputus, Windows125% nyata dan usability mahasiswa masih belum diuji.
