@@ -1,3 +1,9 @@
+# Status terbaru — perawatan Ponytail FULL, 14 November2026
+
+Baseline4dac60c/main diperiksa; dua penyederhanaan internal dipilih: hapus panduan NIM mati dan satukan validasi metadata Course. UI/engine/schema4 tetap. Baseline177/fokus16tes lulus; final179tes default+10kasus GUI+1skala proses125% lulus,0failures/errors/skipped. 14snapshot identik sebelum/sesudah. Paket0.5.4-rc1-20261114-124851: audit226hash+manifest/forbidden0/runtime17modul, seluruh227file cocok ekstraksi/JARtarget. EXE Enterlogin/save metadata/close/reopen duaexit0, SQLite4/integrity/FK dan data lama sah. SHA256ZIP445FC5DA871AD3679A73DC55FCC7B541B107713D02C77B5E2A0A0EDBCEB3EF95. Checkpoint normal main dengan receipt push aktual tmp/ponytail-checkpoint.txt/jawaban akhir; hasil terbaru di [PONYTAIL_FULL_REVIEW.md](PONYTAIL_FULL_REVIEW.md). Draf lama tetap di luar lingkup; tidak memulai dashboard.
+
+## Riwayat sebelum perawatan
+
 # Status terbaru — Revision 002, 14 November 2026
 
 Kandidat0.5.3-rc1/schema4. Implementasi akun ringkas/sapaan, profil dropdown, urutan aksi akademik dan navigasi kanan selesai. **177tes default,10kasus GUI final,1pengulangan125% dan1jendela1024×768 lulus**,0failures/errors/skipped. Paket final20261114-120721: audit226hash+manifest/forbidden0/runtime17modul, seluruh227file ZIP cocok ekstraksi dan JAR target. EXE ekstraksi Enterlogin/saveprofil+course/close/reopen duaexit0; data/integrity/FK sah. HashZIP88B856B2304BF9D198B40A0033C885311EDD226F9D949015ACEA5750010F17A5. Source/test/docs checkpoint normal main; receipt push aktual di tmp/r002-checkpoint.txt dan jawaban akhir. Tidak regenerasi paket sesudah uji. Lihat [REVISION_002.md](REVISION_002.md) untuk hasil terbaru dan lingkup. Draf akademik lama tetap tidak disentuh. Gerbang lapangan/H-02 historis masih pending.

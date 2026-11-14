@@ -1,4 +1,6 @@
-# Tutup Buku — Kandidat Windows 0.5.3-rc1
+# Tutup Buku — Kandidat Windows 0.5.4-rc1
+
+Pemeriksaan maintainability: dua penyederhanaan internal tanpa perubahan UI/rumus/schema. Bukti dan batas di [PONYTAIL_FULL_REVIEW](docs/PONYTAIL_FULL_REVIEW.md).
 
 Revision 002: kolom akun ringkas, judul/deskripsi lebih jelas, sapaan dari input NIM/nama, profil terpusat dengan dropdown prodi, aksi akademik diposisikan ulang, dan shortcut kanan atas. Tahun tunggal/schema 4 serta data Revision 001 tetap. Rincian bukti/paket di [REVISION_002](docs/REVISION_002.md); riwayat kompatibilitas di [REVISION_001](docs/REVISION_001.md). Bagian milestone di bawah adalah riwayat fondasi.
 
@@ -22,7 +24,7 @@ javac -version
 .\mvnw.cmd javafx:run
 ```
 
-Sesuaikan JAVA_HOME dengan lokasi JDK. Build pertama memerlukan internet untuk Maven/dependensi; alur inti aplikasi bekerja lokal. Hasil build `target/tutup-buku-0.5.3-rc1.jar` belum paket mandiri/fat JAR; jalankan melalui **javafx:run**, bukan java -jar. Paket Windows ber-runtime tersedia melalui script M5; pengujian komputer kedua tetap perlu hasil pengguna.
+Sesuaikan JAVA_HOME dengan lokasi JDK. Build pertama memerlukan internet untuk Maven/dependensi; alur inti aplikasi bekerja lokal. Hasil build `target/tutup-buku-0.5.4-rc1.jar` belum paket mandiri/fat JAR; jalankan melalui **javafx:run**, bukan java -jar. Paket Windows ber-runtime tersedia melalui script M5; pengujian komputer kedua tetap perlu hasil pengguna.
 
 Cache sesi pengembangan ini berada di proyek:
 
@@ -146,7 +148,7 @@ Untuk menghasilkan paket dari source pada Windows x64:
 
 Script mengunci Temurin21.0.13+9 dan SDK OpenJFX21.0.10 beserta SHA256 pada .tools, tidak mengubah Java global. Internet hanya diperlukan untuk persiapan alat/dependency pertama. Runtime Temurin dipakai untuk distribusi; Java aplikasi tetap21. Perbedaan patch dari OracleJDK21.0.12 baseline terdokumentasi dan seluruh regresi diulang pada Temurin.
 
-Build-Windows memakai profil Maven windows-package (dependency-plugin3.8.1, runtime scope), menjalankan verify, membuat runtime jlink dan app-image jpackage, menyalin guide/legal, mengaudit file, lalu ZIP+checksum. Folder keluaran **releases/TutupBuku-0.5.3-rc1-TANGGAL-WAKTU/** selalu baru, tidak menghapus/menimpa rilis sebelumnya. releases/ diabaikan Git. Tidak ada upload GitHub Release otomatis.
+Build-Windows memakai profil Maven windows-package (dependency-plugin3.8.1, runtime scope), menjalankan verify, membuat runtime jlink dan app-image jpackage, menyalin guide/legal, mengaudit file, lalu ZIP+checksum. Folder keluaran **releases/TutupBuku-0.5.4-rc1-TANGGAL-WAKTU/** selalu baru, tidak menghapus/menimpa rilis sebelumnya. releases/ diabaikan Git. Tidak ada upload GitHub Release otomatis.
 
 `-SkipBuild` hanya untuk mengemas ulang dokumentasi/source yang sudah diverifikasi dengan JAR/runtime-libs yang tersedia; bukan pengganti tes. Lihat BUILD-INFO dan SHA256SUMS dalam image, serta .zip.sha256 di sebelah ZIP. Sumber/tes/JDK pengembang/cache/database/aset pengguna tidak dibawa.
 
@@ -159,7 +161,7 @@ Tambahkan JAVA_HOME/MAVEN_USER_HOME dan parameter cache seperti bagian setup. Sk
 
 Audit ulang ZIP tanpa mengubah paket:
 ```powershell
-.\scripts\Verify-WindowsPackage.ps1 -Zip 'releases\NAMA_FOLDER\TutupBuku-0.5.3-rc1-windows-x64.zip'
+.\scripts\Verify-WindowsPackage.ps1 -Zip 'releases\NAMA_FOLDER\TutupBuku-0.5.4-rc1-windows-x64.zip'
 # Tambahkan -Launch untuk menjalankan EXE ekstraksi pada data sementara baru,
 # JAVA_HOME/MAVEN_HOME kosong dan PATH terbatas. Tutup jendela agar script selesai.
 ```

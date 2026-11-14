@@ -1,3 +1,11 @@
+# Kandidat0.5.4-rc1 — perawatan internal
+
+Menghapus panduan NIM pra-Revision002 yang tidak lagi dipanggil aplikasi dan menyatukan validasi metadata Course sebelum cabang tambah/edit. Tampilan/alur Revision002, schema4, engine, hash password dan pemisahan aktual/skenario tetap. Query edit metadata tetap tidak menyentuh kehadiran.
+
+Tidak ada fitur baru atau perubahan dashboard. Hasil tes, paket dan batas verifikasi terbaru di PONYTAIL_FULL_REVIEW.md repository. Gerbang lapangan dan H-02 historis tetap pending.
+
+## Riwayat kandidat sebelumnya
+
 # Kandidat0.5.3-rc1 — Revision 002
 
 Form akun tetap terpusat: NIM200px, password260px dan nama300px; judul36px dan deskripsi terbungkus. Sapaan daftar mengikuti input nama/NIM L01/L02 dan tahun; login tidak membocorkan nama profil sebelum autentikasi.

@@ -206,3 +206,9 @@ AuthView membatasi kontrol secara lokal (pref/max), bukan mengubah FormSupport g
 WorkspaceView memakai ComboBox dua prodi dengan canonicalisasi trim/case-insensitive untuk tampilan. Nilai raw terakhir disimpan terpisah; pilihan null menyimpan raw lama saat nama diedit. Dirty guard membandingkan pilihan dengan canonical nilai tersimpan; membuka legacy tidak dianggap edit. Callback sukses baru memperbarui baseline/header, sehingga kegagalan mempertahankan isian. Header identitas kiri dan navigasi kanan memakai view serta guard yang sama.
 
 AcademicView hanya mengubah ukuran/urutan kontrol. Tidak ada migrasi atau perubahan service/persistence/engine; user_version4 dan RULE_VERSION1 tetap. Save-and-activate dan kehadiran metadata tetap diuji oleh regresi R001.
+
+## Perawatan setelah Revision 002
+
+NimGuidance hanya menyimpan welcome yang dipakai AuthView; EXAMPLE/describe pra-Revision002 tidak lagi dipertahankan sebagai API mati. Tes login lama tetap terpisah dari uji sapaan aktif.
+
+SqliteRepository.saveCourseMetadata membentuk satu Course tervalidasi setelah memeriksa semester/pemilik dan sebelum memilih INSERT/UPDATE, tetap di dalam database.write. Kedua query sengaja berbeda: INSERT memakai asumsi default; UPDATE hanya metadata+revision tanpa kolom kehadiran. Readback tetap mengambil data penuh dengan owner+semester+ID. Tidak menambah helper/lapisan/skema atau mengubah engine; rincian bukti di PONYTAIL_FULL_REVIEW.

@@ -40,16 +40,83 @@ class RevisionOnePersistenceTest {
     }
 
     @Test
-    void guidanceIsInformativeAndOldAccountsStillLogin() {
-        assertTrue(NimGuidance.describe("L0125001").contains("Informatika"));
-        assertTrue(NimGuidance.describe("L0225001").contains("Sains Data"));
-        assertTrue(NimGuidance.describe("L0125001").contains("2025"));
-        assertTrue(NimGuidance.describe("L0125001").contains("001"));
-        assertTrue(NimGuidance.describe("L9925001").contains("belum dikenali"));
-        assertTrue(NimGuidance.describe("0001").contains("lama"));
+    void oldAccountsStillLoginWithLeadingZeros() {
         var auth = new AuthService(repo, new PasswordHasher(), session);
         assertEquals("0001", auth.login(" 0001 ", "sandi-uji-lokal".toCharArray()).nim());
         assertEquals("", auth.profile().studyProgram());
+    }
+
+    @Test
+    void invalidMetadataCannotCreateOrAlterACourse() {
+        var semester = academic.saveSemesterForm(0, "3", "2026", true);
+        var original = academic.saveCourseMetadata(0, semester.id(), "PBO", "IF", "2,5");
+        for (long id : new long[] {0, original.id()}) {
+            for (BigDecimal credits :
+                    new BigDecimal[] {BigDecimal.ZERO, new BigDecimal("-1"), null})
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                repo.saveCourseMetadata(
+                                        "0001", id, semester.id(), "PBO Baru", "", credits));
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            repo.saveCourseMetadata(
+                                    "0001", id, semester.id(), " ", "", BigDecimal.ONE));
+        }
+        assertEquals(List.of(original), academic.courses(semester.id()));
+    }
+
+    @Test
+    void failedMetadataWritesRollbackAndCanBeRetriedWithoutLosingGrades() {
+        var semester = academic.saveSemesterForm(0, "3", "2026", true);
+        var course = academic.saveCourseMetadata(0, semester.id(), "PBO", "IF", "3");
+        var planning = new GradePlanningService(new SqliteGradeRepository(db), session);
+        planning.saveComponent(course.id(), "proyek", "Proyek", "100", "8", "10", 0);
+        planning.saveActual(
+                course.id(),
+                EvaluationMode.DETAIL,
+                Optional.empty(),
+                new Attendance(false, true),
+                "Acuan khusus");
+        var original = planning.courses(semester.id()).getFirst();
+        var snapshot = planning.save(planning.create(semester.id(), "Tetap", new BigDecimal("3")));
+        db.read(
+                c -> {
+                    try (var s = c.createStatement()) {
+                        for (String operation : List.of("INSERT", "UPDATE"))
+                            s.execute(
+                                    "CREATE TRIGGER reject_metadata_"
+                                            + operation
+                                            + " AFTER "
+                                            + operation
+                                            + " ON courses WHEN NEW.name='Gagal' BEGIN SELECT"
+                                            + " RAISE(ABORT,'fixture'); END");
+                    }
+                    return null;
+                });
+        for (long id : new long[] {0, course.id()})
+            assertThrows(
+                    StorageException.class,
+                    () -> academic.saveCourseMetadata(id, semester.id(), "Gagal", "BARU", "4"));
+        assertEquals(List.of(original), planning.courses(semester.id()));
+        assertEquals(snapshot, planning.open(snapshot.id()));
+        assertFalse(planning.review(snapshot).outdated());
+        db.read(
+                c -> {
+                    try (var s = c.createStatement()) {
+                        s.execute("DROP TRIGGER reject_metadata_INSERT");
+                        s.execute("DROP TRIGGER reject_metadata_UPDATE");
+                    }
+                    return null;
+                });
+        var updated =
+                academic.saveCourseMetadata(course.id(), semester.id(), "PBO Baru", "BARU", "4");
+        assertEquals(original.course().attendance(), updated.attendance());
+        assertEquals(original.course().attendanceReference(), updated.attendanceReference());
+        assertEquals(
+                original.components(), planning.courses(semester.id()).getFirst().components());
+        assertTrue(planning.review(snapshot).outdated());
     }
 
     @ParameterizedTest

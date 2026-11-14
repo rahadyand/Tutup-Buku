@@ -270,17 +270,17 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                 connection -> {
                     long courseId = id;
                     requireSemester(connection, owner, semesterId);
+                    Course value =
+                            new Course(
+                                    courseId,
+                                    semesterId,
+                                    name,
+                                    code,
+                                    credits,
+                                    Attendance.assumedMet(),
+                                    Course.DEFAULT_ATTENDANCE_REFERENCE,
+                                    0);
                     if (courseId == 0) {
-                        Course value =
-                                new Course(
-                                        0,
-                                        semesterId,
-                                        name,
-                                        code,
-                                        credits,
-                                        Attendance.assumedMet(),
-                                        Course.DEFAULT_ATTENDANCE_REFERENCE,
-                                        0);
                         try (var save =
                                 connection.prepareStatement(
                                         "INSERT INTO"
@@ -298,23 +298,13 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                     } else {
                         // UPDATE ini sengaja tidak menyebut kolom kehadiran, juga aman terhadap
                         // data lama UI.
-                        Course validated =
-                                new Course(
-                                        courseId,
-                                        semesterId,
-                                        name,
-                                        code,
-                                        credits,
-                                        Attendance.assumedMet(),
-                                        Course.DEFAULT_ATTENDANCE_REFERENCE,
-                                        0);
                         try (var save =
                                 connection.prepareStatement(
                                         "UPDATE courses SET"
                                             + " name=?,code=?,credits=?,revision=revision+1 WHERE"
                                             + " owner_nim=? AND semester_id=? AND id=?")) {
-                            save.setString(1, validated.name());
-                            save.setString(2, validated.code());
+                            save.setString(1, value.name());
+                            save.setString(2, value.code());
                             save.setString(3, credits.toPlainString());
                             save.setString(4, owner);
                             save.setLong(5, semesterId);
