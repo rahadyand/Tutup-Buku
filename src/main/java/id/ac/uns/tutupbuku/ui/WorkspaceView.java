@@ -15,6 +15,8 @@ final class WorkspaceView extends BorderPane {
     private final LearningView learningView;
     private final GradeView gradeView;
     private final AcademicView academicView;
+    private AcademicService academicService;
+    private UiTasks uiTasks;
     private java.util.function.Consumer<Runnable> profileGuard = Runnable::run;
 
     WorkspaceView(
@@ -26,6 +28,8 @@ final class WorkspaceView extends BorderPane {
             UserProfile profile,
             java.util.function.Consumer<String> browser,
             Runnable onLogout) {
+        academicService = academic;
+        uiTasks = tasks;
         learningView = new LearningView(learning, academic, tasks, browser);
         gradeView = new GradeView(academic, planning, tasks);
         Button logout = button("logout", "Keluar");
@@ -37,9 +41,20 @@ final class WorkspaceView extends BorderPane {
                                     auth.logout();
                                     onLogout.run();
                                 }));
-        VBox titles = new VBox(5, heading("Tutup Buku"), identity, active);
+        identity.setWrapText(true);
+        VBox titles =
+                new VBox(
+                        3,
+                        heading("Tutup Buku"),
+                        identity,
+                        active,
+                        note("Materi tertata, target terencana."));
         HBox.setHgrow(titles, Priority.ALWAYS);
-        HBox header = new HBox(16, titles, logout);
+        Button openLearning = button("open-learning", "Modul Belajar"),
+                openGrades = button("open-simulation", "Simulasi Nilai");
+        VBox navigation = new VBox(8, logout, new HBox(8, openLearning, openGrades));
+        navigation.setId("workspace-shortcuts");
+        HBox header = new HBox(18, navigation, titles);
         header.setPadding(new Insets(8));
         setTop(header);
 
@@ -60,11 +75,11 @@ final class WorkspaceView extends BorderPane {
                             profileStatus,
                             () -> {
                                 auth.updateProfile(newName, newProgram);
-                                return null;
+                                return auth.profile();
                             },
-                            ignored -> {
+                            updated -> {
                                 profileStatus.setText("Profil tersimpan.");
-                                identity.setText(newName.trim() + " · NIM " + profile.nim());
+                                showProfile(updated);
                                 savedProfile[0] = newName;
                                 savedProfile[1] = newProgram;
                                 done.run();
@@ -84,29 +99,27 @@ final class WorkspaceView extends BorderPane {
                                 saveProfile,
                                 action);
         academicView = new AcademicView(auth, academic, tasks, this::showProfile);
-        Tab dashboard =
+        DashboardView dashboardContent =
+                new DashboardView(
+                        learningView,
+                        gradeView,
+                        this::requestLeave,
+                        learningView::refresh,
+                        gradeView::refresh);
+        Tab dashboard = new Tab("Dashboard", dashboardContent);
+        Tab profileTab =
                 new Tab(
-                        "Dashboard",
-                        new DashboardView(
-                                learningView,
-                                gradeView,
-                                this::requestLeave,
-                                learningView::refresh,
-                                gradeView::refresh));
+                        "Profil",
+                        scroll(
+                                form(
+                                        heading("Profil"),
+                                        field("NIM (tidak dapat diubah)", nim),
+                                        field("Nama", name),
+                                        field("Program studi (Informatika / Sains Data)", program),
+                                        save,
+                                        profileStatus)));
         TabPane tabs =
-                new TabPane(
-                        dashboard,
-                        new Tab(
-                                "Profil",
-                                scroll(
-                                        form(
-                                                heading("Profil"),
-                                                field("NIM (tidak dapat diubah)", nim),
-                                                field("Nama", name),
-                                                field("Program studi", program),
-                                                save,
-                                                profileStatus))),
-                        new Tab("Semester & mata kuliah", academicView));
+                new TabPane(dashboard, new Tab("Semester & Mata Kuliah", academicView), profileTab);
         tabs.setId("workspace-tabs");
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         setCenter(tabs);
@@ -136,6 +149,17 @@ final class WorkspaceView extends BorderPane {
                                         }
                                     });
                         });
+        java.util.function.IntConsumer shortcut =
+                index ->
+                        requestLeave(
+                                () -> {
+                                    selecting[0] = true;
+                                    tabs.getSelectionModel().select(dashboard);
+                                    selecting[0] = false;
+                                    dashboardContent.openArea(index);
+                                });
+        openLearning.setOnAction(e -> shortcut.accept(0));
+        openGrades.setOnAction(e -> shortcut.accept(1));
         showProfile(profile);
         academicView.refresh();
         learningView.refresh();
@@ -145,11 +169,39 @@ final class WorkspaceView extends BorderPane {
         learningView.preferSemester(profile.activeSemesterId());
         gradeView.preferSemester(profile.activeSemesterId());
         identity.setText(profile.name() + " · NIM " + profile.nim());
-        active.setText(
-                profile.activeSemesterId().isPresent()
-                        ? "Semester aktif dipilih. Lihat penandanya di Semester & mata kuliah."
-                        : "Belum ada semester aktif. Buat atau pilih semester di Semester & mata"
-                                + " kuliah.");
+        String program =
+                profile.studyProgram().isBlank()
+                        ? "Program studi belum diisi"
+                        : profile.studyProgram();
+        if (profile.activeSemesterId().isEmpty()) {
+            active.setText(
+                    program + " · Belum ada semester aktif. Atur semester untuk mulai belajar.");
+        } else {
+            uiTasks.run(
+                    active,
+                    () ->
+                            academicService.semesters().stream()
+                                    .filter(
+                                            s ->
+                                                    profile.activeSemesterId()
+                                                            .filter(id -> id == s.id())
+                                                            .isPresent())
+                                    .findFirst(),
+                    semester ->
+                            active.setText(
+                                    program
+                                            + " · "
+                                            + semester.map(
+                                                            s ->
+                                                                    "Semester "
+                                                                            + s.number()
+                                                                            + " · Tahun "
+                                                                            + s.year())
+                                                    .orElse(
+                                                            "Belum ada semester aktif. Atur"
+                                                                + " semester untuk mulai"
+                                                                + " belajar.")));
+        }
     }
 
     void requestLeave(Runnable action) {

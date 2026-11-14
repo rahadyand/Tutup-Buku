@@ -28,6 +28,42 @@ public final class AcademicService {
         repository.setActiveSemester(session.requireNim(), id);
     }
 
+    public Semester saveSemesterForm(long id, String number, String year, boolean activate) {
+        int parsed;
+        try {
+            parsed = Integer.parseInt(number.trim());
+        } catch (RuntimeException error) {
+            throw new IllegalArgumentException("Nomor semester harus bilangan bulat lebih dari 0.");
+        }
+        String single = year == null ? "" : year.trim();
+        if (!single.matches("[0-9]{4}")
+                || Integer.parseInt(single) < 1000
+                || Integer.parseInt(single) > 9998)
+            throw new IllegalArgumentException(
+                    "Tahun harus 4 digit antara 1000–9998, misalnya 2026.");
+        String internal = single + "/" + (Integer.parseInt(single) + 1);
+        return repository.saveSemesterAndActivate(
+                session.requireNim(),
+                new Semester(
+                        id,
+                        parsed,
+                        internal,
+                        parsed % 2 == 0 ? SemesterPeriod.EVEN : SemesterPeriod.ODD),
+                activate);
+    }
+
+    public Course saveCourseMetadata(
+            long id, long semester, String name, String code, String credits) {
+        java.math.BigDecimal parsed;
+        try {
+            parsed = DecimalInput.parse(credits);
+        } catch (IllegalArgumentException error) {
+            throw new IllegalArgumentException("SKS wajib berupa angka lebih dari 0.");
+        }
+        return repository.saveCourseMetadata(
+                session.requireNim(), id, semester, name, code, parsed);
+    }
+
     public void deleteSemester(long id) {
         repository.deleteSemester(session.requireNim(), id);
     }

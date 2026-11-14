@@ -21,3 +21,6 @@ P1/P2 tetap pada BACKLOG. Jika ditemukan crash, kehilangan data, hasil rumus sal
 ## H-02 — exception JavaFX daftar, belum direproduksi terfokus
 
 Log run kedua paket memuat IndexOutOfBoundsException dari ReadOnlyUnbackedObservableList/ListViewBehavior. Pemicu dan waktu tepat belum dipastikan. Aktual8/10 dan skenario/IP3,70 tetap berhasil dibuka kembali; tutup normal exit0, quick_check/FK dan data fixture sah. Belum ada bukti kehilangan data, tetapi exception ini tetap belum selesai. Catat langkah klik/pilihan daftar jika muncul lagi; jangan mereset DB. Pemeriksaan visual saja tidak menggantikan log. Paket tidak diubah untuk masalah yang belum dipastikan ini.
+
+## Revision001 / kandidat0.5.2-rc1
+UI akun/navigasi/akademik diperbarui, schema4 mempertahankan ID/periode arsip. Tahun tunggal UI1000–9998; arsip benturan nomor/tahun dibedakan periode+#ID, tidak digabung. Default176tes dan GUI terkait diverifikasi; rincian source/paket/screenshot pada REVISION_001. H-02 historis tetap belum dipastikan selesai; sesi EXE baru tidak menunjukkan exception tersebut. Komputer kedua/offline fisik/Windows125% nyata/usability tetap pending.

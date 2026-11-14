@@ -64,21 +64,24 @@ class ReleaseHardeningFxCheck extends FxTestSupport {
                         return null;
                     });
             login();
-            tab("workspace-tabs", 2);
+            tab("workspace-tabs", 1);
+            await(() -> stage.getScene().lookup("#view-courses")!=null || stage.getScene().lookup("#courses-page")!=null);
+            if (fx(() -> stage.getScene().lookup("#view-courses") != null)) click("view-courses");
+            await(() -> stage.getScene().lookup("#course-list")!=null);
             select("course-list", 0);
-            assertTrue(fx(() -> ((CheckBox) node("course-attendance")).isSelected()));
+            assertNull(fx(() -> stage.getScene().lookup("#course-attendance")));
             tab("workspace-tabs", 0);
             click("open-simulation");
             select("grade-courses", 0);
             click("actual-attendance");
             click("actual-attendance-confirmed");
             click("save-actual-settings");
-            tab("workspace-tabs", 2);
+            tab("workspace-tabs", 1);
+            await(() -> stage.getScene().lookup("#view-courses")!=null || stage.getScene().lookup("#courses-page")!=null);
+            if (fx(() -> stage.getScene().lookup("#view-courses") != null)) click("view-courses");
+            await(() -> stage.getScene().lookup("#course-list")!=null);
             select("course-list", 0);
-            assertFalse(
-                    fx(() -> ((CheckBox) node("course-attendance")).isSelected()),
-                    "Kembali ke akademik harus memakai kehadiran terkini, bukan salinan sebelum"
-                        + " edit aktual.");
+            assertNull(fx(() -> stage.getScene().lookup("#course-attendance")));
             text("course-name", "PBO diperbarui");
             text("course-credits", "4");
             click("save-course");

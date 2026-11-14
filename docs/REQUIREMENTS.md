@@ -5,7 +5,7 @@ Seluruh 25 halaman dibaca pada 8 November 2026 dan ditinjau ulang untuk M2–M5.
 | ID fitur / rincian PRD | Prioritas | Perilaku yang wajib dipertahankan | Status / milestone |
 |---|---|---|---|
 | F01 / ACC-01, ACC-02 | P0 | NIM teks unik setelah trim, nol awal tetap, tanpa pola dugaan; password hash+salt+parameter; registrasi/konfirmasi, login/logout, isolasi akun; tanpa recovery universal | Selesai M2; isolasi materi/catatan ditambahkan M3 |
-| F02 / ACA-01 | P0 | Nama/prodi editable; semester aktif milik akun; tahun/periode unik; semester lama tetap; mata kuliah nama/SKS >0, kode opsional; konfirmasi hapus turunan | Selesai M2, termasuk persistensi dan GUI |
+| F02 / ACA-01 | P0 | Nama/prodi editable; semester aktif milik akun; nomor/tahun unik pada alur Revision 001; arsip periode lama tetap terpisah; semester lama tetap; mata kuliah nama/SKS >0, kode opsional; konfirmasi hapus turunan | Selesai M2, termasuk persistensi dan GUI |
 | F03 | P0 | Dashboard dua pintu setara Modul dan Simulasi; kosong bukan IP nol | Selesai M4, dua pilar terintegrasi |
 | F04 / LEARN-01,02,03 | P0 | Materi bawaan disalin per akun dan materi pengguna; Markdown judul/teks/list/tabel/kode/gambar/link; editor+preview, aset PNG/JPEG disalin, rumus gambar, sumber/urutan/revisi | Selesai M3, persistence dan GUI |
 | F05 / LEARN-01 | P0 | Kuliah→bab→materi terpisah dari peminatan→bidang→materi; satu pemilik, salinan independen | Selesai M3, persistence dan GUI |
@@ -29,6 +29,10 @@ Seluruh 25 halaman dibaca pada 8 November 2026 dan ditinjau ulang untuk M2–M5.
 - Gagal simpan jangan reset data/editor atau tampil sukses palsu. Transaksi, FK, query pemilik, raw HTML/script nonaktif.
 - Data di folder pengguna, bukan folder instalasi; UI tidak membeku; akses keyboard; target 1366×768/skala125%; paket Windows mandiri diuji komputer kedua / M5.
 - Skenario lama boleh dibaca sebagai snapshot, bukan IP terkini; perubahan aktual/bobot/SKS perlu revisi.
+
+## Override pengguna Revision 001
+
+Aturan UI/NIM/tahun navigasi terbaru menggantikan PRD hlm6/15 pada bagian yang bertentangan: NIM berpanduanL01/L02 tanpa memblokir akun lama, akun terpusat+passwordtoggle, header kontekstual, shortcutdi bawahKeluar, tabDashboard/Akademik/Profil, dua halaman akademik, tahun tunggal tanpa periodeselector. Metadata kehadiran hanya diedit pada simulasi. Schema 4 menjaga seluruh ID dan arsip; rincian/bukti di REVISION_001. Tabel/milestone di bawah yang menyebut tahun/periode adalah riwayat sebelum revisi.
 
 ## Jenis keputusan
 

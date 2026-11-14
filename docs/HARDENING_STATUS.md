@@ -1,3 +1,7 @@
+# Kelanjutan terbaru
+
+Revision001 diminta terpisah pada14November2026. Status otoritatif pekerjaan terbaru: [REVISION_001.md](REVISION_001.md). Pekerjaan hardening terbatas di bawah telah selesai sebelumnya; jangan melanjutkan instruksi sisa lama atau draf akademik otomatis.
+
 # Status penutupan kandidat0.5.1-rc1
 
 ## Lingkup terbaru — 10 November 2026

@@ -22,6 +22,14 @@ public interface GradeRepository {
             java.util.Optional<LetterGrade> letter,
             Attendance attendance);
 
+    void saveActualSettings(
+            String owner,
+            long courseId,
+            EvaluationMode mode,
+            java.util.Optional<LetterGrade> letter,
+            Attendance attendance,
+            String reference);
+
     List<SemesterScenario> scenarios(String owner, long semesterId);
 
     SemesterScenario loadScenario(String owner, long id);

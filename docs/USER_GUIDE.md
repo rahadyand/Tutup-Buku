@@ -1,4 +1,4 @@
-# Panduan Tutup Buku 0.5.1-rc1 — Windows x64
+# Panduan Tutup Buku 0.5.2-rc1 — Windows x64
 
 ## Membuka paket
 1. Ekstrak seluruh ZIP memakai **Extract All**, misalnya ke `D:\Aplikasi Saya\TutupBuku`. Jangan menjalankan EXE langsung dari tampilan ZIP.
@@ -8,12 +8,16 @@
 
 Paket kandidat belum ditandatangani digital. Bila Windows memblokir, catat pesan dan minta bantuan pengembang; jangan mengubah pengaturan keamanan untuk pengujian ini.
 
-## Profil, semester dan mata kuliah
-- Profil: ubah nama dan program studi, kemudian Simpan. NIM tetap.
-- Semester & mata kuliah: Semester baru → nomor positif, tahun berurutan misalnya2026/2027, Ganjil/Genap → Simpan. Kombinasi tahun/periode unik dalam akun.
-- Jadikan aktif menetapkan semester pembuka untuk kedua ruang dashboard saat login berikutnya. Semester lama tetap ada; pilihan layar dapat diganti tanpa mengubah referensi aktif.
-- Tambah mata kuliah dengan nama/SKS positif; kode opsional. Acuan kehadiran dapat diedit. Penanda awal adalah asumsi.
-- Perubahan form belum tersimpan ditahan oleh pilihan Simpan/Buang/Batal saat berpindah. Hapus meminta konfirmasi turunan; Batal menjaga data.
+## Akun, profil, semester dan mata kuliah — Revision 001
+
+- Login/Daftar terpusat. Contoh NIM L0125001 = L +01 Informatika +25 angkatan 2025 +001 identitas; L0225001 memakai02 Sains Data. Ini panduan, bukan verifikasi kampus atau larangan masuk bagi akun lama. Nol awal tetap dan NIM lama tidak diubah.
+- Password tersembunyi awal; Tampilkan/Sembunyikan tersedia terpisah untuk login, password daftar dan konfirmasinya. Visibility kembali tersembunyi setelah sukses/berpindah tab. Enter pada field password tetap mengirim form. Gagal simpan/login tidak mengosongkan isian.
+- Profil: ubah nama/prodi dan Simpan. Prodi tidak diisi otomatis dari NIM. NIM tidak dapat diubah.
+- Shortcut Modul Belajar/Simulasi Nilai selalu di bawah Keluar kiri atas. Tab: Dashboard, Semester & Mata Kuliah, Profil; perubahan belum tersimpan tetap mendapat Simpan/Buang/Batal.
+- Halaman Semester: pilih data tersimpan atau Semester baru; isi nomor positif dan tahun tunggal4 digit (1000–9998), misalnya2026. Jadikan Aktif langsung menyimpan+aktivasi lalu ke halaman course; tidak perlu Simpan dahulu. Simpan Semester juga ke course tetapi tidak mengganti semester aktif lain.
+- Halaman course: daftar semester di kiri dan mata kuliahnya di kanan. Sorotan berarti dipilih; [aktif] adalah referensi aktif akun. Isi nama, kode opsional, SKS positif; Simpan/Hapus dekat form. Kembali ke halaman Semester untuk mengedit/aktivasi/hapus semester.
+- Tidak ada kehadiran pada form course. Nama/kode/SKS dapat diubah tanpa mengubah kehadiran, konfirmasi atau acuan. Acuan/checkbox tersedia pada Simulasi Nilai → Komponen & aktual. Course baru tetap berasumsi kehadiran terpenuhi, belum diverifikasi.
+- Arsip dari format lama mempertahankan ID/periode/data. Label menampilkan tahun tunggal serta arsip Ganjil/Genap+#ID supaya dua arsip yang sama nomor/tahun tidak tertukar. Tidak ada penggabungan otomatis. Cadangkan DB+assets saat app tertutup sebelum memperbarui; versi lama tidak membuka schema 4.
 
 ## Modul Belajar
 1. Pilih Kuliah → semester/course → tambah bab; atau Peminatan → bidang yang terpisah dari semester.
@@ -53,7 +57,7 @@ Ini memakai folder demo terpisah; bukan data normal. Pada PowerShell yang sama, 
 
 Untuk uji jaringan terputus/komputer kedua/skala Windows125%, ikuti RELEASE_ACCEPTANCE.md. Pengembang tidak mengubah pengaturan global tersebut secara otomatis.
 
-## Hasil pemeriksaan kandidat ini — 10 November 2026
+## Bukti historis kandidat0.5.1 — 10 November 2026
 
 ZIP0.5.1-rc1 bertimestamp20261109-224207 sudah diuji melalui EXE ekstraksi dengan data demo terisolasi. Nilai aktual8/10, course3SKS, semester aktif dan skenario tersimpan bertargetIP3 tetap terbaca setelah tutup/buka ulang; IP Simulasi tetap3,70. Seluruh227file ZIP cocok dengan ekstraksi yang diuji. Path/hash dan batas bukti ada di HARDENING_VERIFICATION.md pada repository. Dokumen panduan repository ini diperbarui sesudah paket dibuat; ZIP tidak dibangun ulang.
 

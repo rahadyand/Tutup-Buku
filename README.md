@@ -1,4 +1,6 @@
-# Tutup Buku — Kandidat Windows 0.5.0-rc1
+# Tutup Buku — Kandidat Windows 0.5.2-rc1
+
+Revision 001: form akun terpusat dengan panduan NIM dan toggle password; shortcut di bawah Keluar; urutan Dashboard/Akademik/Profil; semester dan course dua halaman. Tahun UI tunggal, arsip lama dipertahankan melalui schema 4. Rincian kompatibilitas, bukti dan paket di [REVISION_001](docs/REVISION_001.md). Bagian milestone berikut menjelaskan fondasi historis; aturan revisi ini mengatasi konvensi UI lama.
 
 Aplikasi desktop Java untuk final project PBO semester 3, mahasiswa Fakultas Teknologi Informasi dan Sains Data UNS. Tenggat produk: **8 Desember 2026**. UI dan dokumentasi berbahasa Indonesia.
 
@@ -20,7 +22,7 @@ javac -version
 .\mvnw.cmd javafx:run
 ```
 
-Sesuaikan JAVA_HOME dengan lokasi JDK. Build pertama memerlukan internet untuk Maven/dependensi; alur inti aplikasi bekerja lokal. Hasil build `target/tutup-buku-0.5.0-rc1.jar` belum paket mandiri/fat JAR; jalankan melalui **javafx:run**, bukan java -jar. Paket Windows ber-runtime tersedia melalui script M5; pengujian komputer kedua tetap perlu hasil pengguna.
+Sesuaikan JAVA_HOME dengan lokasi JDK. Build pertama memerlukan internet untuk Maven/dependensi; alur inti aplikasi bekerja lokal. Hasil build `target/tutup-buku-0.5.2-rc1.jar` belum paket mandiri/fat JAR; jalankan melalui **javafx:run**, bukan java -jar. Paket Windows ber-runtime tersedia melalui script M5; pengujian komputer kedua tetap perlu hasil pengguna.
 
 Cache sesi pengembangan ini berada di proyek:
 
@@ -44,7 +46,7 @@ $env:TUTUP_BUKU_DATA_DIR = "$PWD\tmp\demo-m4"
 
 Untuk kembali ke lokasi biasa, `Remove-Item Env:TUTUP_BUKU_DATA_DIR -ErrorAction SilentlyContinue` hanya menghapus variabel sesi, tidak menghapus file. Tes selalu menggunakan database/aset sementara, bukan database AppData Anda.
 
-Skema otomatis dimigrasikan **1→2→3** secara aditif dan transaksional per versi. M4 tidak mengubah file gambar/bacaan M3. Database rusak, versi tak dikenal, dan gagal migrasi dilaporkan **tanpa reset**. Tutup aplikasi sebelum menyalin cadangan manual, lalu salin database **beserta folder assets**.
+Skema otomatis dimigrasikan **1→2→3→4** secara aditif dan transaksional per versi. M4 tidak mengubah file gambar/bacaan M3. Database rusak, versi tak dikenal, dan gagal migrasi dilaporkan **tanpa reset**. Tutup aplikasi sebelum menyalin cadangan manual, lalu salin database **beserta folder assets**.
 
 Password memakai PBKDF2-HMAC-SHA256 bawaan Java, 600.000 iterasi, salt acak16byte, hasil256bit; parameter tersimpan. NIM adalah teks yang di-trim, nol awal tetap. Database tidak dienkripsi seluruhnya. Tidak ada email, recovery universal atau login otomatis setelah restart.
 
@@ -52,9 +54,9 @@ Password memakai PBKDF2-HMAC-SHA256 bawaan Java, 600.000 iterasi, salt acak16byt
 
 1. Daftar NIM, nama, password minimal8karakter dan konfirmasi. Coba NIM sama dan password login salah untuk melihat validasi.
 2. Masuk; edit nama/prodi di **Profil**. NIM tetap. Prodi boleh kosong sampai dilengkapi.
-3. **Semester & mata kuliah** → Semester baru. Nomor positif, tahun YYYY/YYYY berurutan, Ganjil/Genap. Tahun/periode unik per akun.
-4. **Jadikan aktif** menyimpan referensi aktif; semester lama tidak hilang. Layar perencanaan dapat melihat semester mana pun tanpa mengubah referensi ini.
-5. Buat mata kuliah: nama dan SKS positif, kode opsional, acuan kehadiran dapat diedit. Centang awal berarti asumsi belum terverifikasi.
+3. **Semester & Mata Kuliah** → halaman Semester. Isi nomor positif dan tahun tunggal4 digit, misalnya2026. Nomor+tahun unik pada alur baru. Arsip lama tetap terpisah dengan periode danID pada label.
+4. **Jadikan Aktif** menyimpan form+aktivasi atomik lalu membuka halaman course. **Simpan Semester** juga membuka course tetapi tidak mengubah aktif. Kembali ke halaman Semester untuk mengedit; semester lama tetap ada.
+5. Pada halaman course: pilih semester di kiri; nama/SKS positif dan kode opsional. Edit metadata mempertahankan seluruh kehadiran. Checkbox/acuan hanya berada di Simulasi Nilai; course baru tetap memakai asumsi awal.
 6. Edit/hapus memakai pilihan daftar. Hapus selalu dikonfirmasi dan menjelaskan data turunan. Keluar/masuk akun lain untuk memeriksa isolasi; restart untuk memeriksa persistensi.
 
 ## Mencoba Modul Belajar (M3)
@@ -98,10 +100,10 @@ Snapshot yang usang tetap dapat dibaca/digandakan sebagai historis. Refresh meng
 ```powershell
 .\mvnw.cmd clean verify
 .\mvnw.cmd '-Dtest=GradePlanningPersistenceTest,GradeMigrationTest' test
-.\mvnw.cmd '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck,MilestoneFiveFxCheck' '-DreuseForks=false' verify
+.\mvnw.cmd '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck,MilestoneFiveFxCheck,ReleaseHardeningFxCheck,RevisionOneFxCheck' '-DreuseForks=false' verify
 ```
 
-Tambahkan parameter cache di atas jika memakai cache sesi ini. Default **138 tes**:137 baseline +1regresi verifikasi kehadiran. GUI opt-in **7 tes**; fork terpisah karena tiap kelas menutup toolkit. Hasil final dan perintah persis dicatat pada [status pengembangan](docs/DEVELOPMENT_STATUS.md). Laporan di target/surefire-reports; gambar di target/verification. Tes GUI meluncurkan aplikasi asli dengan SQLite sementara, termasuk kegagalan simpan yang sengaja disisipkan.
+Tambahkan parameter cache di atas jika memakai cache sesi ini. Default **176 tes**:163 baseline +13regresi Revision 001. GUI opt-in **9 tes**; fork terpisah karena tiap kelas menutup toolkit. Hasil final dan perintah persis dicatat pada [status pengembangan](docs/DEVELOPMENT_STATUS.md). Laporan di target/surefire-reports; gambar di target/verification. Tes GUI meluncurkan aplikasi asli dengan SQLite sementara, termasuk kegagalan simpan yang sengaja disisipkan.
 
 Pemeriksaan otomatis dan tinjauan gambar bukan uji usability mahasiswa. Ukuran jendela target1366×768 dan skala proses JavaFX125% diperiksa tanpa mengubah Windows; benchmark30×20 diukur dan paket mandiri diuji terpisah. Komputer kedua, skala Windows125% nyata, jaringan fisik diputus dan usability masih perlu hasil pengguna. Warning JavaFX unnamed module/unchecked cast pada kode tes dicatat; bukan kegagalan tes.
 
@@ -124,7 +126,7 @@ Pemeriksaan otomatis dan tinjauan gambar bukan uji usability mahasiswa. Ukuran j
 - [Status historis M1](docs/MILESTONE_1_STATUS.md), [M2](docs/MILESTONE_2_STATUS.md), [M3](docs/MILESTONE_3_STATUS.md)
 - [Konvensi proyek](AGENTS.md)
 
-Checkpoint M4: [cf37dbe](https://github.com/rahadyand/Tutup-Buku/commit/cf37dbea4e0de35b729808ef130e21c065c9f04a). Checkpoint M3: [04d580d](https://github.com/rahadyand/Tutup-Buku/commit/04d580d61473596f9a39f95dafee21c8a6265dcf), main. M4 sudah di-push dan hash baseline diperiksa sebelum M5; checkpoint M5 dilakukan setelah gerbang lokal lulus, dengan hasil pada DEVELOPMENT_STATUS/Git. M5 menyiapkan kandidat lokal dan lembar penerimaan; tidak melanjutkan fitur baru atau laporan akademik otomatis. Starter lama `src/App.java` dan salinan konfigurasi awal tetap dipertahankan.
+Checkpoint M4: [cf37dbe](https://github.com/rahadyand/Tutup-Buku/commit/cf37dbea4e0de35b729808ef130e21c065c9f04a). Checkpoint M3: [04d580d](https://github.com/rahadyand/Tutup-Buku/commit/04d580d61473596f9a39f95dafee21c8a6265dcf), main. M4 sudah di-push dan hash baseline diperiksa sebelum M5; checkpoint M5 dilakukan setelah gerbang lokal lulus, dengan hasil pada DEVELOPMENT_STATUS/Git. Revision 001 mengubah akun/navigasi/akademik sesuai permintaan pengguna; tidak mendesain ulang isi dashboard atau melanjutkan draf akademik. Starter lama `src/App.java` dan salinan konfigurasi awal tetap dipertahankan.
 
 Stack terkunci Java21, JavaFX21.0.10, SQLite JDBC3.51.0.0, CommonMark0.24.0+GFM tables, JUnit5.12.2. Lisensi dan rujukan: [OpenJFX](https://openjfx.io/openjfx-docs/) GPLv2+Classpath Exception, [Maven Wrapper](https://maven.apache.org/tools/wrapper/) Apache2.0, [SQLite JDBC](https://github.com/xerial/sqlite-jdbc) Apache2.0, [CommonMark](https://github.com/commonmark/commonmark-java) BSD2-Clause, JUnit EPL2.0. Sertakan pemberitahuan lisensi saat distribusi M5.
 
@@ -144,7 +146,7 @@ Untuk menghasilkan paket dari source pada Windows x64:
 
 Script mengunci Temurin21.0.13+9 dan SDK OpenJFX21.0.10 beserta SHA256 pada .tools, tidak mengubah Java global. Internet hanya diperlukan untuk persiapan alat/dependency pertama. Runtime Temurin dipakai untuk distribusi; Java aplikasi tetap21. Perbedaan patch dari OracleJDK21.0.12 baseline terdokumentasi dan seluruh regresi diulang pada Temurin.
 
-Build-Windows memakai profil Maven windows-package (dependency-plugin3.8.1, runtime scope), menjalankan verify, membuat runtime jlink dan app-image jpackage, menyalin guide/legal, mengaudit file, lalu ZIP+checksum. Folder keluaran **releases/TutupBuku-0.5.0-rc1-TANGGAL-WAKTU/** selalu baru, tidak menghapus/menimpa rilis sebelumnya. releases/ diabaikan Git. Tidak ada upload GitHub Release otomatis.
+Build-Windows memakai profil Maven windows-package (dependency-plugin3.8.1, runtime scope), menjalankan verify, membuat runtime jlink dan app-image jpackage, menyalin guide/legal, mengaudit file, lalu ZIP+checksum. Folder keluaran **releases/TutupBuku-0.5.2-rc1-TANGGAL-WAKTU/** selalu baru, tidak menghapus/menimpa rilis sebelumnya. releases/ diabaikan Git. Tidak ada upload GitHub Release otomatis.
 
 `-SkipBuild` hanya untuk mengemas ulang dokumentasi/source yang sudah diverifikasi dengan JAR/runtime-libs yang tersedia; bukan pengganti tes. Lihat BUILD-INFO dan SHA256SUMS dalam image, serta .zip.sha256 di sebelah ZIP. Sumber/tes/JDK pengembang/cache/database/aset pengguna tidak dibawa.
 
@@ -157,7 +159,7 @@ Tambahkan JAVA_HOME/MAVEN_USER_HOME dan parameter cache seperti bagian setup. Sk
 
 Audit ulang ZIP tanpa mengubah paket:
 ```powershell
-.\scripts\Verify-WindowsPackage.ps1 -Zip 'releases\NAMA_FOLDER\TutupBuku-0.5.0-rc1-windows-x64.zip'
+.\scripts\Verify-WindowsPackage.ps1 -Zip 'releases\NAMA_FOLDER\TutupBuku-0.5.2-rc1-windows-x64.zip'
 # Tambahkan -Launch untuk menjalankan EXE ekstraksi pada data sementara baru,
 # JAVA_HOME/MAVEN_HOME kosong dan PATH terbatas. Tutup jendela agar script selesai.
 ```

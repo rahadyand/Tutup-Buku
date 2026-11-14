@@ -58,6 +58,19 @@ public final class GradePlanningService {
         repository.saveActualSettings(session.requireNim(), course, mode, letter, attendance);
     }
 
+    public void saveActual(
+            long course,
+            EvaluationMode mode,
+            Optional<LetterGrade> letter,
+            Attendance attendance,
+            String reference) {
+        if (mode == null) throw new IllegalArgumentException("Pilih mode penilaian.");
+        if (reference == null || reference.isBlank())
+            throw new IllegalArgumentException("Acuan kehadiran wajib diisi.");
+        repository.saveActualSettings(
+                session.requireNim(), course, mode, letter, attendance, reference.trim());
+    }
+
     public GradeResult actualResult(ActualCourse course) {
         if (course.mode() == EvaluationMode.DIRECT)
             return calculator.direct(course.letter(), true, course.course().attendance());
@@ -171,8 +184,8 @@ public final class GradePlanningService {
         if (!changes.isEmpty())
             changes.add(
                     "Perbarui basis: pertahankan target/mode; buang kunci yang sudah"
-                        + " aktual/terhapus. Mata kuliah baru ditambahkan, yang dihapus"
-                        + " dikeluarkan. Tinjau lalu Simpan skenario.");
+                            + " aktual/terhapus. Mata kuliah baru ditambahkan, yang dihapus"
+                            + " dikeluarkan. Tinjau lalu Simpan skenario.");
         return new ScenarioReview(changes);
     }
 
@@ -278,7 +291,7 @@ public final class GradePlanningService {
                         switch (target.status()) {
                             case ACHIEVABLE ->
                                     "Target dapat dicapai. Saran minimum sama untuk semua komponen"
-                                        + " bebas (0–100).";
+                                            + " bebas (0–100).";
                             case ALREADY_REACHED ->
                                     "Target sudah tercapai; saran minimum komponen bebas 0.";
                             case IMPOSSIBLE ->
@@ -308,7 +321,7 @@ public final class GradePlanningService {
             return "Tidak kompatibel: semester berbeda.";
         if (first.review().outdated() || second.review().outdated())
             return "Basis usang/perlu ditinjau. Angka di bawah adalah snapshot historis, bukan"
-                       + " perbandingan basis terkini.";
+                    + " perbandingan basis terkini.";
         Map<Long, Long> a = new HashMap<>(), b = new HashMap<>();
         first.scenario()
                 .courses()

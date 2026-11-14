@@ -1,12 +1,24 @@
 # Arsitektur Tutup Buku — M1–M5
 
+## Revision 001 — arsitektur saat ini (schema 4)
+
+AuthView memakai PasswordInput untuk dua representasi teks tersinkron; reset visibility pada sukses/keluar tab. NimGuidance hanya menguraikan konvensi L/01/02/tahun/identitas; AuthService tidak diberi pola wajib baru. Tidak ada lookup NIM akun lain atau pengisian prodi otomatis.
+
+WorkspaceView menyediakan satu pasang shortcut di bawah Keluar, menuju DashboardView yang sama. Tab berurutan Dashboard/Akademik/Profil. Guard lama tetap dipakai sebelum action/refresh. Header membaca profil dan semester aktif melalui worker; tidak berisi instruksi panel internal. FormSupport.centeredPage/centeredForm berlaku lokal, tidak mengecilkan seluruh TextField aplikasi.
+
+AcademicView sekarang dua halaman, memakai saveSemesterForm/ saveSemesterAndActivate agar save+aktif satu transaksi. Form menahan input saat error; ID hasil commit disimpan sebelum reload daftar. Halaman kedua memisahkan semester dipilih dan aktif, memuat course per owner+semester. saveCourseMetadata hanya UPDATE nama/kode/SKS/revisi; SQL tidak mengubah kehadiran. Input acuan kehadiran dipindahkan ke ActualGradePane dan disimpan bersama setting aktual.
+
+Semester menyimpan academicYear rentang+period internal serta flag legacy. year() dan toString() menampilkan tahun awal tunggal. Schema3→4 mengganti UNIQUE lama menjadi owner+nomor+rentang+periode (tetap mengizinkan dua arsip berbeda); alur UI baru menolak duplikasi owner+nomor+tahun secara transaksional. Periode record baru berasal dari paritas nomor sebagai metadata internal saja; periode record lama tidak ditafsirkan ulang. Semua arsip migrasi berflag legacy dan menyertakan periode+#ID pada label agar tidak tertukar. Tidak merge/delete ID atau data turunan. API lama dipertahankan untuk kompatibilitas dan fixture historis, bukan form baru.
+
+Migrasi rebuild menggunakan nama tabel baru, copyID+kolom lama, drop/rename dalam transaksi, foreign_key_check sebelum commit dan FK dipulihkan setelahnya. AUTOINCREMENT sequence dipertahankan. Batas tahun input1000–9998 menjaga rentang internal tetap4 digit; dukungan9999 belum dibuat. Lihat tes migrasi gagal/sukses dan bukti di REVISION_001. Bagian schema1/2/3 di bawah adalah riwayat, bukan format input UI terbaru.
+
 ## Aliran sederhana
 
 UI menangkap input → service memvalidasi/mengoordinasikan → repository mengakses SQLite → hasil immutable ditampilkan. Service tidak mengenal JavaFX/SQL; engine perhitungan tetap murni. M2 menambahkan SQLite repository untuk akun/akademik; engine M1 tidak diubah.
 
 | Class | Tanggung jawab dan alasan |
 |---|---|
-| Score | Menyimpan perolehan dan maksimum, validasi0≤earned≤maximum dan maximum>0; normalized() mengeluarkan skala100 dengan presisi34digit |
+| Score | Menyimpan perolehan dan maksimum, validasi0≤earned≤maximum dan maximum>0; normalized() mengeluarkan skala100 dengan presisi34 digit |
 | AssessmentItem | ID, nama bebas, bobot0–100 dan aktual Optional; tidak menyimpan asumsi |
 | ScenarioAssumptions | Map ID→normalisasi terkunci, disalin immutable; saran tidak ditulis otomatis ke sini |
 | Attendance | met dan confirmed terpisah; awaltrue/false berarti memenuhi sebagai asumsi |
@@ -28,7 +40,7 @@ Huruf langsung hanya menyimpan huruf, tanpa angka fiktif. Kedua mode menghasilka
 
 ## Presisi dan validasi
 
-Input adalah desimal eksak. Pembagian seperti2/3 berulang; jika setiap normalisasi dibulatkan lalu dijumlahkan, nilai yang tepat60 dapat salah menjadi sedikit di bawah60. `ScoreFraction` menambahkan pecahan tanpa pembagian, lalu membandingkan numerator dengan ambang×denominator. Grade weighted dan status solver memakai pembandingan eksak itu. Angka keluaran berulang menggunakan `MathContext.DECIMAL128` (34digit), bukan double. Saat UI lengkap dibuat, beri tanda≈/cukup digit untuk nilai dekat batas; jangan mengandalkan format2desimal untuk konversi ulang.
+Input adalah desimal eksak. Pembagian seperti2/3 berulang; jika setiap normalisasi dibulatkan lalu dijumlahkan, nilai yang tepat60 dapat salah menjadi sedikit di bawah60. `ScoreFraction` menambahkan pecahan tanpa pembagian, lalu membandingkan numerator dengan ambang×denominator. Grade weighted dan status solver memakai pembandingan eksak itu. Angka keluaran berulang menggunakan `MathContext.DECIMAL128` (34 digit), bukan double. Saat UI lengkap dibuat, beri tanda≈/cukup digit untuk nilai dekat batas; jangan mengandalkan format2desimal untuk konversi ulang.
 
 Saran aman dibulatkan **ke atas2desimal** pada skala100. Ini pilihan ketelitian input M1, contoh56,666… menjadi56,67; 56,66 tetap69,996/C+. Saran adalah nilai normalisasi, bukan angka perolehan pada skala asal. Konversi ke skala perolehan jika nanti ditampilkan perlu ketelitian input yang eksplisit.
 

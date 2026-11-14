@@ -27,6 +27,8 @@ final class ActualGradePane extends BorderPane {
     private final Label status = status("actual-grade-status"),
             result = status("actual-result"),
             total = status("component-total");
+    private final TextField reference =
+            text("actual-attendance-reference", Course.DEFAULT_ATTENDANCE_REFERENCE);
     private ActualCourse current;
     private AssessmentComponent selected;
     private boolean filling, componentDirty, settingsDirty;
@@ -97,6 +99,7 @@ final class ActualGradePane extends BorderPane {
                         });
         letter.valueProperty().addListener((o, a, b) -> markSettings());
         attendance.selectedProperty().addListener((o, a, b) -> markSettings());
+        reference.textProperty().addListener((o, a, b) -> markSettings());
         confirmed.selectedProperty().addListener((o, a, b) -> markSettings());
         Button newItem = button("new-component", "Komponen baru"),
                 saveItem = button("save-component", "Simpan komponen / nilai aktual"),
@@ -155,6 +158,7 @@ final class ActualGradePane extends BorderPane {
                         clearLetter,
                         attendance,
                         confirmed,
+                        field("Acuan kehadiran (tidak dihitung otomatis)", reference),
                         saveSettings,
                         result,
                         heading("Komponen bobot rata / flat"),
@@ -199,6 +203,10 @@ final class ActualGradePane extends BorderPane {
         letter.setValue(value == null ? null : value.letter().orElse(null));
         attendance.setSelected(value == null || value.course().attendance().met());
         confirmed.setSelected(value != null && value.course().attendance().confirmed());
+        reference.setText(
+                value == null
+                        ? Course.DEFAULT_ATTENDANCE_REFERENCE
+                        : value.course().attendanceReference());
         components.getItems().setAll(value == null ? List.of() : value.components());
         components.getSelectionModel().clearSelection();
         filling = false;
@@ -321,11 +329,12 @@ final class ActualGradePane extends BorderPane {
         EvaluationMode chosen = mode.getValue();
         Optional<LetterGrade> actual = Optional.ofNullable(letter.getValue());
         Attendance value = new Attendance(attendance.isSelected(), confirmed.isSelected());
+        String attendanceReference = reference.getText();
         // Form komponen yang belum disimpan tidak boleh hilang saat mode disimpan.
         tasks.save(
                 status,
                 () -> {
-                    service.saveActual(id, chosen, actual, value);
+                    service.saveActual(id, chosen, actual, value, attendanceReference);
                     return service.courses(semester);
                 },
                 values -> {

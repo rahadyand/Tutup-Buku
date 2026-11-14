@@ -1,3 +1,13 @@
+# Kandidat0.5.2-rc1 — Revision 001
+
+Form Login/Daftar terpusat, panduan NIM Informatika/Sains Data tanpa aturan login baru, toggle tiga password dan reset visibility. Shortcut dipindahkan ke bawah Keluar; urutan Dashboard/Akademik/Profil. Header menampilkan profil dan semester aktif sebenarnya.
+
+Akademik dua halaman; tahun tunggal4 digit, save+activate atomik, simpan saja tidak mengubah aktif. Course metadata tidak menyentuh kehadiran; acuan dipindahkan ke nilai aktual. Migrasi3→4 mempertahankan ID/data/periode arsip tanpa merge; arsip diberi periode+#ID agar tidak tertukar. Versi sebelumnya tidak dapat membuka schema 4. Cadangkan DB+assets dahulu saat app tertutup.
+
+Batas: tahun1000–9998, hanyaWindowsx64, penerimaan perangkat kedua/offline fisik/Windows125% nyata/usability masih pending. H-02 historis JavaFXListView belum diklaim teratasi. Bukti tes/paket terbaru di REVISION_001.md repository.
+
+## Riwayat sebelum Revision 001
+
 # Catatan kandidat rilis 0.5.1-rc1
 
 Hardening sesudah M5: layar Semester & mata kuliah dimuat ulang setelah guard ketika dibuka kembali. Kehadiran yang baru disimpan melalui Simulasi Nilai kini terbaca sebelum edit nama/SKS, sehingga form lama tidak menimpanya. Regresi lintas layar membuktikan kehadiran false/confirmed true tetap tersimpan setelah metadata berubah.

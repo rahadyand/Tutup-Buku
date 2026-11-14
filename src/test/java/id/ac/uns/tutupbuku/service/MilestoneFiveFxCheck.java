@@ -38,7 +38,7 @@ class MilestoneFiveFxCheck extends FxTestSupport {
     void createSemester(String number, String year) throws Exception {
         click("new-semester");
         text("semester-number", number);
-        text("semester-year", year);
+        text("semester-year", year.substring(0, 4));
         click("save-semester");
     }
 
@@ -82,8 +82,9 @@ class MilestoneFiveFxCheck extends FxTestSupport {
             text("register-confirmation", "sandi-uji-lokal");
             click("register");
             login();
-            tab("workspace-tabs", 2);
+            tab("workspace-tabs", 1);
             createSemester("3", "2026/2027");
+            click("edit-semesters");
             click("set-active-semester");
             createCourse("PBO", "3");
             createCourse("Algoritma", "3");
@@ -91,22 +92,21 @@ class MilestoneFiveFxCheck extends FxTestSupport {
             createCourse("Bahasa Inggris", "2");
             text("course-name", "Edit yang belum disimpan");
             dialog(
-                    () -> ((TabPane) node("workspace-tabs")).getSelectionModel().select(1),
+                    () -> ((TabPane) node("workspace-tabs")).getSelectionModel().select(2),
                     ButtonBar.ButtonData.CANCEL_CLOSE);
             assertEquals(
                     "Edit yang belum disimpan",
                     fx(() -> ((TextField) node("course-name")).getText()));
             dialog(
-                    () -> ((TabPane) node("workspace-tabs")).getSelectionModel().select(1),
+                    () -> ((TabPane) node("workspace-tabs")).getSelectionModel().select(2),
                     ButtonBar.ButtonData.NO);
             text("profile-program", "Informatika");
             dialog(() -> ((Button) node("logout")).fire(), ButtonBar.ButtonData.CANCEL_CLOSE);
             assertEquals("Informatika", fx(() -> ((TextField) node("profile-program")).getText()));
             click("save-profile");
-            tab("workspace-tabs", 2);
+            tab("workspace-tabs", 1);
             createSemester("4", "2026/2027");
-            combo("semester-period", SemesterPeriod.EVEN);
-            click("save-semester"); // invalid duplicate before period change must preserve draft
+            // Revision001: semester4/year2026 is distinct from semester3, without a period field.
             tab("workspace-tabs", 0);
             click("open-learning");
             assertEquals(
@@ -164,13 +164,13 @@ class MilestoneFiveFxCheck extends FxTestSupport {
             text(
                     "material-markdown",
                     "# Belajar\n\n"
-                        + "| A | B |\n"
-                        + "| --- | --- |\n"
-                        + "| 1 | 2 |\n\n"
-                        + "```java\n"
-                        + "class Course {}\n"
-                        + "```\n\n"
-                        + "![Gambar]("
+                            + "| A | B |\n"
+                            + "| --- | --- |\n"
+                            + "| 1 | 2 |\n\n"
+                            + "```java\n"
+                            + "class Course {}\n"
+                            + "```\n\n"
+                            + "![Gambar]("
                             + reference
                             + ")\n\n"
                             + "Paragraf bacaan.\n\n".repeat(70));
@@ -237,7 +237,7 @@ class MilestoneFiveFxCheck extends FxTestSupport {
             assertTrue(label("scenario-course-result").contains("Lulus"));
             click("save-scenario");
             screenshot("m5-grades-" + suffix + ".png");
-            tab("workspace-tabs", 2);
+            tab("workspace-tabs", 1);
             fx(
                     () -> {
                         var list = (ListView<Semester>) node("semester-list");

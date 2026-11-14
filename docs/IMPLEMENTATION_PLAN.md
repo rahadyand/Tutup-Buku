@@ -38,3 +38,6 @@ Editor flat/aktual, draft bobot, mode huruf/detail, target multi-komponen, snaps
 M5 telah diminta dan menghasilkan kandidat0.5.0-rc1: integrasi/guard/default aktif, reviewmulti-course, tata letak, benchmark30×20, app-imageZIP ber-runtime beserta lisensi/panduan, audit dan uji EXE ekstraksi/restart. Rincian bukti pada DEVELOPMENT_STATUS dan INTEGRATION_REVIEW.
 
 Gerbang lapangan masih membutuhkan pengguna: komputer Windows kedua, offline fisik, Windows125% nyata dan usability3–5mahasiswa. Ini penerimaan kandidat yang sama, bukan izin memulai fitur baru. Setelah pengguna meninjau hasil, perbaiki hanya masalah yang terkonfirmasi. Laporan/PPT akhir tidak ditulis otomatis; latihan demo9menit tersedia di DEMO_SCRIPT.
+
+## Revision 001 atas permintaan pengguna — 14 November2026
+Revisi terbatas akun/navigasi/header/akademik dua halaman, tahun tunggal dengan migrasi4, kehadiran hanya di nilai, kandidat0.5.2-rc1. Tidak memulai milestone/fitur lain atau draf akademik. Setelah verifikasi dan push, berhenti untuk review pengguna. Hasil aktual di REVISION_001/DEVELOPMENT_STATUS.

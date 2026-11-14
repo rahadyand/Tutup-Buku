@@ -5,6 +5,8 @@ import static id.ac.uns.tutupbuku.ui.FormSupport.*;
 import id.ac.uns.tutupbuku.domain.*;
 import id.ac.uns.tutupbuku.service.*;
 
+import javafx.application.Platform;
+import javafx.geometry.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
@@ -17,23 +19,24 @@ final class AcademicView extends BorderPane {
     private final UiTasks tasks;
     private final Consumer<UserProfile> onProfile;
     private final ListView<Semester> semesters = new ListView<>();
+    private final ComboBox<Semester> editorSelection = new ComboBox<>();
     private final ListView<Course> courses = new ListView<>();
-    private final TextField number = text("semester-number", "Misalnya 3");
-    private final TextField year = text("semester-year", "2026/2027");
-    private final ComboBox<SemesterPeriod> period = new ComboBox<>();
-    private final TextField courseName = text("course-name", "Nama mata kuliah");
-    private final TextField code = text("course-code", "Opsional");
-    private final TextField credits = text("course-credits", "Misalnya 3 atau 2,5");
-    private final TextField reference =
-            text("course-attendance-reference", Course.DEFAULT_ATTENDANCE_REFERENCE);
-    private final CheckBox attendance =
-            new CheckBox("Syarat kehadiran terpenuhi — asumsi, belum diverifikasi");
-    private final Label semesterStatus = status("semester-status");
-    private final Label courseStatus = status("course-status");
-    private final Label loadStatus = status("academic-status");
-    private boolean refreshing;
+    private final TextField number = text("semester-number", "Misalnya 3"),
+            year = text("semester-year", "2026");
+    private final TextField courseName = text("course-name", "Nama mata kuliah"),
+            code = text("course-code", "Opsional"),
+            credits = text("course-credits", "3");
+    private final Label active = status("academic-active-semester"),
+            semesterStatus = status("semester-status"),
+            courseStatus = status("course-status"),
+            loadStatus = status("academic-status"),
+            courseContext = status("course-semester-context");
+    private final ScrollPane semesterPage;
+    private final BorderPane coursePage = new BorderPane();
+    private Semester selectedSemester;
+    private Course selectedCourse;
     private UserProfile profile;
-    private boolean filling, semesterDirty, courseDirty;
+    private boolean filling, selecting, semesterDirty, courseDirty;
 
     AcademicView(
             AuthService auth,
@@ -46,227 +49,171 @@ final class AcademicView extends BorderPane {
         this.onProfile = onProfile;
         semesters.setId("semester-list");
         courses.setId("course-list");
-        period.setId("semester-period");
-        attendance.setId("course-attendance");
-        period.getItems().setAll(SemesterPeriod.values());
-        period.setValue(SemesterPeriod.ODD);
-        semesters.setPrefHeight(145);
-        courses.setPrefHeight(145);
-        semesters.setPlaceholder(new Label("Belum ada semester. Klik Semester baru."));
-        courses.setPlaceholder(new Label("Pilih semester; belum ada mata kuliah."));
+        editorSelection.setId("semester-editor-selector");
+        editorSelection.setPromptText("Pilih semester tersimpan untuk mengedit");
+        editorSelection.setMaxWidth(360);
+        semesters.setPlaceholder(note("Belum ada semester tersimpan."));
+        courses.setPlaceholder(note("Belum ada mata kuliah pada semester pilihan."));
         semesters.setCellFactory(
                 list ->
                         new ListCell<>() {
                             @Override
-                            protected void updateItem(Semester item, boolean empty) {
-                                super.updateItem(item, empty);
+                            protected void updateItem(Semester value, boolean empty) {
+                                super.updateItem(value, empty);
                                 setText(
-                                        empty || item == null
+                                        empty || value == null
                                                 ? null
-                                                : item
+                                                : value
                                                         + (profile != null
                                                                         && profile.activeSemesterId()
                                                                                 .filter(
                                                                                         id ->
                                                                                                 id
-                                                                                                        == item
+                                                                                                        == value
                                                                                                                 .id())
                                                                                 .isPresent()
                                                                 ? " [aktif]"
                                                                 : ""));
                             }
                         });
+        // Tunda perubahan selection sampai event JavaFX selesai; jangan mutasi selection di tengah
+        // Change.
         semesters
                 .getSelectionModel()
                 .selectedItemProperty()
                 .addListener(
-                        (obs, old, selected) -> {
-                            if (refreshing) return;
-                            refreshing = true;
-                            semesters.getSelectionModel().select(old);
-                            refreshing = false;
-                            guard(
+                        (o, old, value) -> {
+                            if (selecting || value == null) return;
+                            Platform.runLater(
                                     () -> {
-                                        refreshing = true;
-                                        semesters.getSelectionModel().select(selected);
-                                        refreshing = false;
-                                        fillSemester(selected);
-                                        loadCourses();
+                                        if (selecting) return;
+                                        selecting = true;
+                                        semesters.getSelectionModel().select(selectedSemester);
+                                        selecting = false;
+                                        guard(() -> selectSemester(value));
                                     });
+                        });
+        editorSelection
+                .valueProperty()
+                .addListener(
+                        (o, old, value) -> {
+                            if (selecting || value == null) return;
+                            selecting = true;
+                            editorSelection.setValue(selectedSemester);
+                            selecting = false;
+                            guard(() -> selectSemester(value));
                         });
         courses.getSelectionModel()
                 .selectedItemProperty()
                 .addListener(
-                        (obs, old, selected) -> {
-                            if (refreshing) return;
-                            refreshing = true;
-                            courses.getSelectionModel().select(old);
-                            refreshing = false;
-                            guardCourse(
+                        (o, old, value) -> {
+                            if (selecting) return;
+                            Platform.runLater(
                                     () -> {
-                                        refreshing = true;
-                                        courses.getSelectionModel().select(selected);
-                                        refreshing = false;
-                                        fillCourse(selected);
+                                        if (selecting) return;
+                                        selecting = true;
+                                        courses.getSelectionModel().select(selectedCourse);
+                                        selecting = false;
+                                        guardCourse(
+                                                () -> {
+                                                    selectedCourse = value;
+                                                    selecting = true;
+                                                    courses.getSelectionModel().select(value);
+                                                    selecting = false;
+                                                    fillCourse(value);
+                                                });
                                     });
                         });
-        Button newSemester = button("new-semester", "Semester baru");
-        newSemester.setOnAction(
-                event ->
+        number.setMaxWidth(120);
+        year.setMaxWidth(150);
+        Button newForm = button("new-semester", "Semester baru");
+        newForm.setOnAction(e -> newSemester());
+        Button activate = button("set-active-semester", "Jadikan Aktif");
+        activate.setOnAction(e -> guardCourse(() -> saveSemester(true, () -> showCourses())));
+        Button save = button("save-semester", "Simpan Semester");
+        save.setOnAction(e -> guardCourse(() -> saveSemester(false, () -> showCourses())));
+        Button delete = button("delete-semester", "Hapus Semester");
+        delete.setOnAction(e -> deleteSemester());
+        Button view = button("view-courses", "Lihat mata kuliah semester ini");
+        view.setOnAction(
+                e ->
                         guard(
                                 () -> {
-                                    refreshing = true;
-                                    semesters.getSelectionModel().clearSelection();
-                                    courses.getItems().clear();
-                                    refreshing = false;
-                                    fillSemester(null);
-                                    fillCourse(null);
+                                    if (selectedSemester == null)
+                                        semesterStatus.setText(
+                                                "Pilih semester tersimpan terlebih dahulu.");
+                                    else showCourses();
                                 }));
-        Button saveSemester = button("save-semester", "Simpan semester");
-        saveSemester.setOnAction(event -> saveSemester());
-        Button active = button("set-active-semester", "Jadikan aktif");
-        active.setOnAction(
-                event ->
-                        guard(
-                                () -> {
-                                    Semester selected =
-                                            semesters.getSelectionModel().getSelectedItem();
-                                    if (selected == null) {
-                                        semesterStatus.setText("Pilih semester terlebih dahulu.");
-                                        return;
-                                    }
-                                    tasks.run(
-                                            semesterStatus,
-                                            () -> {
-                                                academic.setActiveSemester(selected.id());
-                                                return null;
-                                            },
-                                            ignored -> {
-                                                semesterStatus.setText("Semester aktif tersimpan.");
-                                                refresh();
-                                            });
-                                }));
-        Button deleteSemester = button("delete-semester", "Hapus semester");
-        deleteSemester.setOnAction(
-                event ->
-                        guard(
-                                () -> {
-                                    Semester selected =
-                                            semesters.getSelectionModel().getSelectedItem();
-                                    if (selected == null) {
-                                        semesterStatus.setText("Pilih semester yang akan dihapus.");
-                                        return;
-                                    }
-                                    if (!confirm(
-                                            this,
-                                            "Hapus semester?",
-                                            "Hapus "
-                                                    + selected
-                                                    + " beserta mata kuliah, komponen/nilai aktual,"
-                                                    + " semua skenario, bab, materi kuliah, catatan"
-                                                    + " dan status selesainya? Jika aktif, pilihan"
-                                                    + " aktif dikosongkan. Semester lain dan"
-                                                    + " peminatan tetap tersimpan; aset gambar"
-                                                    + " tidak dibersihkan."))
-                                        return;
-                                    tasks.run(
-                                            semesterStatus,
-                                            () -> {
-                                                academic.deleteSemester(selected.id());
-                                                return null;
-                                            },
-                                            ignored -> {
-                                                semesterStatus.setText(
-                                                        "Semester dan mata kuliah terkait"
-                                                            + " dihapus.");
-                                                refresh();
-                                            });
-                                }));
+        for (Button button : List.of(activate, save, delete)) button.setMaxWidth(260);
+        semesterPage =
+                centeredPage(
+                        centeredForm(
+                                heading("Semester"),
+                                active,
+                                fieldCentered("Semester tersimpan", editorSelection),
+                                newForm,
+                                fieldCentered("Nomor semester", number),
+                                fieldCentered("Tahun", year),
+                                activate,
+                                save,
+                                delete,
+                                view,
+                                semesterStatus),
+                        500);
+        semesterPage.setId("semester-page");
+        coursePage.setId("courses-page");
+        Button back = button("edit-semesters", "Kembali ke halaman Semester");
+        back.setOnAction(e -> guard(() -> showSemester()));
+        Button newFromCourses = button("new-semester", "Semester baru");
+        newFromCourses.setOnAction(e -> newSemester());
+        VBox sidebar =
+                new VBox(
+                        10,
+                        heading("Semester tersimpan"),
+                        note("Sorotan = dipilih · [aktif] = semester aktif"),
+                        semesters,
+                        newFromCourses,
+                        back);
+        sidebar.setPadding(new Insets(16));
+        sidebar.setPrefWidth(300);
+        VBox.setVgrow(semesters, Priority.ALWAYS);
+        coursePage.setLeft(sidebar);
+        courses.setPrefHeight(160);
+        courses.setMinHeight(90);
+        courseName.setMaxWidth(480);
+        code.setMaxWidth(180);
+        credits.setMaxWidth(100);
         Button newCourse = button("new-course", "Mata kuliah baru");
         newCourse.setOnAction(
-                event ->
+                e ->
                         guardCourse(
                                 () -> {
-                                    refreshing = true;
+                                    selectedCourse = null;
+                                    selecting = true;
                                     courses.getSelectionModel().clearSelection();
-                                    refreshing = false;
+                                    selecting = false;
                                     fillCourse(null);
                                 }));
         Button saveCourse = button("save-course", "Simpan mata kuliah");
-        saveCourse.setOnAction(event -> saveCourse());
+        saveCourse.setOnAction(e -> saveCourse(() -> {}));
         Button deleteCourse = button("delete-course", "Hapus mata kuliah");
-        deleteCourse.setOnAction(
-                event ->
-                        guardCourse(
-                                () -> {
-                                    Semester selectedSemester =
-                                            semesters.getSelectionModel().getSelectedItem();
-                                    Course selected = courses.getSelectionModel().getSelectedItem();
-                                    if (selected == null || selectedSemester == null) {
-                                        courseStatus.setText(
-                                                "Pilih mata kuliah yang akan dihapus.");
-                                        return;
-                                    }
-                                    if (!confirm(
-                                            this,
-                                            "Hapus mata kuliah?",
-                                            "Hapus mata kuliah "
-                                                    + selected.name()
-                                                    + " beserta komponen/nilai aktual, bab, materi"
-                                                    + " kuliah, catatan dan status selesainya?"
-                                                    + " Snapshot skenario lama tetap tersedia"
-                                                    + " sebagai data historis dan perlu ditinjau."
-                                                    + " Mata kuliah lain dan peminatan tetap"
-                                                    + " tersimpan; aset gambar tidak dibersihkan."))
-                                        return;
-                                    tasks.run(
-                                            courseStatus,
-                                            () -> {
-                                                academic.deleteCourse(
-                                                        selectedSemester.id(), selected.id());
-                                                return null;
-                                            },
-                                            ignored -> {
-                                                courseStatus.setText("Mata kuliah dihapus.");
-                                                loadCourses();
-                                            });
-                                }));
-        Button reload = button("reload-academic", "Muat ulang daftar");
-        reload.setOnAction(event -> guard(this::refresh));
-        VBox left =
-                form(
-                        heading("Semester"),
-                        semesters,
-                        newSemester,
-                        field("Nomor semester", number),
-                        field("Tahun akademik", year),
-                        field("Periode", period));
-        VBox right =
+        deleteCourse.setOnAction(e -> deleteCourse());
+        VBox courseForm =
                 form(
                         heading("Mata kuliah"),
+                        courseContext,
                         courses,
                         newCourse,
                         field("Nama mata kuliah", courseName),
-                        field("Kode", code),
+                        field("Kode (opsional)", code),
                         field("SKS (lebih dari 0)", credits),
-                        attendance,
-                        field("Acuan kehadiran (tidak dihitung otomatis)", reference),
-                        note(
-                                "Atur komponen dan nilai pada Dashboard → Simulasi nilai."
-                                    + " Verifikasi kehadiran tersedia di Komponen & aktual; acuan"
-                                    + " ini bukan absensi per tanggal."));
-        BorderPane semesterPanel = new BorderPane(scroll(left));
-        semesterPanel.setBottom(
-                form(new FlowPane(8, 8, saveSemester, active, deleteSemester), semesterStatus));
-        BorderPane coursePanel = new BorderPane(scroll(right));
-        coursePanel.setBottom(form(new FlowPane(8, 8, saveCourse, deleteCourse), courseStatus));
-        SplitPane split = new SplitPane(semesterPanel, coursePanel);
-        split.setDividerPositions(0.44);
-        HBox loadBar = new HBox(12, reload, loadStatus);
-        loadBar.setPadding(new javafx.geometry.Insets(12));
-        setCenter(split);
-        setBottom(loadBar);
-        fillCourse(null);
+                        new HBox(10, saveCourse, deleteCourse),
+                        courseStatus);
+        courseForm.setMaxWidth(680);
+        coursePage.setCenter(centeredPage(courseForm, 680));
+        setBottom(loadStatus);
+        setPadding(new Insets(6));
+        showSemester();
         for (TextField field : List.of(number, year))
             field.textProperty()
                     .addListener(
@@ -276,15 +223,7 @@ final class AcademicView extends BorderPane {
                                     semesterStatus.setText("Belum disimpan.");
                                 }
                             });
-        period.valueProperty()
-                .addListener(
-                        (o, a, b) -> {
-                            if (!filling) {
-                                semesterDirty = true;
-                                semesterStatus.setText("Belum disimpan.");
-                            }
-                        });
-        for (TextField field : List.of(courseName, code, credits, reference))
+        for (TextField field : List.of(courseName, code, credits))
             field.textProperty()
                     .addListener(
                             (o, a, b) -> {
@@ -293,31 +232,36 @@ final class AcademicView extends BorderPane {
                                     courseStatus.setText("Belum disimpan.");
                                 }
                             });
-        attendance
-                .selectedProperty()
-                .addListener(
-                        (o, a, b) -> {
-                            if (!filling) {
-                                courseDirty = true;
-                                courseStatus.setText("Belum disimpan.");
-                            }
-                        });
     }
 
     void refresh() {
-        Semester previous = semesters.getSelectionModel().getSelectedItem();
-        long previousId = previous == null ? 0 : previous.id();
+        reload(selectedSemester == null ? 0 : selectedSemester.id(), () -> {});
+    }
+
+    private void reload(long preferred, Runnable done) {
         tasks.run(
                 loadStatus,
                 () -> new Snapshot(auth.profile(), academic.semesters()),
                 snapshot -> {
                     profile = snapshot.profile();
                     onProfile.accept(profile);
-                    refreshing = true;
+                    selecting = true;
                     semesters.getItems().setAll(snapshot.semesters());
-                    Semester selection =
+                    editorSelection.getItems().setAll(snapshot.semesters());
+                    selecting = false;
+                    active.setText(
                             snapshot.semesters().stream()
-                                    .filter(s -> s.id() == previousId)
+                                    .filter(
+                                            s ->
+                                                    profile.activeSemesterId()
+                                                            .filter(id -> id == s.id())
+                                                            .isPresent())
+                                    .findFirst()
+                                    .map(s -> "Aktif: " + s)
+                                    .orElse("Belum ada semester aktif."));
+                    Semester choice =
+                            snapshot.semesters().stream()
+                                    .filter(s -> s.id() == preferred)
                                     .findFirst()
                                     .orElseGet(
                                             () ->
@@ -333,162 +277,188 @@ final class AcademicView extends BorderPane {
                                                                                     .isPresent())
                                                             .findFirst()
                                                             .orElse(null));
-                    semesters.getSelectionModel().select(selection);
-                    semesters.refresh();
-                    refreshing = false;
-                    fillSemester(selection);
-                    loadStatus.setText(
-                            snapshot.semesters().isEmpty()
-                                    ? "Belum ada semester. Buat semester pertama Anda."
-                                    : "Daftar semester dimuat.");
-                    loadCourses();
+                    selectSemester(choice);
+                    loadStatus.setText("Daftar semester dimuat.");
+                    done.run();
                 });
     }
 
-    private void loadCourses() {
-        Semester selected = semesters.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            courses.getItems().clear();
-            fillCourse(null);
-            return;
-        }
-        tasks.run(
-                loadStatus,
-                () -> academic.courses(selected.id()),
-                loaded -> {
-                    refreshing = true;
-                    courses.getItems().setAll(loaded);
-                    courses.getSelectionModel().clearSelection();
-                    refreshing = false;
-                    fillCourse(null);
-                    loadStatus.setText("Daftar dimuat. " + selected);
+    private void selectSemester(Semester value) {
+        selectedSemester = value;
+        selecting = true;
+        semesters.getSelectionModel().select(value);
+        editorSelection.setValue(value);
+        semesters.refresh();
+        selecting = false;
+        fillSemester(value);
+        loadCourses();
+    }
+
+    private void showSemester() {
+        setCenter(semesterPage);
+    }
+
+    private void showCourses() {
+        setCenter(coursePage);
+    }
+
+    private void newSemester() {
+        guard(
+                () -> {
+                    selectedSemester = null;
+                    selecting = true;
+                    semesters.getSelectionModel().clearSelection();
+                    editorSelection.setValue(null);
+                    selecting = false;
+                    fillSemester(null);
+                    showSemester();
                 });
     }
 
-    private void fillSemester(Semester semester) {
+    private void fillSemester(Semester value) {
         filling = true;
-        number.setText(semester == null ? "" : Integer.toString(semester.number()));
-        year.setText(semester == null ? "" : semester.academicYear());
-        period.setValue(semester == null ? SemesterPeriod.ODD : semester.period());
+        number.setText(value == null ? "" : Integer.toString(value.number()));
+        year.setText(value == null ? "" : value.year());
         filling = false;
         semesterDirty = false;
     }
 
-    private void fillCourse(Course course) {
+    private void loadCourses() {
+        selectedCourse = null;
+        if (selectedSemester == null) {
+            selecting = true;
+            courses.getItems().clear();
+            selecting = false;
+            fillCourse(null);
+            courseContext.setText("Pilih semester tersimpan.");
+            return;
+        }
+        Semester context = selectedSemester;
+        courseContext.setText("Dipilih: " + context);
+        tasks.run(
+                loadStatus,
+                () -> academic.courses(context.id()),
+                loaded -> {
+                    if (selectedSemester == null || selectedSemester.id() != context.id()) return;
+                    selecting = true;
+                    courses.getItems().setAll(loaded);
+                    courses.getSelectionModel().clearSelection();
+                    selecting = false;
+                    fillCourse(null);
+                });
+    }
+
+    private void fillCourse(Course value) {
         filling = true;
-        courseName.setText(course == null ? "" : course.name());
-        code.setText(course == null ? "" : course.code());
-        credits.setText(course == null ? "" : course.credits().toPlainString().replace('.', ','));
-        attendance.setSelected(course == null || course.attendance().met());
-        reference.setText(
-                course == null
-                        ? Course.DEFAULT_ATTENDANCE_REFERENCE
-                        : course.attendanceReference());
-        attendance.setText(
-                course != null && course.attendance().confirmed()
-                        ? "Syarat kehadiran terpenuhi — sudah diverifikasi"
-                        : "Syarat kehadiran terpenuhi — asumsi, belum diverifikasi");
+        courseName.setText(value == null ? "" : value.name());
+        code.setText(value == null ? "" : value.code());
+        credits.setText(value == null ? "" : value.credits().toPlainString().replace('.', ','));
         filling = false;
         courseDirty = false;
     }
 
-    private void saveSemester() {
-        saveSemester(() -> {});
-    }
-
-    private void saveSemester(Runnable done) {
-        Semester selected = semesters.getSelectionModel().getSelectedItem();
-        long id = selected == null ? 0 : selected.id();
-        String value = number.getText(), academicYear = year.getText();
-        SemesterPeriod selectedPeriod = period.getValue();
+    private void saveSemester(boolean activate, Runnable done) {
+        long id = selectedSemester == null ? 0 : selectedSemester.id();
+        String inputNumber = number.getText(), inputYear = year.getText();
         tasks.run(
                 semesterStatus,
-                () -> {
-                    int parsed;
-                    try {
-                        parsed = Integer.parseInt(value.trim());
-                    } catch (NumberFormatException error) {
-                        throw new IllegalArgumentException(
-                                "Nomor semester harus bilangan bulat lebih dari 0.");
-                    }
-                    return academic.saveSemester(id, parsed, academicYear, selectedPeriod);
-                },
+                () -> academic.saveSemesterForm(id, inputNumber, inputYear, activate),
                 saved -> {
-                    semesterStatus.setText("Semester tersimpan.");
-                    // Pilih hasil baru setelah muat ulang, tanpa mengubah pilihan semester aktif
-                    // secara otomatis.
-                    tasks.run(
-                            loadStatus,
-                            () -> new Snapshot(auth.profile(), academic.semesters()),
-                            snapshot -> {
-                                profile = snapshot.profile();
-                                onProfile.accept(profile);
-                                refreshing = true;
-                                semesters.getItems().setAll(snapshot.semesters());
-                                semesters.getSelectionModel().select(saved);
-                                semesters.refresh();
-                                refreshing = false;
-                                fillSemester(saved);
-                                if (!courseDirty) loadCourses();
-                                done.run();
-                            });
+                    selectedSemester = saved;
+                    fillSemester(saved);
+                    semesterStatus.setText(
+                            activate ? "Semester tersimpan dan aktif." : "Semester tersimpan.");
+                    // Tandai hasil commit sebelum refresh daftar; retry tidak membuat record baru.
+                    reload(saved.id(), done);
                 });
-    }
-
-    private void saveCourse() {
-        saveCourse(() -> {});
     }
 
     private void saveCourse(Runnable done) {
-        Semester selectedSemester = semesters.getSelectionModel().getSelectedItem();
         if (selectedSemester == null) {
-            courseStatus.setText("Pilih atau buat semester terlebih dahulu.");
+            courseStatus.setText("Pilih semester terlebih dahulu.");
             return;
         }
-        Course selected = courses.getSelectionModel().getSelectedItem();
-        long id = selected == null ? 0 : selected.id();
+        long semester = selectedSemester.id(),
+                id = selectedCourse == null ? 0 : selectedCourse.id();
         String name = courseName.getText(),
                 courseCode = code.getText(),
-                courseCredits = credits.getText(),
-                attendanceReference = reference.getText();
-        boolean met = attendance.isSelected();
+                courseCredits = credits.getText();
         tasks.run(
                 courseStatus,
-                () ->
-                        academic.saveCourse(
-                                id,
-                                selectedSemester.id(),
-                                name,
-                                courseCode,
-                                courseCredits,
-                                met,
-                                attendanceReference),
+                () -> academic.saveCourseMetadata(id, semester, name, courseCode, courseCredits),
                 saved -> {
+                    selectedCourse = saved;
+                    fillCourse(saved);
                     courseStatus.setText("Mata kuliah tersimpan.");
                     tasks.run(
                             loadStatus,
-                            () -> academic.courses(selectedSemester.id()),
+                            () -> academic.courses(semester),
                             loaded -> {
-                                refreshing = true;
+                                selecting = true;
                                 courses.getItems().setAll(loaded);
                                 courses.getSelectionModel().select(saved);
-                                refreshing = false;
-                                fillCourse(saved);
-                                loadStatus.setText("Daftar mata kuliah dimuat.");
+                                selecting = false;
                                 done.run();
                             });
                 });
     }
 
-    private record Snapshot(UserProfile profile, List<Semester> semesters) {}
+    private void deleteSemester() {
+        guardCourse(
+                () -> {
+                    if (selectedSemester == null) {
+                        semesterStatus.setText("Pilih semester tersimpan.");
+                        return;
+                    }
+                    if (!confirm(
+                            this,
+                            "Hapus semester?",
+                            "Hapus semester beserta mata kuliah, nilai aktual, skenario, bab,"
+                                + " materi kuliah, catatan dan progresnya? Semester lain dan"
+                                + " peminatan tetap. Pilihan aktif dikosongkan bila semester ini"
+                                + " aktif.")) return;
+                    long id = selectedSemester.id();
+                    tasks.run(
+                            semesterStatus,
+                            () -> {
+                                academic.deleteSemester(id);
+                                return null;
+                            },
+                            ignored -> {
+                                selectedSemester = null;
+                                fillSemester(null);
+                                reload(0, () -> showSemester());
+                            });
+                });
+    }
+
+    private void deleteCourse() {
+        if (selectedSemester == null || selectedCourse == null) {
+            courseStatus.setText("Pilih mata kuliah tersimpan.");
+            return;
+        }
+        if (!confirm(
+                this,
+                "Hapus mata kuliah?",
+                "Hapus mata kuliah beserta komponen/nilai, bab, materi, catatan dan progres?"
+                        + " Snapshot skenario lama tetap historis.")) return;
+        long semester = selectedSemester.id(), id = selectedCourse.id();
+        tasks.run(
+                courseStatus,
+                () -> {
+                    academic.deleteCourse(semester, id);
+                    return null;
+                },
+                ignored -> {
+                    courseDirty = false;
+                    loadCourses();
+                    courseStatus.setText("Mata kuliah dihapus.");
+                });
+    }
 
     private void guardCourse(Runnable action) {
         GradeForms.guard(
-                this,
-                courseDirty,
-                () -> fillCourse(courses.getSelectionModel().getSelectedItem()),
-                this::saveCourse,
-                action);
+                this, courseDirty, () -> fillCourse(selectedCourse), this::saveCourse, action);
     }
 
     void guard(Runnable action) {
@@ -497,8 +467,10 @@ final class AcademicView extends BorderPane {
                         GradeForms.guard(
                                 this,
                                 semesterDirty,
-                                () -> fillSemester(semesters.getSelectionModel().getSelectedItem()),
-                                this::saveSemester,
+                                () -> fillSemester(selectedSemester),
+                                done -> saveSemester(false, done),
                                 action));
     }
+
+    private record Snapshot(UserProfile profile, List<Semester> semesters) {}
 }

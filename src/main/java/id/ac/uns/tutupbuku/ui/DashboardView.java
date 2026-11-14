@@ -11,6 +11,12 @@ import java.util.function.Consumer;
 
 /** Shell dua pilar dari M1, dipertahankan setelah login M2. */
 public final class DashboardView extends VBox {
+    private java.util.function.IntConsumer openArea;
+
+    void openArea(int index) {
+        openArea.accept(index);
+    }
+
     public DashboardView() {
         this(null, Runnable::run, () -> {});
     }
@@ -40,7 +46,7 @@ public final class DashboardView extends VBox {
                                                     + "Bidang → Materi"),
                                         note(
                                                 "Fixture shell M1. Masuk melalui aplikasi untuk"
-                                                    + " membuka fitur belajar M3."))
+                                                        + " membuka fitur belajar M3."))
                                 : learningContent);
         Tab simulationTab = new Tab("Simulasi nilai", gradeContent);
         TabPane tabs = new TabPane(learningTab, simulationTab);
@@ -64,25 +70,15 @@ public final class DashboardView extends VBox {
                                         else refreshGrades.run();
                                     });
                         });
-        Button learning = button("open-learning", "Buka modul belajar");
-        Button simulation = button("open-simulation", "Buka simulasi nilai");
-        learning.setMaxWidth(Double.MAX_VALUE);
-        simulation.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(learning, Priority.ALWAYS);
-        HBox.setHgrow(simulation, Priority.ALWAYS);
-        learning.setOnAction(
-                event -> {
-                    if (tabs.getSelectionModel().getSelectedItem() == learningTab)
-                        guard.accept(refreshLearning);
-                    else tabs.getSelectionModel().select(learningTab);
-                });
-        simulation.setOnAction(
-                event -> {
-                    if (tabs.getSelectionModel().getSelectedItem() == simulationTab)
-                        guard.accept(refreshGrades);
-                    else tabs.getSelectionModel().select(simulationTab);
-                });
-        getChildren().addAll(new HBox(12, learning, simulation), tabs);
+        openArea =
+                index -> {
+                    selecting[0] = true;
+                    tabs.getSelectionModel().select(index);
+                    selecting[0] = false;
+                    if (index == 0) refreshLearning.run();
+                    else refreshGrades.run();
+                };
+        getChildren().add(tabs);
         VBox.setVgrow(tabs, Priority.ALWAYS);
     }
 }

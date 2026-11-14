@@ -110,7 +110,7 @@ class GradeMigrationTest {
                             try (var s = c.createStatement();
                                     var r = s.executeQuery("PRAGMA user_version")) {
                                 r.next();
-                                assertEquals(3, r.getInt(1));
+                                assertEquals(4, r.getInt(1));
                             }
                             return null;
                         });
@@ -143,7 +143,7 @@ class GradeMigrationTest {
             try (var r =
                     s.executeQuery(
                             "SELECT count(*) FROM sqlite_master WHERE"
-                                + " name='assessment_components'")) {
+                                    + " name='assessment_components'")) {
                 r.next();
                 assertEquals(0, r.getInt(1));
             }

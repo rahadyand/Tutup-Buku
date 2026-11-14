@@ -82,7 +82,7 @@ public final class SqliteGradeRepository implements GradeRepository {
                                     prepare(
                                             c,
                                             "SELECT owner_nim,course_id FROM assessment_components"
-                                                + " WHERE id=?",
+                                                    + " WHERE id=?",
                                             item.id());
                             ResultSet r = s.executeQuery()) {
                         if (r.next() && (!owner.equals(r.getString(1)) || courseId != r.getLong(2)))
@@ -121,7 +121,7 @@ public final class SqliteGradeRepository implements GradeRepository {
                             prepare(
                                     c,
                                     "DELETE FROM assessment_components WHERE owner_nim=? AND"
-                                        + " course_id=? AND id=?",
+                                            + " course_id=? AND id=?",
                                     owner,
                                     courseId,
                                     id)) {
@@ -144,7 +144,7 @@ public final class SqliteGradeRepository implements GradeRepository {
                                     prepare(
                                             c,
                                             "SELECT id FROM assessment_components WHERE owner_nim=?"
-                                                + " AND course_id=? ORDER BY position,id",
+                                                    + " AND course_id=? ORDER BY position,id",
                                             owner,
                                             courseId);
                             ResultSet r = s.executeQuery()) {
@@ -160,7 +160,7 @@ public final class SqliteGradeRepository implements GradeRepository {
                                 prepare(
                                         c,
                                         "UPDATE assessment_components SET position=? WHERE"
-                                            + " owner_nim=? AND course_id=? AND id=?",
+                                                + " owner_nim=? AND course_id=? AND id=?",
                                         i,
                                         owner,
                                         courseId,
@@ -179,6 +179,17 @@ public final class SqliteGradeRepository implements GradeRepository {
             EvaluationMode mode,
             Optional<LetterGrade> letter,
             Attendance attendance) {
+        saveActualSettings(owner, courseId, mode, letter, attendance, null);
+    }
+
+    @Override
+    public void saveActualSettings(
+            String owner,
+            long courseId,
+            EvaluationMode mode,
+            Optional<LetterGrade> letter,
+            Attendance attendance,
+            String reference) {
         database.write(
                 c -> {
                     requireCourse(c, owner, courseId);
@@ -199,10 +210,11 @@ public final class SqliteGradeRepository implements GradeRepository {
                             prepare(
                                     c,
                                     "UPDATE courses SET"
-                                        + " attendance_met=?,attendance_confirmed=?,revision=revision+1"
+                                        + " attendance_met=?,attendance_confirmed=?,attendance_reference=COALESCE(?,attendance_reference),revision=revision+1"
                                         + " WHERE owner_nim=? AND id=?",
                                     attendance.met(),
                                     attendance.confirmed(),
+                                    reference,
                                     owner,
                                     courseId)) {
                         changed(s.executeUpdate());
@@ -250,8 +262,8 @@ public final class SqliteGradeRepository implements GradeRepository {
                             prepare(
                                     c,
                                     "SELECT * FROM scenario_courses WHERE owner_nim=? AND"
-                                        + " scenario_id=? ORDER BY course_name COLLATE"
-                                        + " NOCASE,course_id",
+                                            + " scenario_id=? ORDER BY course_name COLLATE"
+                                            + " NOCASE,course_id",
                                     owner,
                                     id);
                     ResultSet row = q.executeQuery()) {
@@ -275,8 +287,8 @@ public final class SqliteGradeRepository implements GradeRepository {
                                     prepare(
                                             c,
                                             "SELECT * FROM scenario_items WHERE owner_nim=? AND"
-                                                + " scenario_id=? AND course_id=? ORDER BY"
-                                                + " position,item_id",
+                                                    + " scenario_id=? AND course_id=? ORDER BY"
+                                                    + " position,item_id",
                                             owner,
                                             id,
                                             courseId);
@@ -402,13 +414,13 @@ public final class SqliteGradeRepository implements GradeRepository {
                             if (s.executeUpdate() != 1)
                                 throw new IllegalArgumentException(
                                         "Skenario telah berubah. Buka ulang sebelum menyimpan;"
-                                            + " isian Anda belum dihapus.");
+                                                + " isian Anda belum dihapus.");
                         }
                         try (PreparedStatement s =
                                 prepare(
                                         c,
                                         "DELETE FROM scenario_courses WHERE owner_nim=? AND"
-                                            + " scenario_id=?",
+                                                + " scenario_id=?",
                                         owner,
                                         id)) {
                             s.executeUpdate();
