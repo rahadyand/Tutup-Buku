@@ -41,3 +41,7 @@ Gerbang lapangan masih membutuhkan pengguna: komputer Windows kedua, offline fis
 
 ## Revision 001 atas permintaan pengguna — 14 November2026
 Revisi terbatas akun/navigasi/header/akademik dua halaman, tahun tunggal dengan migrasi4, kehadiran hanya di nilai, kandidat0.5.2-rc1. Tidak memulai milestone/fitur lain atau draf akademik. Setelah verifikasi dan push, berhenti untuk review pengguna. Hasil aktual di REVISION_001/DEVELOPMENT_STATUS.
+
+## Revision 002 atas permintaan pengguna
+
+Revisi terbatas ukuran akun, sapaan input, dropdown profil, posisi aksi akademik dan shortcut kanan. Tidak ada migrasi atau perubahan engine. Selesaikan regresi/render/paket0.5.3-rc1, checkpoint normal main, lalu berhenti untuk review. Hasil aktual di REVISION_002/DEVELOPMENT_STATUS. Tidak memulai dashboard/revisi lain.

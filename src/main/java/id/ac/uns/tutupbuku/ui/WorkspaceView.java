@@ -52,9 +52,12 @@ final class WorkspaceView extends BorderPane {
         HBox.setHgrow(titles, Priority.ALWAYS);
         Button openLearning = button("open-learning", "Modul Belajar"),
                 openGrades = button("open-simulation", "Simulasi Nilai");
-        VBox navigation = new VBox(8, logout, new HBox(8, openLearning, openGrades));
+        HBox shortcuts = new HBox(8, openLearning, openGrades);
+        shortcuts.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        VBox navigation = new VBox(8, logout, shortcuts);
+        navigation.setAlignment(javafx.geometry.Pos.TOP_RIGHT);
         navigation.setId("workspace-shortcuts");
-        HBox header = new HBox(18, navigation, titles);
+        HBox header = new HBox(18, titles, navigation);
         header.setPadding(new Insets(8));
         setTop(header);
 
@@ -63,14 +66,34 @@ final class WorkspaceView extends BorderPane {
         nim.setEditable(false);
         TextField name = text("profile-name", "Nama");
         name.setText(profile.name());
-        TextField program = text("profile-program", "Program studi (teks bebas)");
-        program.setText(profile.studyProgram());
+        nim.setPrefWidth(200);
+        nim.setMaxWidth(200);
+        name.setPrefWidth(300);
+        name.setMaxWidth(300);
+        ComboBox<String> program = new ComboBox<>();
+        program.setId("profile-program");
+        program.getItems().setAll("Informatika", "Sains Data");
+        program.setPrefWidth(240);
+        program.setMaxWidth(240);
+        program.setPromptText("Pilih program studi");
+        program.setValue(canonicalProgram(profile.studyProgram()));
+        Label programHelp =
+                note(
+                        "Pilih prodi lalu Simpan. Nilai lama yang kosong/tidak dikenali tetap"
+                                + " disimpan sampai Anda memilih prodi.");
+        programHelp.setMaxWidth(360);
         Label profileStatus = status("profile-status");
         Button save = button("save-profile", "Simpan profil");
         String[] savedProfile = {profile.name(), profile.studyProgram()};
         java.util.function.Consumer<Runnable> saveProfile =
                 done -> {
-                    String newName = name.getText(), newProgram = program.getText();
+                    // Pilihan kosong mempertahankan prodi lama sampai pengguna memilih
+                    // penggantinya.
+                    String newName = name.getText(),
+                            newProgram =
+                                    program.getValue() == null
+                                            ? savedProfile[1]
+                                            : program.getValue();
                     tasks.run(
                             profileStatus,
                             () -> {
@@ -91,10 +114,12 @@ final class WorkspaceView extends BorderPane {
                         GradeForms.guard(
                                 this,
                                 !name.getText().equals(savedProfile[0])
-                                        || !program.getText().equals(savedProfile[1]),
+                                        || !java.util.Objects.equals(
+                                                program.getValue(),
+                                                canonicalProgram(savedProfile[1])),
                                 () -> {
                                     name.setText(savedProfile[0]);
-                                    program.setText(savedProfile[1]);
+                                    program.setValue(canonicalProgram(savedProfile[1]));
                                 },
                                 saveProfile,
                                 action);
@@ -110,14 +135,16 @@ final class WorkspaceView extends BorderPane {
         Tab profileTab =
                 new Tab(
                         "Profil",
-                        scroll(
-                                form(
+                        centeredPage(
+                                centeredForm(
                                         heading("Profil"),
-                                        field("NIM (tidak dapat diubah)", nim),
-                                        field("Nama", name),
-                                        field("Program studi (Informatika / Sains Data)", program),
+                                        fieldCentered("NIM (tidak dapat diubah)", nim),
+                                        fieldCentered("Nama", name),
+                                        fieldCentered("Program studi", program),
+                                        programHelp,
                                         save,
-                                        profileStatus)));
+                                        profileStatus),
+                                460));
         TabPane tabs =
                 new TabPane(dashboard, new Tab("Semester & Mata Kuliah", academicView), profileTab);
         tabs.setId("workspace-tabs");
@@ -168,7 +195,7 @@ final class WorkspaceView extends BorderPane {
     private void showProfile(UserProfile profile) {
         learningView.preferSemester(profile.activeSemesterId());
         gradeView.preferSemester(profile.activeSemesterId());
-        identity.setText(profile.name() + " · NIM " + profile.nim());
+        identity.setText("Selamat datang, " + profile.name() + " · NIM " + profile.nim());
         String program =
                 profile.studyProgram().isBlank()
                         ? "Program studi belum diisi"
@@ -199,9 +226,15 @@ final class WorkspaceView extends BorderPane {
                                                                             + s.year())
                                                     .orElse(
                                                             "Belum ada semester aktif. Atur"
-                                                                + " semester untuk mulai"
-                                                                + " belajar.")));
+                                                                    + " semester untuk mulai"
+                                                                    + " belajar.")));
         }
+    }
+
+    private static String canonicalProgram(String value) {
+        for (String program : java.util.List.of("Informatika", "Sains Data"))
+            if (program.equalsIgnoreCase(value.trim())) return program;
+        return null;
     }
 
     void requestLeave(Runnable action) {

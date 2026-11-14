@@ -1,4 +1,4 @@
-# Panduan Tutup Buku 0.5.2-rc1 — Windows x64
+# Panduan Tutup Buku 0.5.3-rc1 — Windows x64
 
 ## Membuka paket
 1. Ekstrak seluruh ZIP memakai **Extract All**, misalnya ke `D:\Aplikasi Saya\TutupBuku`. Jangan menjalankan EXE langsung dari tampilan ZIP.
@@ -8,14 +8,14 @@
 
 Paket kandidat belum ditandatangani digital. Bila Windows memblokir, catat pesan dan minta bantuan pengembang; jangan mengubah pengaturan keamanan untuk pengujian ini.
 
-## Akun, profil, semester dan mata kuliah — Revision 001
+## Akun, profil, semester dan mata kuliah — Revision 002
 
-- Login/Daftar terpusat. Contoh NIM L0125001 = L +01 Informatika +25 angkatan 2025 +001 identitas; L0225001 memakai02 Sains Data. Ini panduan, bukan verifikasi kampus atau larangan masuk bagi akun lama. Nol awal tetap dan NIM lama tidak diubah.
+- Login/Daftar terpusat dan ringkas, dengan judul/deskripsi kegunaan aplikasi. Sapaan pendaftaran mengikuti nama dan NIM yang diketik; sebelum login, nama akun tersimpan tidak ditampilkan. Pola NIM L0125001 = L +01 Informatika +25 angkatan 2025 +001 identitas; L0225001 memakai02 Sains Data. Ini panduan, bukan verifikasi kampus atau larangan masuk bagi akun lama. Nol awal tetap dan NIM lama tidak diubah.
 - Password tersembunyi awal; Tampilkan/Sembunyikan tersedia terpisah untuk login, password daftar dan konfirmasinya. Visibility kembali tersembunyi setelah sukses/berpindah tab. Enter pada field password tetap mengirim form. Gagal simpan/login tidak mengosongkan isian.
-- Profil: ubah nama/prodi dan Simpan. Prodi tidak diisi otomatis dari NIM. NIM tidak dapat diubah.
-- Shortcut Modul Belajar/Simulasi Nilai selalu di bawah Keluar kiri atas. Tab: Dashboard, Semester & Mata Kuliah, Profil; perubahan belum tersimpan tetap mendapat Simpan/Buang/Batal.
-- Halaman Semester: pilih data tersimpan atau Semester baru; isi nomor positif dan tahun tunggal4 digit (1000–9998), misalnya2026. Jadikan Aktif langsung menyimpan+aktivasi lalu ke halaman course; tidak perlu Simpan dahulu. Simpan Semester juga ke course tetapi tidak mengganti semester aktif lain.
-- Halaman course: daftar semester di kiri dan mata kuliahnya di kanan. Sorotan berarti dipilih; [aktif] adalah referensi aktif akun. Isi nama, kode opsional, SKS positif; Simpan/Hapus dekat form. Kembali ke halaman Semester untuk mengedit/aktivasi/hapus semester.
+- Profil terpusat: ubah nama dan pilih Informatika atau Sains Data, lalu Simpan. Nilai lama yang dikenali ditampilkan dengan label baku. Nilai kosong/tidak dikenali tetap tersimpan dengan dropdown kosong hingga Anda memilih pengganti; membuka profil tidak mengubah database. Prodi tidak diisi otomatis dari NIM. NIM tidak dapat diubah.
+- Shortcut Modul Belajar/Simulasi Nilai selalu di kanan atas, berdampingan di bawah Keluar yang rata kanan. Tab: Dashboard, Semester & Mata Kuliah, Profil; perubahan belum tersimpan tetap mendapat Simpan/Buang/Batal.
+- Halaman Semester: pilih data tersimpan atau Semester Baru di bawah Hapus Semester dan teks petunjuk; isi nomor positif dan tahun tunggal4 digit (1000–9998), misalnya2026. Jadikan Aktif langsung menyimpan+aktivasi lalu ke halaman course; tidak perlu Simpan dahulu. Simpan Semester juga ke course tetapi tidak mengganti semester aktif lain.
+- Halaman course: daftar semester di kiri dan mata kuliahnya di kanan. Sorotan berarti dipilih; [aktif] adalah referensi aktif akun. Isi nama, kode opsional, SKS positif; Simpan/Hapus dekat form; Mata Kuliah Baru berada tepat di bawah status simpan. Gulir bila bagian bawah belum terlihat. Kembali ke halaman Semester untuk mengedit/aktivasi/hapus semester.
 - Tidak ada kehadiran pada form course. Nama/kode/SKS dapat diubah tanpa mengubah kehadiran, konfirmasi atau acuan. Acuan/checkbox tersedia pada Simulasi Nilai → Komponen & aktual. Course baru tetap berasumsi kehadiran terpenuhi, belum diverifikasi.
 - Arsip dari format lama mempertahankan ID/periode/data. Label menampilkan tahun tunggal serta arsip Ganjil/Genap+#ID supaya dua arsip yang sama nomor/tahun tidak tertukar. Tidak ada penggabungan otomatis. Cadangkan DB+assets saat app tertutup sebelum memperbarui; versi lama tidak membuka schema 4.
 

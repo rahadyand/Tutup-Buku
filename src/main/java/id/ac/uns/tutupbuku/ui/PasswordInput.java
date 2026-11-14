@@ -20,8 +20,12 @@ final class PasswordInput extends HBox {
         visible.setManaged(false);
         toggle = FormSupport.button(id + "-toggle", "Tampilkan");
         toggle.setMinWidth(98);
-        HBox.setHgrow(masked, Priority.ALWAYS);
-        HBox.setHgrow(visible, Priority.ALWAYS);
+        masked.setPrefWidth(260);
+        masked.setMaxWidth(260);
+        visible.setPrefWidth(260);
+        visible.setMaxWidth(260);
+        setPrefWidth(366);
+        setMaxWidth(366);
         toggle.setOnAction(e -> setRevealed(!visible.isVisible()));
         getChildren().addAll(masked, visible, toggle);
     }

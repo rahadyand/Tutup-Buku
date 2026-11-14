@@ -1,3 +1,13 @@
+# Kandidat0.5.3-rc1 — Revision 002
+
+Form akun tetap terpusat: NIM200px, password260px dan nama300px; judul36px dan deskripsi terbungkus. Sapaan daftar mengikuti input nama/NIM L01/L02 dan tahun; login tidak membocorkan nama profil sebelum autentikasi.
+
+Profil terpusat dengan dropdown Informatika/Sains Data. Prodi lama kosong/tidak dikenal tidak ditimpa saat membuka halaman. Semester90px/tahun110px, aksi170px; Semester Baru di bawah Hapus/petunjuk dan Mata Kuliah Baru di bawah status simpan. Navigasi kini kanan atas: Keluar lalu dua shortcut. Guard, transaksi, attendance, engine dan schema4 dipertahankan.
+
+Bukti terbaru di REVISION_002.md repository. Kandidat masih memerlukan komputer kedua, jaringan fisik terputus, skala Windows125% nyata dan usability. H-02 historis belum diklaim selesai. Cadangkan DB+assets saat aplikasi tertutup sebelum memperbarui.
+
+## Riwayat sebelum Revision 002
+
 # Kandidat0.5.2-rc1 — Revision 001
 
 Form Login/Daftar terpusat, panduan NIM Informatika/Sains Data tanpa aturan login baru, toggle tiga password dan reset visibility. Shortcut dipindahkan ke bawah Keluar; urutan Dashboard/Akademik/Profil. Header menampilkan profil dan semester aktif sebenarnya.

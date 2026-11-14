@@ -1,3 +1,9 @@
+# Status terbaru — Revision 002, 14 November 2026
+
+Kandidat0.5.3-rc1/schema4. Implementasi akun ringkas/sapaan, profil dropdown, urutan aksi akademik dan navigasi kanan selesai. **177tes default,10kasus GUI final,1pengulangan125% dan1jendela1024×768 lulus**,0failures/errors/skipped. Paket final20261114-120721: audit226hash+manifest/forbidden0/runtime17modul, seluruh227file ZIP cocok ekstraksi dan JAR target. EXE ekstraksi Enterlogin/saveprofil+course/close/reopen duaexit0; data/integrity/FK sah. HashZIP88B856B2304BF9D198B40A0033C885311EDD226F9D949015ACEA5750010F17A5. Source/test/docs checkpoint normal main; receipt push aktual di tmp/r002-checkpoint.txt dan jawaban akhir. Tidak regenerasi paket sesudah uji. Lihat [REVISION_002.md](REVISION_002.md) untuk hasil terbaru dan lingkup. Draf akademik lama tetap tidak disentuh. Gerbang lapangan/H-02 historis masih pending.
+
+## Riwayat status sebelum Revision 002
+
 # Status pengembangan — M5 kandidat Windows
 
 Tanggal **9 November 2026, Asia/Jakarta**. Versi **0.5.0-rc1**, schema **3**. **Kandidat lokal M5 siap untuk penerimaan pengguna; gerbang lapangan tetap pending.** Tidak memulai fitur baru/laporan/PPT.

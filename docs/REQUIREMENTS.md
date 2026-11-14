@@ -96,3 +96,7 @@ Pemetaan per kebutuhan/tes dan defek terkonfirmasi ada di [INTEGRATION_REVIEW.md
 Default138tes +7GUI +benchmark1 lulus; tes skala125% mengulang alurM5 secara terpisah. F08G/MT14 grouped tidak diaktifkan; semua P1/P2 tetap deferred. Simpan nilai/skenario eksplisit mengikuti instruksi pengguna M4; autosave materi2detik tetap. Retry menggunakan Simpan yang sama sesudah pesan gagal.
 
 Kandidat lokal tersedia untuk penerimaan; jangan menyatakan seluruh P0 penerimaan lapangan selesai sampai AT13 dan pemeriksaan pengguna tercatat. Lembar pelaksanaan: [RELEASE_ACCEPTANCE.md](RELEASE_ACCEPTANCE.md).
+
+## Revision 002 — F01–F03 dan keterbacaan
+
+Akun/profil/akademik/header direvisi menurut chat terbaru, tanpa requirement produk/schema baru. Lebar aktual, sapaan murni input, perlindungan nama sebelum login, profil legacy/dropdown/guard, posisi aksi dan navigasi kanan diuji. Engine/attendance/belajar/snapshot tetap lewat regresi. Bukti dan batas kandidat0.5.3-rc1 di REVISION_002; hasil M5 di atas adalah riwayat, bukan hitungan tes terbaru. P1/P2 tetap BACKLOG.

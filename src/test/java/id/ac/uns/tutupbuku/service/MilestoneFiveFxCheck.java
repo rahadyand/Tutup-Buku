@@ -100,9 +100,14 @@ class MilestoneFiveFxCheck extends FxTestSupport {
             dialog(
                     () -> ((TabPane) node("workspace-tabs")).getSelectionModel().select(2),
                     ButtonBar.ButtonData.NO);
-            text("profile-program", "Informatika");
+            fx(
+                    () -> {
+                        ((ComboBox<String>) node("profile-program")).setValue("Informatika");
+                        return null;
+                    });
             dialog(() -> ((Button) node("logout")).fire(), ButtonBar.ButtonData.CANCEL_CLOSE);
-            assertEquals("Informatika", fx(() -> ((TextField) node("profile-program")).getText()));
+            assertEquals(
+                    "Informatika", fx(() -> ((ComboBox<?>) node("profile-program")).getValue()));
             click("save-profile");
             tab("workspace-tabs", 1);
             createSemester("4", "2026/2027");

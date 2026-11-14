@@ -124,9 +124,11 @@ final class AcademicView extends BorderPane {
                                                 });
                                     });
                         });
-        number.setMaxWidth(120);
-        year.setMaxWidth(150);
-        Button newForm = button("new-semester", "Semester baru");
+        number.setPrefWidth(90);
+        number.setMaxWidth(90);
+        year.setPrefWidth(110);
+        year.setMaxWidth(110);
+        Button newForm = button("new-semester", "Semester Baru");
         newForm.setOnAction(e -> newSemester());
         Button activate = button("set-active-semester", "Jadikan Aktif");
         activate.setOnAction(e -> guardCourse(() -> saveSemester(true, () -> showCourses())));
@@ -144,19 +146,23 @@ final class AcademicView extends BorderPane {
                                                 "Pilih semester tersimpan terlebih dahulu.");
                                     else showCourses();
                                 }));
-        for (Button button : List.of(activate, save, delete)) button.setMaxWidth(260);
+        for (Button button : List.of(activate, save, delete)) {
+            button.setPrefWidth(170);
+            button.setMaxWidth(170);
+        }
         semesterPage =
                 centeredPage(
                         centeredForm(
                                 heading("Semester"),
                                 active,
                                 fieldCentered("Semester tersimpan", editorSelection),
-                                newForm,
-                                fieldCentered("Nomor semester", number),
+                                fieldCentered("Semester", number),
                                 fieldCentered("Tahun", year),
                                 activate,
                                 save,
                                 delete,
+                                note("Ketuk untuk menambahkan semester baru."),
+                                newForm,
                                 view,
                                 semesterStatus),
                         500);
@@ -164,7 +170,7 @@ final class AcademicView extends BorderPane {
         coursePage.setId("courses-page");
         Button back = button("edit-semesters", "Kembali ke halaman Semester");
         back.setOnAction(e -> guard(() -> showSemester()));
-        Button newFromCourses = button("new-semester", "Semester baru");
+        Button newFromCourses = button("new-semester", "Semester Baru");
         newFromCourses.setOnAction(e -> newSemester());
         VBox sidebar =
                 new VBox(
@@ -183,7 +189,7 @@ final class AcademicView extends BorderPane {
         courseName.setMaxWidth(480);
         code.setMaxWidth(180);
         credits.setMaxWidth(100);
-        Button newCourse = button("new-course", "Mata kuliah baru");
+        Button newCourse = button("new-course", "Mata Kuliah Baru");
         newCourse.setOnAction(
                 e ->
                         guardCourse(
@@ -203,12 +209,12 @@ final class AcademicView extends BorderPane {
                         heading("Mata kuliah"),
                         courseContext,
                         courses,
-                        newCourse,
                         field("Nama mata kuliah", courseName),
                         field("Kode (opsional)", code),
                         field("SKS (lebih dari 0)", credits),
                         new HBox(10, saveCourse, deleteCourse),
-                        courseStatus);
+                        courseStatus,
+                        newCourse);
         courseForm.setMaxWidth(680);
         coursePage.setCenter(centeredPage(courseForm, 680));
         setBottom(loadStatus);

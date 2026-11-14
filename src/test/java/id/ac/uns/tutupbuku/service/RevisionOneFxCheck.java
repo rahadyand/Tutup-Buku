@@ -70,12 +70,16 @@ class RevisionOneFxCheck extends FxTestSupport {
             }
             screenshot(
                     "r001-register-" + System.getProperty("glass.win.uiScale", "native") + ".png");
-            fx(() -> {
-                var hint=(Label)node("register-nim-guidance");
-                stage.getScene().getRoot().applyCss();stage.getScene().getRoot().layout();
-                assertTrue(hint.getHeight()>=hint.prefHeight(hint.getWidth())-1,"Panduan NIM tidak boleh terpotong menjadi elipsis.");
-                return null;
-            });
+            fx(
+                    () -> {
+                        var hint = (Label) node("register-nim-guidance");
+                        stage.getScene().getRoot().applyCss();
+                        stage.getScene().getRoot().layout();
+                        assertTrue(
+                                hint.getHeight() >= hint.prefHeight(hint.getWidth()) - 1,
+                                "Panduan NIM tidak boleh terpotong menjadi elipsis.");
+                        return null;
+                    });
             click("register");
             assertTrue(label("login-status").contains("berhasil dibuat"));
             tab("auth-tabs", 1);
@@ -95,7 +99,7 @@ class RevisionOneFxCheck extends FxTestSupport {
             assertTrue(label("active-semester-label").contains("Belum ada semester aktif"));
             tab("workspace-tabs", 2);
             text("profile-name", "Demo Revisi");
-            text("profile-program", "Sains Data");
+            combo("profile-program", "Sains Data");
             click("save-profile");
             assertTrue(label("active-semester-label").contains("Sains Data"));
             click("open-simulation");
@@ -163,7 +167,7 @@ class RevisionOneFxCheck extends FxTestSupport {
                             try (var q = c.createStatement()) {
                                 q.execute(
                                         "CREATE TRIGGER reject_semester BEFORE INSERT ON semesters"
-                                            + " BEGIN SELECT RAISE(ABORT,'fixture'); END");
+                                                + " BEGIN SELECT RAISE(ABORT,'fixture'); END");
                             }
                             return null;
                         });

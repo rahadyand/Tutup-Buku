@@ -198,3 +198,11 @@ scripts/Prepare-PackagingTools.ps1 mengambil arsip pinned+SHA256; Build-Windows.
 Setiap rilis memakai folder timestamp baru; ZIP/generated runtime di releases diabaikan Git. Staging hanya menerima project JAR dan13JAR runtime yang dikenali, kemudian guide/legal/hash. Database/assets/Git/cache/secrets/development source tidak disalin dari workspace. Data selalu AppPaths di luar image; proses launcher diuji dengan JAVA_HOME/MAVEN_HOME kosong, PATH terbatas dan override demo.
 
 FxTestSupport hanya utilitas tes M4/M5 di source test; tidak masuk JAR aplikasi. CalculationPerformanceCheck memakai30×20 di @TempDir, mencatat engine+review SQLite di luar setup/hash/render. Angka hasil adalah kondisi mesin pengembang, bukan janji semua perangkat.
+
+## Revision 002 — presentasi dan pilihan profil
+
+AuthView membatasi kontrol secara lokal (pref/max), bukan mengubah FormSupport global. Deskripsi memiliki minimum tinggi preferred agar wrap tidak dipaksa menjadi elipsis. NimGuidance.welcome adalah fungsi murni input nama/NIM; tidak mengakses repository. AuthService dan hash password tidak berubah.
+
+WorkspaceView memakai ComboBox dua prodi dengan canonicalisasi trim/case-insensitive untuk tampilan. Nilai raw terakhir disimpan terpisah; pilihan null menyimpan raw lama saat nama diedit. Dirty guard membandingkan pilihan dengan canonical nilai tersimpan; membuka legacy tidak dianggap edit. Callback sukses baru memperbarui baseline/header, sehingga kegagalan mempertahankan isian. Header identitas kiri dan navigasi kanan memakai view serta guard yang sama.
+
+AcademicView hanya mengubah ukuran/urutan kontrol. Tidak ada migrasi atau perubahan service/persistence/engine; user_version4 dan RULE_VERSION1 tetap. Save-and-activate dan kehadiran metadata tetap diuji oleh regresi R001.

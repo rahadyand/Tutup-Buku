@@ -259,7 +259,11 @@ class MilestoneTwoFxCheck {
         assertNotNull(fx(() -> node("open-learning")));
         tab("workspace-tabs", 2);
         text("profile-name", "Nama Edit");
-        text("profile-program", "Informatika");
+        fx(
+                () -> {
+                    ((ComboBox<String>) node("profile-program")).setValue("Informatika");
+                    return null;
+                });
         click("save-profile");
         assertEquals("Profil tersimpan.", label("profile-status"));
         tab("workspace-tabs", 1);
@@ -374,7 +378,7 @@ class MilestoneTwoFxCheck {
         open(file);
         login("001234");
         tab("workspace-tabs", 2);
-        assertEquals("Informatika", fx(() -> ((TextField) node("profile-program")).getText()));
+        assertEquals("Informatika", fx(() -> ((ComboBox<?>) node("profile-program")).getValue()));
         assertEquals(
                 "Isian belum tersimpan", fx(() -> ((TextField) node("profile-name")).getText()));
         tab("workspace-tabs", 1);
