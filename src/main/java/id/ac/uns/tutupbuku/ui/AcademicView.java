@@ -48,7 +48,11 @@ final class AcademicView extends BorderPane {
         this.tasks = tasks;
         this.onProfile = onProfile;
         semesters.setId("semester-list");
+        semesters.setAccessibleText("Daftar semester tersimpan");
+        semesters.setAccessibleHelp(
+                "Sorotan menunjukkan pilihan; penanda aktif menunjukkan semester aktif.");
         courses.setId("course-list");
+        courses.setAccessibleText("Daftar mata kuliah semester pilihan");
         editorSelection.setId("semester-editor-selector");
         editorSelection.setPromptText("Pilih semester tersimpan untuk mengedit");
         editorSelection.setMaxWidth(360);
@@ -126,13 +130,17 @@ final class AcademicView extends BorderPane {
                         });
         number.setPrefWidth(90);
         number.setMaxWidth(90);
+        number.setAccessibleHelp("Nomor semester berupa bilangan bulat lebih dari nol.");
         year.setPrefWidth(110);
         year.setMaxWidth(110);
+        year.setAccessibleHelp("Tahun tunggal empat digit antara 1000 dan 9998.");
         Button newForm = button("new-semester", "Semester Baru");
         newForm.setOnAction(e -> newSemester());
         Button activate = button("set-active-semester", "Jadikan Aktif");
+        activate.setAccessibleHelp("Menyimpan formulir semester dan menjadikannya semester aktif.");
         activate.setOnAction(e -> guardCourse(() -> saveSemester(true, () -> showCourses())));
         Button save = button("save-semester", "Simpan Semester");
+        save.setAccessibleHelp("Menyimpan formulir semester tanpa mengganti semester aktif.");
         save.setOnAction(e -> guardCourse(() -> saveSemester(false, () -> showCourses())));
         Button delete = button("delete-semester", "Hapus Semester");
         delete.setOnAction(e -> deleteSemester());

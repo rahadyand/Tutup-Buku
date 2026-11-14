@@ -34,8 +34,11 @@ final class FormSupport {
         return button;
     }
 
-    static VBox field(String label, Node input) {
-        return new VBox(4, new Label(label), input);
+    static VBox field(String text, Node input) {
+        Label label = new Label(text);
+        if (input instanceof PasswordInput password) password.associateLabel(label);
+        else label.setLabelFor(input);
+        return new VBox(4, label, input);
     }
 
     static VBox form(Node... children) {
@@ -52,7 +55,7 @@ final class FormSupport {
 
     static Label heading(String text) {
         Label label = new Label(text);
-        label.setStyle("-fx-font-size: 22px; -fx-font-weight: bold;");
+        label.getStyleClass().add("section-heading");
         return label;
     }
 

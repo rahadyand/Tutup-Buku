@@ -1,5 +1,6 @@
 package id.ac.uns.tutupbuku.ui;
 
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -16,9 +17,12 @@ final class PasswordInput extends HBox {
         masked = FormSupport.password(id);
         visible = FormSupport.text(id + "-visible", "");
         visible.textProperty().bindBidirectional(masked.textProperty());
+        masked.accessibleHelpProperty().bind(accessibleHelpProperty());
+        visible.accessibleHelpProperty().bind(accessibleHelpProperty());
         visible.setVisible(false);
         visible.setManaged(false);
         toggle = FormSupport.button(id + "-toggle", "Tampilkan");
+        toggle.setAccessibleHelp("Mengubah tampilan password tanpa mengubah isinya.");
         toggle.setMinWidth(98);
         masked.setPrefWidth(260);
         masked.setMaxWidth(260);
@@ -28,6 +32,13 @@ final class PasswordInput extends HBox {
         setMaxWidth(366);
         toggle.setOnAction(e -> setRevealed(!visible.isVisible()));
         getChildren().addAll(masked, visible, toggle);
+    }
+
+    void associateLabel(Label label) {
+        label.labelForProperty()
+                .bind(Bindings.when(visible.visibleProperty()).then(visible).otherwise(masked));
+        toggle.accessibleTextProperty()
+                .bind(Bindings.concat(toggle.textProperty(), " ", label.textProperty()));
     }
 
     private void setRevealed(boolean reveal) {

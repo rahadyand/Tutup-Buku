@@ -8,15 +8,346 @@ import id.ac.uns.tutupbuku.security.PasswordHasher;
 import id.ac.uns.tutupbuku.ui.TutupBukuApplication;
 
 import javafx.application.Platform;
+import javafx.event.Event;
+import javafx.scene.AccessibleAttribute;
+import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.*;
 
 class RevisionTwoFxCheck extends FxTestSupport {
+    void associatedLabel(String id, String expected) throws Exception {
+        fx(
+                () -> {
+                    var input = node(id);
+                    var label = input.queryAccessibleAttribute(AccessibleAttribute.LABELED_BY);
+                    assertInstanceOf(Label.class, label, id);
+                    assertEquals(expected, ((Label) label).getText(), id);
+                    assertSame(input, ((Label) label).getLabelFor(), id);
+                    return null;
+                });
+    }
+
+    void focus(String id) throws Exception {
+        fx(
+                () -> {
+                    stage.toFront();
+                    stage.requestFocus();
+                    node(id).requestFocus();
+                    return null;
+                });
+        await(() -> stage.isFocused() && node(id).isFocused());
+    }
+
+    void key(KeyCode code, boolean shift) throws Exception {
+        fx(
+                () -> {
+                    var window =
+                            Window.getWindows().stream()
+                                    .filter(Window::isFocused)
+                                    .findFirst()
+                                    .orElseThrow();
+                    assertTrue(
+                            window == stage || window.getScene().getRoot() instanceof DialogPane);
+                    Node target = window.getScene().getFocusOwner();
+                    assertNotNull(target);
+                    // Antrekan event agar dialog modal tidak memblok pemanggil tes.
+                    Platform.runLater(
+                            () -> {
+                                Event.fireEvent(
+                                        target,
+                                        new KeyEvent(
+                                                KeyEvent.KEY_PRESSED,
+                                                "",
+                                                "",
+                                                code,
+                                                shift,
+                                                false,
+                                                false,
+                                                false));
+                                Event.fireEvent(
+                                        target,
+                                        new KeyEvent(
+                                                KeyEvent.KEY_RELEASED,
+                                                "",
+                                                "",
+                                                code,
+                                                shift,
+                                                false,
+                                                false,
+                                                false));
+                            });
+                    return null;
+                });
+    }
+
+    void key(KeyCode code) throws Exception {
+        key(code, false);
+    }
+
+    void traversal(String... ids) throws Exception {
+        focus(ids[0]);
+        for (int i = 1; i < ids.length; i++) {
+            String id = ids[i];
+            key(KeyCode.TAB);
+            try {
+                await(() -> node(id).isFocused());
+            } catch (AssertionError error) {
+                System.out.println(
+                        "PHASE2 expected focus="
+                                + id
+                                + "; actual="
+                                + fx(() -> String.valueOf(stage.getScene().getFocusOwner())));
+                screenshot("phase2-keyboard-failure.png");
+                throw error;
+            }
+            assertTrue(fx(() -> node(id).isFocusVisible()), id);
+        }
+        for (int i = ids.length - 2; i >= 0; i--) {
+            String id = ids[i];
+            key(KeyCode.TAB, true);
+            await(() -> node(id).isFocused());
+        }
+        System.out.println("PHASE2 traversal forward/reverse: " + String.join(" -> ", ids));
+    }
+
+    void accessibilityAndKeyboard(String suffix) throws Exception {
+        click("logout");
+        await(() -> stage.getScene().lookup("#login-nim") != null);
+        associatedLabel("login-nim", "NIM");
+        associatedLabel("login-password", "Password");
+        assertEquals(
+                AccessibleRole.PASSWORD_FIELD,
+                fx(() -> node("login-password").getAccessibleRole()));
+        assertNull(
+                fx(
+                        () ->
+                                node("login-password")
+                                        .queryAccessibleAttribute(AccessibleAttribute.TEXT)));
+        assertEquals(
+                "Tampilkan Password", fx(() -> node("login-password-toggle").getAccessibleText()));
+        assertEquals(
+                AccessibleRole.BUTTON, fx(() -> node("login-password-toggle").getAccessibleRole()));
+        assertEquals(AccessibleRole.TAB_PANE, fx(() -> node("auth-tabs").getAccessibleRole()));
+        text("login-nim", "L0125006");
+        assertEquals(label("login-nim-guidance"), fx(() -> node("login-nim").getAccessibleHelp()));
+        assertEquals(
+                "Tekan Enter untuk masuk.", fx(() -> node("login-password").getAccessibleHelp()));
+        tab("auth-tabs", 1);
+        associatedLabel("register-nim", "NIM");
+        associatedLabel("register-name", "Nama");
+        associatedLabel("register-password", "Password (minimal 8 karakter)");
+        associatedLabel("register-confirmation", "Konfirmasi password");
+        assertEquals(
+                "Tampilkan Password (minimal 8 karakter)",
+                fx(() -> node("register-password-toggle").getAccessibleText()));
+        assertEquals(
+                "Tampilkan Konfirmasi password",
+                fx(() -> node("register-confirmation-toggle").getAccessibleText()));
+        traversal(
+                "register-nim",
+                "register-name",
+                "register-password",
+                "register-password-toggle",
+                "register-confirmation",
+                "register-confirmation-toggle",
+                "register");
+        tab("auth-tabs", 0);
+        text("login-nim", "0003");
+        traversal("login-nim", "login-password", "login-password-toggle", "login");
+        focus("login-nim");
+        key(KeyCode.TAB);
+        await(() -> node("login-password").isFocused());
+        screenshot("phase2-focus-password-" + suffix + ".png");
+        key(KeyCode.TAB);
+        await(() -> node("login-password-toggle").isFocused());
+        key(KeyCode.SPACE);
+        await(() -> node("login-password-visible").isVisible());
+        associatedLabel("login-password-visible", "Password");
+        assertNull(
+                fx(
+                        () ->
+                                node("login-password")
+                                        .queryAccessibleAttribute(AccessibleAttribute.LABELED_BY)));
+        assertEquals(
+                AccessibleRole.TEXT_FIELD,
+                fx(() -> node("login-password-visible").getAccessibleRole()));
+        assertEquals(
+                "Sembunyikan Password",
+                fx(() -> node("login-password-toggle").getAccessibleText()));
+        key(KeyCode.TAB, true);
+        await(() -> node("login-password-visible").isFocused());
+        key(KeyCode.TAB);
+        await(() -> node("login-password-toggle").isFocused());
+        key(KeyCode.SPACE);
+        await(() -> node("login-password").isVisible());
+        associatedLabel("login-password", "Password");
+        key(KeyCode.TAB, true);
+        await(() -> node("login-password").isFocused());
+        key(KeyCode.ENTER);
+        await(() -> ((Label) node("login-status")).getText().contains("NIM atau password salah"));
+        assertEquals("0003", fx(() -> ((TextField) node("login-nim")).getText()));
+        text("login-password", "sandi-uji-lokal");
+        focus("login-password");
+        key(KeyCode.ENTER);
+        await(() -> stage.getScene().lookup("#workspace-tabs") != null);
+        idle();
+        tab("workspace-tabs", 2);
+        await(() -> stage.getScene().lookup("#profile-nim") != null);
+        associatedLabel("profile-nim", "NIM (tidak dapat diubah)");
+        associatedLabel("profile-name", "Nama");
+        associatedLabel("profile-program", "Program studi");
+        assertFalse(fx(() -> ((TextField) node("profile-nim")).isEditable()));
+        assertTrue(fx(() -> node("profile-nim").isFocusTraversable()));
+        assertEquals(
+                AccessibleRole.COMBO_BOX, fx(() -> node("profile-program").getAccessibleRole()));
+        traversal("profile-nim", "profile-name", "profile-program", "save-profile");
+        focus("profile-program");
+        key(KeyCode.F4);
+        await(() -> ((ComboBox<?>) node("profile-program")).isShowing());
+        key(KeyCode.DOWN);
+        key(KeyCode.ENTER);
+        await(
+                () ->
+                        !((ComboBox<?>) node("profile-program")).isShowing()
+                                && ((ComboBox<?>) node("profile-program")).getValue() != null);
+        key(KeyCode.TAB);
+        await(() -> node("save-profile").isFocused());
+        screenshot("phase2-focus-save-" + suffix + ".png");
+        key(KeyCode.SPACE);
+        await(() -> ((Label) node("profile-status")).getText().equals("Profil tersimpan."));
+        String savedName = fx(() -> ((TextField) node("profile-name")).getText());
+        text("profile-name", savedName + " aksesibilitas");
+        focus("open-learning");
+        key(KeyCode.SPACE);
+        await(
+                () ->
+                        Window.getWindows().stream()
+                                .anyMatch(
+                                        w ->
+                                                w.isShowing()
+                                                        && w.getScene().getRoot()
+                                                                instanceof DialogPane));
+        fx(
+                () -> {
+                    var pane =
+                            (DialogPane)
+                                    Window.getWindows().stream()
+                                            .filter(
+                                                    w ->
+                                                            w.isShowing()
+                                                                    && w.getScene().getRoot()
+                                                                            instanceof DialogPane)
+                                            .findFirst()
+                                            .orElseThrow()
+                                            .getScene()
+                                            .getRoot();
+                    var cancel =
+                            pane.getButtonTypes().stream()
+                                    .filter(
+                                            t ->
+                                                    t.getButtonData()
+                                                            == ButtonBar.ButtonData.CANCEL_CLOSE)
+                                    .findFirst()
+                                    .orElseThrow();
+                    assertTrue(((Button) pane.lookupButton(cancel)).isDefaultButton());
+                    for (var type : pane.getButtonTypes()) {
+                        var button = (Button) pane.lookupButton(type);
+                        assertEquals(AccessibleRole.BUTTON, button.getAccessibleRole());
+                        assertFalse(
+                                ((String) button.queryAccessibleAttribute(AccessibleAttribute.TEXT))
+                                        .isBlank());
+                    }
+                    return null;
+                });
+        var dialogFocus = new java.util.HashSet<String>();
+        for (int i = 0; i < 3; i++) {
+            key(KeyCode.TAB);
+            dialogFocus.add(
+                    fx(
+                            () -> {
+                                var window =
+                                        Window.getWindows().stream()
+                                                .filter(
+                                                        w ->
+                                                                w.isShowing()
+                                                                        && w.getScene().getRoot()
+                                                                                instanceof
+                                                                                DialogPane)
+                                                .findFirst()
+                                                .orElseThrow();
+                                var button =
+                                        assertInstanceOf(
+                                                Button.class, window.getScene().getFocusOwner());
+                                assertTrue(button.isFocusVisible());
+                                return button.getText();
+                            }));
+        }
+        assertEquals(java.util.Set.of("Simpan", "Buang perubahan", "Batal"), dialogFocus);
+        key(KeyCode.ESCAPE);
+        await(
+                () ->
+                        Window.getWindows().stream()
+                                .noneMatch(
+                                        w ->
+                                                w.isShowing()
+                                                        && w.getScene().getRoot()
+                                                                instanceof DialogPane));
+        assertEquals(
+                2,
+                fx(
+                        () ->
+                                ((TabPane) node("workspace-tabs"))
+                                        .getSelectionModel()
+                                        .getSelectedIndex()));
+        assertTrue(
+                fx(() -> ((TextField) node("profile-name")).getText().endsWith(" aksesibilitas")));
+        text("profile-name", savedName);
+        tab("workspace-tabs", 1);
+        await(() -> stage.getScene().lookup("#semester-number") != null);
+        associatedLabel("semester-editor-selector", "Semester tersimpan");
+        associatedLabel("semester-number", "Semester");
+        associatedLabel("semester-year", "Tahun");
+        traversal(
+                "semester-number",
+                "semester-year",
+                "set-active-semester",
+                "save-semester",
+                "delete-semester",
+                "new-semester",
+                "view-courses");
+        assertTrue(fx(() -> node("save-semester").getAccessibleHelp().contains("tanpa mengganti")));
+        text("semester-number", "12");
+        text("semester-year", "2028");
+        focus("save-semester");
+        key(KeyCode.SPACE);
+        await(() -> stage.getScene().lookup("#courses-page") != null);
+        idle();
+        associatedLabel("course-name", "Nama mata kuliah");
+        associatedLabel("course-code", "Kode (opsional)");
+        associatedLabel("course-credits", "SKS (lebih dari 0)");
+        assertEquals(
+                "Daftar semester tersimpan", fx(() -> node("semester-list").getAccessibleText()));
+        assertEquals(
+                "Daftar mata kuliah semester pilihan",
+                fx(() -> node("course-list").getAccessibleText()));
+        assertEquals(AccessibleRole.LIST_VIEW, fx(() -> node("semester-list").getAccessibleRole()));
+        traversal(
+                "course-name",
+                "course-code",
+                "course-credits",
+                "save-course",
+                "delete-course",
+                "new-course");
+    }
+
     double top(String id) {
         Node n = node(id);
         return n.localToScene(n.getLayoutBounds()).getMinY();
@@ -97,6 +428,7 @@ class RevisionTwoFxCheck extends FxTestSupport {
                         return null;
                     });
             idle();
+            associatedLabel("login-nim", "NIM");
             text("login-nim", "L0125006");
             assertFalse(label("login-nim-guidance").contains("Nama Privat"));
             width("login-nim", 180, 220);
@@ -274,6 +606,7 @@ class RevisionTwoFxCheck extends FxTestSupport {
             try (var db = new SqliteDatabase(file)) {
                 assertEquals("", new SqliteRepository(db).getProfile("0003").studyProgram());
             }
+            accessibilityAndKeyboard(suffix);
         } finally {
             fx(
                     () -> {

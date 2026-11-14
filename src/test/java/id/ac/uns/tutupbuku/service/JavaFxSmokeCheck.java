@@ -7,6 +7,7 @@ import id.ac.uns.tutupbuku.ui.DashboardView;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.PixelFormat;
@@ -42,7 +43,10 @@ class JavaFxSmokeCheck {
                     Stage stage = new Stage();
                     try {
                         // Fixture shell M1 sekarang berada di dashboard setelah login M2.
-                        stage.setScene(new javafx.scene.Scene(new DashboardView(), 1000, 690));
+                        var scene = new javafx.scene.Scene(new DashboardView(), 1000, 690);
+                        scene.getStylesheets()
+                                .add(DashboardView.class.getResource("tutup-buku.css").toExternalForm());
+                        stage.setScene(scene);
                         stage.show();
                         assertTrue(stage.isShowing());
                         var root = stage.getScene().getRoot();
@@ -53,6 +57,12 @@ class JavaFxSmokeCheck {
                                         .getSelectionModel()
                                         .getSelectedItem()
                                         .getText());
+                        root.applyCss();
+                        root.layout();
+                        var heading = (Label) root.lookup(".section-heading");
+                        assertNotNull(heading);
+                        assertEquals(22, heading.getFont().getSize(), 0.01);
+                        assertTrue(heading.getFont().getStyle().contains("Bold"));
                         ((TabPane) root.lookup("#main-tabs")).getSelectionModel().select(1);
                         assertEquals(
                                 "Simulasi nilai",

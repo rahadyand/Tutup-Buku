@@ -1,0 +1,10 @@
+.tutup-buku-root {
+    -fx-background-color: #f5f7f6;
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 13px;
+}
+
+.section-heading {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}

@@ -29,6 +29,11 @@ final class AuthView extends StackPane {
         Button login = button("login", "Masuk"), register = button("register", "Daftar akun lokal");
         Label loginHint = guidance(loginNim, null, "login-nim-guidance");
         Label registerHint = guidance(registerNim, name, "register-nim-guidance");
+        loginNim.accessibleHelpProperty().bind(loginHint.textProperty());
+        registerNim.accessibleHelpProperty().bind(registerHint.textProperty());
+        loginPassword.setAccessibleHelp("Tekan Enter untuk masuk.");
+        registerPassword.setAccessibleHelp("Minimal 8 karakter. Tekan Enter untuk mendaftar.");
+        confirmation.setAccessibleHelp("Ulangi password pendaftaran. Tekan Enter untuk mendaftar.");
         VBox loginForm =
                 centeredForm(
                         heading("Masuk"),
@@ -54,6 +59,7 @@ final class AuthView extends StackPane {
         Tab registerTab = new Tab("Daftar", centeredPage(registerForm, 520));
         TabPane tabs = new TabPane(loginTab, registerTab);
         tabs.setId("auth-tabs");
+        tabs.setAccessibleText("Masuk dan daftar akun lokal");
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getSelectionModel()
                 .selectedItemProperty()

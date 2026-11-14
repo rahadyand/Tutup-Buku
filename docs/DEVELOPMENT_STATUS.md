@@ -1,4 +1,170 @@
-# Status terbaru — perawatan Ponytail FULL, 14 November2026
+# Status terbaru - modernisasi UI fase 2, 14 November 2026
+
+**Implementasi yang ditargetkan selesai; verifikasi otomatis JavaFX lulus.** Verifikasi keyboard OS, screen reader manual dan perangkat pengguna tetap **NOT VERIFIED**. Fase2 tidak dinyatakan sebagai validasi aksesibilitas menyeluruh. Aplikasi tetap0.5.4-rc1/Java21/JavaFX21.0.10/schema4/RULE_VERSION1. Tidak memulai fase3, commit, push atau paket Windows.
+
+## Analisis sebelum implementasi dan batas yang disetujui
+
+Analisis sebelum implementasi: AGENTS, PRD25halaman, hasil fase1, roadmap audit dan Ponytail FULL dibaca ulang. Migration Plan UI/Design System formal tetap tidak tersedia; roadmap dalam `UI_AUDIT_AND_PLAN.md` menjadi definisi fase yang tersedia. Persetujuan terbaru membatasi pekerjaan pada aksesibilitas dengan tampilan fase1 tetap, sehingga tidak mengubah palet/CSS atau membuat framework komponen.
+
+Git awal memuat perubahan fase1 pada FormSupport/TutupBukuApplication/JavaFxSmokeCheck/DEVELOPMENT_STATUS dan resource CSS baru, serta draf untracked lama. Semuanya dipertahankan; hash source/dokumen awal dicatat di `tmp/ui-phase2-20261114/baseline-hashes.json`.
+
+| Temuan sebelum edit | Bukti dan keputusan lingkup |
+|---|---|
+| Label form belum terkait input | `FormSupport.field` hanya membuat Label dan input. Target: `labelFor` langsung untuk kontrol native; factory centered memakai jalur yang sama. Ini juga menjangkau pemakai helper pada modul lain tanpa mengedit view tersebut. |
+| Label password belum menunjuk representasi aktif | `PasswordInput` adalah HBox berisi masked/visible dan tombol. Target: label mengarah field aktif; nama toggle memasukkan konteks label; bantuan tidak mengambil isi password. Peran PASSWORD_FIELD/TEXT_FIELD/BUTTON tetap native. |
+| Nama tombol | Tombol standar sudah memiliki teks bermakna. Kekurangan terkonfirmasi adalah toggle "Tampilkan"/"Sembunyikan" tanpa konteks tiga password. Tidak mengganti nama/peran semua tombol secara generik. |
+| Bantuan dan nama navigasi | Target AuthView: panduan NIM dan bantuan submit password; WorkspaceView: profil readonly/legacy dan navigasi; AcademicView: nama dua daftar dan bantuan Simpan vs Jadikan Aktif. Tidak mengubah event atau validasi. |
+| Keyboard/fokus/dialog | Tidak ada handler traversal khusus atau style yang menghapus fokus. Fokus native terlihat pada bukti fase1; keterjangkauan melalui tombol keyboard belum dibuktikan. Target verifikasi Tab/Shift+Tab, toggle, Enter/Space, ComboBox dan Escape/Batal dialog; CSS tetap kecuali ada bukti yang memerlukan persetujuan lain. |
+| Kontrol di luar file fase2 | Folder-name belajar, TextArea Markdown/note, selector yang dibuat langsung dan baris kunci/asumsi memerlukan perubahan view tersendiri bila hendak diberi semantik khusus. Tidak diedit; perlu persetujuan tambahan untuk lingkup file tersebut. Guard GradeForms/MaterialEditor tetap tanpa perubahan. |
+
+File yang direncanakan: `src/main/java/id/ac/uns/tutupbuku/ui/{FormSupport,PasswordInput,AuthView,WorkspaceView,AcademicView}.java`, fixture R002 yang sudah ada `src/test/java/id/ac/uns/tutupbuku/service/RevisionTwoFxCheck.java`, dan dokumen status ini. Ini lima file UI serta fixture terkait yang disebut fase2 pada roadmap, bukan izin mengedit layer bisnis atau file fase3/4. Tidak menambah class produksi, dependency, selector CSS, shortcut, atau urutan fokus buatan.
+
+Tiga baseline fase1 dipertahankan untuk review: `m3-learning.png` (waktu/posisi isi WebView), `r002-courses-125%-1366.png` dan `r002-courses-native-1024.png` (fokus Keluar). Salinan26gambar dan catatan perbandingan berada di `tmp/ui-phase2-20261114/phase1/` dan `phase1-comparison.json`. Belum ada klaim perbedaan terselesaikan.
+
+H-02 ListView tetap masalah historis terbuka, di luar fase2. Bagian di atas mencatat keputusan sebelum edit aplikasi; hasil pelaksanaan berikut dibedakan dari rencana dan hasil fase1.
+
+## Perubahan fase 2
+
+| File relatif root proyek | Implementasi dan alasan |
+|---|---|
+| `src/main/java/id/ac/uns/tutupbuku/ui/FormSupport.java` | `field` menghubungkan Label langsung ke input native. `fieldCentered` tetap memakai helper tersebut. PasswordInput ditangani sebagai kontrol gabungan, tanpa mengubah layout VBox4 atau factory lain. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/PasswordInput.java` | Binding `labelFor` mengikuti field masked/visible yang aktif; nama aksesibel toggle memuat label password/konfirmasi dan berubah bersama teks Tampilkan/Sembunyikan. Bantuan wrapper diteruskan ke kedua field. Tidak mengambil isi password sebagai nama/help, tidak mengganti peran native atau handler/timing/fokus. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/AuthView.java` | Panduan NIM menjadi accessible help yang mengikuti teks panduan yang sudah ada. Bantuan Enter/minimum password dan nama navigasi akun ditambahkan, tanpa mengubah validasi/login/registrasi/sapaan. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/WorkspaceView.java` | Bantuan NIM readonly, panduan prodi legacy dan nama navigasi workspace. Field tetap dapat difokuskan sesuai perilaku native; canonicalisasi, dirty guard, posisi header dan shortcut tetap. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/AcademicView.java` | Nama aksesibel dua daftar serta bantuan nomor/tahun, Simpan dan Jadikan Aktif. Semua handler, selection, save/activate, dimensi dan metadata-only attendance tetap. |
+| `src/test/java/id/ac/uns/tutupbuku/service/RevisionTwoFxCheck.java` | Fixture R002 diperluas dengan pemeriksaan15kontrol logis berlabel, representasi password aktif, nama/help/peran native, lima jalur Tab/Shift+Tab, fokus terlihat, kontrol keyboard dan dialog. Ekspektasi lama tetap; kasus tambahan berada pada tes opt-in yang sama, bukan penambahan angka kasus JUnit. |
+| `docs/DEVELOPMENT_STATUS.md` | Analisis awal, hasil aktual, kegagalan pengembangan, perbandingan screenshot, batas dan penghentian fase2. |
+
+Pemeriksaan hash awal/akhir menunjukkan tepat tujuh file implementasi ini berubah sejak awal fase2. Bootstrap, CSS dan fixture smoke fase1 serta seluruh draf lain yang diinventarisasi tetap identik. `git diff` layer domain/service/persistence/security, pom, Wrapper dan script packaging kosong. Pada akhir sesi Git juga menampilkan `.codex/config.toml` baru yang untracked, dengan waktu pembuatan bertepatan percobaan alat Windows; berkas tersebut tidak diedit, dihapus atau di-stage sebagai perubahan aplikasi.
+
+Tidak ada `setAccessibleRole`, shortcut, handler traversal atau aturan CSS baru dalam kode produksi. Tombol yang sudah bernama jelas tetap memakai nama/peran native; hanya toggle gabungan mendapat konteks tambahan. Latar `#f5f7f6`, Segoe UI13, heading22bold, auth36, judul materi17, ukuran R002 dan seluruh selector fase1 tetap. CSS dalam source/JAR masih identik, SHA256 `923eab21a94fe3e4fcc0f802e343258402a2f5f077c915f76e014ac1b5f1b4eb`.
+
+## Build dan hasil tes akhir
+
+Semua perintah berikut benar-benar dijalankan pada Temurin21.0.13+9, Maven3.9.11/Wrapper, cache offline lokal. Database/aset tes memakai @TempDir; probe style memakai folder tmp baru, tanpa database AppData pengguna. Tidak mengubah Windows/DPI/jaringan global.
+
+```powershell
+$env:JAVA_HOME = (Resolve-Path '.tools/jdk-21.0.13+9').Path
+$env:MAVEN_USER_HOME = Join-Path $PWD '.tools/maven-user'
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck,MilestoneFiveFxCheck,ReleaseHardeningFxCheck,RevisionOneFxCheck,RevisionTwoFxCheck' '-DreuseForks=false' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=RevisionTwoFxCheck' '-DargLine=-Dglass.win.uiScale=125%' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=RevisionTwoFxCheck' '-Drevision.width=1024' verify
+```
+
+| Run akhir | Hasil |
+|---|---|
+| Regresi default | **BUILD SUCCESS;179tes,0failure/error/skipped**; kompilasi dan JAR Maven berhasil. |
+| Sembilan kelas GUI, fork terpisah | **BUILD SUCCESS;10kasus,0failure/error/skipped**. Termasuk smoke, reader, M2-M5, hardening dan R001/R002. |
+| R002 emulasi proses125% pada target1366x768 | **BUILD SUCCESS;1kasus,0failure/error/skipped**, termasuk pemeriksaan aksesibilitas/keyboard JavaFX baru. |
+| R0021024x768 native | **BUILD SUCCESS;1kasus,0failure/error/skipped**, termasuk pemeriksaan baru yang sama. |
+| Style/protected paths/diff | Probe menghasilkan background/font/ukuran yang identik dengan fase1; source CSS sama dengan entry JAR. `git diff --check` lulus. Tidak ada exception atau warning CSS baru pada empat log final. |
+
+Warning JavaFX unnamed module dan catatan unchecked helper lama tetap ada. Build/test default tidak diubah untuk menyembunyikan kegagalan. Regresi mempertahankan perhitungan/target/IP, persistensi/isolasi/migrasi, validation/guard/failure/retry, autosave/resume, materi aman dan skenario; ini bukti fixture otomatis, bukan semua perangkat atau semua keadaan aplikasi.
+
+## Bukti keyboard dan aksesibilitas
+
+`RevisionTwoFxCheck` memeriksa `AccessibleAttribute.LABELED_BY` dan labelFor secara dua arah, termasuk perpindahan label ke field password visible dan kembali masked. Peran PASSWORD_FIELD/TEXT_FIELD/BUTTON/COMBO_BOX/LIST_VIEW/TAB_PANE tetap native; atribut TEXT password masked tetap null. Nama toggle tiga password bermakna, panduan NIM tidak mengambil nama akun tersimpan, dan help tidak mengambil isi password.
+
+Lima jalur traversal maju/mundur mencakup form Daftar, Masuk, Profil, Semester dan Mata Kuliah (28posisi kontrol pada lima jalur). Tes mengirim **KeyEvent melalui event dispatch JavaFX**, bukan `.fire()` untuk langkah keyboard tersebut dan bukan bukti injeksi tombol tingkat OS. Diuji: hidden password dilewati, toggle lewat Space, Shift+Tab ke field aktif, Enter login gagal/benar dengan input tetap, F4/Down/Enter ComboBox, Space Simpan, tiga tombol guard melalui Tab, default Batal, serta Escape mempertahankan form dan menahan navigasi. Assertion `isFocusVisible` dan screenshot fokus password/Simpan mendukung indikator native yang terlihat; tidak menambah custom traversal.
+
+Screenshot `phase2-focus-password-*` dan `phase2-focus-save-*` diambil pada native1366, native1024 dan emulasi125%; fokus biru pada field/tombol ditinjau visual, termasuk Simpan profil125%. Ini tinjauan gambar oleh pengembang, bukan sesi screen reader atau uji keyboard fisik peserta.
+
+Kegagalan selama pengembangan dicatat terpisah:
+
+- `label-before.log`: tes relasi baru sengaja dijalankan sebelum perbaikan;1error karena LABELED_BY NIM null. `label-after.log`:1kasus lulus sesudah perbaikan.
+- `keyboard.log`:1error karena fixture membaca login sebelum callback logout selesai; ditambahkan await view siap pada fixture.
+- `keyboard-ready.log`/`keyboard-focus.log`:masing-masing1failure; JavaFX Robot tidak memindahkan fokus dari register-nim pada lingkungan ini. Alat akses jendela Windows juga gagal dimulai (`failed to launch codex app-server: program not found`). Keyboard OS tetap **NOT VERIFIED**, tidak dilaporkan lulus.
+- `keyboard-javafx.log`:1error karena pengiriman event sinkron masuk ke dialog modal dan memblok future tes. Event kemudian diantrekan dengan Platform.runLater pada fixture; tidak mengubah aplikasi. `keyboard-modal.log`:1kasus terfokus lulus sebelum regresi akhir di atas.
+
+## Perbandingan screenshot terhadap fase 1
+
+Baseline26gambar fase1 dipertahankan. Hasil fase2: **20identik byte;6berbeda**. Seluruh ukuran gambar sama; pemeriksaan piksel membuktikan enam gambar berbeda identik di luar area berikut. Tidak mengklaim seluruh screenshot sama atau bahwa variasi fokus sudah diperbaiki.
+
+| Screenshot | Area perbedaan `(x1,y1,x2,y2)` | Penilaian / status |
+|---|---|---|
+| `m3-learning.png` | `(717,215,730,224)` | Angka waktu materi berbeda pada run ini; isi/scroll kali ini cocok. Variasi scroll historis fase1 tetap **PERLU REVIEW**, bukan dinyatakan selesai. |
+| `r002-courses-125%-1366.png` | `(1016,6,1074,36)` | Area tombol Keluar; baseline berbeda fase1 tetap **PERLU REVIEW**. |
+| `r002-courses-native-1024.png` | `(944,6,1002,35)` | Area tombol Keluar; baseline berbeda fase1 tetap **PERLU REVIEW**. |
+| `m4-scenarios.png` | `(1200,6,1258,35)` | Variasi tambahan terbatas area tombol Keluar; state snapshot perlu review. |
+| `r002-courses-native-1366.png` | `(1286,6,1344,35)` | Variasi tambahan terbatas area tombol Keluar; state snapshot perlu review. |
+| `r002-register-native-1366.png` | `(760,501,858,526)` | Variasi tampilan tombol toggle konfirmasi; state fokus/hover belum dibuktikan penyebabnya. Tidak ditandai resolved. |
+
+Tinjauan gambar tidak menemukan perpindahan layout pada layar yang dicakup. CSS dan computed style sama; perbedaan area tombol tetap didokumentasikan, bukan dihilangkan lewat CSS atau perubahan fokus untuk mengejar hash identik. Bukti: `tmp/ui-phase2-20261114/{phase1,after}/`, `phase1-comparison.json`, `comparison.json`, `{verify,gui,scale,small,style}.log`, log pengembangan di atas, dan target/surefire-reports. Probe style sama dengan fase1: NIM200/password260 pada Segoe UI13, brand36, heading22 dan backgroundf5f7f6.
+
+## Risiko, H-02, dan penghentian
+
+**NOT VERIFIED:** screen reader manual/Narrator/NVDA, integrasi Windows UI Automation eksternal, keyboard tingkat OS/fisik pada perangkat pengguna, DPI Windows125% nyata, perangkat kedua, seluruh kontrol di luar target dan seluruh keadaan minimum760x480. Tes KeyEvent/property JavaFX tidak menggantikan pemeriksaan tersebut. Penerimaan manusia diperlukan sebelum menyatakan aksesibilitas lengkap. ZIP/DS/Migration Plan formal masih tidak tersedia; tidak mengarang kepatuhan terhadapnya.
+
+H-02 tetap **OPEN, OUT OF SCOPE**; fase2 tidak mengubah selection/ListViewBehavior atau mengklaim akar masalah selesai. Tidak ada exception H-02 pada log final yang diperiksa; ketiadaannya dalam run ini bukan bukti perbaikan. Kontrol langsung pada LearningView/MaterialEditor/GradeView/ScenarioPane di luar helper tetap memerlukan lingkup file tambahan bila ingin diperbaiki secara khusus.
+
+Berhenti setelah fase2. Rekomendasi berikutnya: tinjauan screen reader/keyboard OS dan enam variasi snapshot, lalu keputusan lingkup fase3 (status nilai terlihat dan kepadatan lokal) sesuai audit. Tidak menjalankan fase3, mengedit file tambahan, membuat paket/installer, commit atau push.
+
+## Riwayat hasil fase 1
+
+# Status terbaru - modernisasi UI fase 1, 14 November 2026
+
+**Fase 1 selesai dalam lingkup yang disetujui:** style root dan heading umum dipindahkan ke CSS, dengan nilai visual lama tetap. Baseline Git `220d1f0de270f11c1e5eb7b662bea789445021cd`, aplikasi tetap `0.5.4-rc1`, Java21/JavaFX21.0.10, schema4/RULE_VERSION1. Berhenti sebelum fase2; tidak membuat paket Windows, commit atau push.
+
+## Lingkup dan berkas
+
+Sebelum edit, Git tidak memiliki perubahan tracked/staged. Draf untracked `HUMAN_ACCEPTANCE_KIT.md`, `MORNING_CHECKLIST.md`, `P0_AUDIT.md`, `UI_AUDIT_AND_PLAN.md` dan `docs/academic/` dipertahankan tanpa perubahan. Definisi fase1 dibaca dari bagian9 `docs/UI_AUDIT_AND_PLAN.md`; PRD/AGENTS dan Ponytail FULL tetap berlaku. ZIP refactoring, Design System formal dan Migration Plan UI belum tersedia, sehingga tidak mengarang palet/token baru atau mengklaim kesesuaian dengan spesifikasi yang belum dibaca.
+
+Hanya lima file berikut yang berubah pada fase ini:
+
+| Berkas relatif root proyek | Perubahan dan alasan |
+|---|---|
+| `src/main/resources/id/ac/uns/tutupbuku/ui/tutup-buku.css` (baru) | `.tutup-buku-root`: latar `#f5f7f6`, Segoe UI13px; `.section-heading`:22px bold. Memusatkan nilai presentasi yang sebelumnya inline, tanpa aturan global untuk ukuran input/spacing/fokus. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/TutupBukuApplication.java` | Root memakai style class; Scene memuat CSS dari classpath. Lifecycle, handler, ID node dan ukuran jendela tetap. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/FormSupport.java` | Factory `heading` menambahkan kelas CSS, menggantikan inline22px bold. Factory lain tetap. |
+| `src/test/java/id/ac/uns/tutupbuku/service/JavaFxSmokeCheck.java` | Scene fixture standalone memuat stylesheet yang sama; assertion baru memeriksa heading22px bold sesudah CSS/layout. Ekspektasi hitung dan alur lama tidak diubah. |
+| `docs/DEVELOPMENT_STATUS.md` | Mencatat hasil implementasi, perintah, bukti dan batas aktual pada bagian ini. |
+
+Override auth36px dan judul materi17px dipertahankan. Lebar lokal R002, struktur JavaFX programatik, header kanan, tab, dua halaman akademik, guard, CSS HTML reader dan seluruh dependency tetap. Diff domain/service/persistence/security/pom/Wrapper/scripts kosong; tidak ada migrasi atau perubahan format data.
+
+## Build dan tes yang benar-benar dijalankan
+
+Lingkungan: Temurin21.0.13+9 portable di `.tools/jdk-21.0.13+9`, JavaFX21.0.10, Maven3.9.11 melalui Wrapper. Semua database/aset tes memakai @TempDir; probe style memakai folder sementara baru di `tmp`, bukan AppData pengguna. Tidak mengubah pengaturan Windows global.
+
+```powershell
+$env:JAVA_HOME = (Resolve-Path '.tools/jdk-21.0.13+9').Path
+$env:MAVEN_USER_HOME = Join-Path $PWD '.tools/maven-user'
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=JavaFxSmokeCheck,RevisionTwoFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck' '-DreuseForks=false' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=RevisionTwoFxCheck' '-DargLine=-Dglass.win.uiScale=125%' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=RevisionTwoFxCheck' '-Drevision.width=1024' verify
+```
+
+| Pemeriksaan | Hasil aktual |
+|---|---|
+| Baseline sebelum edit: empat GUI di atas, lalu R002125% dan R0021024 |4+1+1kasus lulus;0failure/error/skipped.26snapshot disalin sebelum perubahan. Ini baseline terpisah, tidak ditambahkan ke hitungan pascaperubahan. |
+| `verify` pascaperubahan | **BUILD SUCCESS;179tes,0failure/error/skipped**.75source dan27file tes dikompilasi;1resource disalin; JAR Maven berhasil dibuat. |
+| Empat GUI pascaperubahan | **BUILD SUCCESS;4kasus,0failure/error/skipped**, fork terpisah. Termasuk assertion CSS baru pada fixture standalone. |
+| R002 emulasi proses125% | **BUILD SUCCESS;1kasus,0failure/error/skipped**; target jendela fisik1366x768. |
+| R002 lebar1024 | **BUILD SUCCESS;1kasus,0failure/error/skipped**; target1024x768 native. |
+| Resource | CSS di `target/classes` dan entry `id/ac/uns/tutupbuku/ui/tutup-buku.css` dalam JAR identik byte dengan source; SHA256 `923eab21a94fe3e4fcc0f802e343258402a2f5f077c915f76e014ac1b5f1b4eb`. Bukan uji EXE distribusi. |
+
+Probe Java sementara menjalankan aplikasi dengan database fiktif terisolasi, menunggu login siap, lalu membaca properti sesudah `applyCss/layout`. Hasil sebelum/sesudah identik: background `0xf5f7f6ff`; NIM Segoe UI13/lebar200; password Segoe UI13/lebar260; brand Segoe UI Bold36/lebar198; heading Segoe UI Bold22. Probe bukan fitur produksi atau pengujian keyboard.
+
+## Bukti fungsi dan tampilan
+
+Regresi default menguji kembali kalkulasi/target/IP, autentikasi/isolasi, transaksi/migrasi dan persistensi yang sudah ada. GUI memverifikasi60→55→70, override kehadiran, snapshot/usang/refresh/duplikasi/perbandingan, failure/retry/input tetap dan restart; M3 meliputi autosave, catatan/completion, script nonaktif, guard, urutan serta resume. R002 memeriksa ukuran lokal, sapaan/privasi, password/Enter handler, profil legacy/dropdown, save gagal/retry, guard Simpan/Buang/Batal, urutan aksi dan posisi shortcut kanan. Ini bukti otomatis pada fixture, bukan klaim seluruh perilaku atau perangkat telah diperiksa manual.
+
+Perbandingan26snapshot sebelum/sesudah: **23identik byte**. Dua screenshot course125%/1024 hanya berbeda dalam area fokus tombol Keluar; screenshot M3 berbeda pada waktu materi dan isi/scroll WebView. Pemeriksaan piksel membuktikan bagian lain dari tiga gambar itu identik. Tidak mengklaim26gambar identik atau memperbaiki variasi state snapshot. Assertion resume M3 tetap lulus pada kedua run. Tinjauan visual dilakukan pada login native, course native/1024/125%, register/header125%, reader M3 dan tabel perbandingan M4; tidak ditemukan perubahan layout pada gambar yang diperiksa.
+
+Bukti lokal: `tmp/ui-phase1-20261114/{baseline-gui,baseline-scale,baseline-small,verify,gui,scale,small}.log`, `baseline-style.log`, `style.log`, `comparison.json`, dan direktori `before/after` berisi screenshot. XML/TXT tes tetap di `target/surefire-reports`. Tidak ada exception atau warning CSS baru pada log build/GUI yang diperiksa. Warning JavaFX unnamed module dan catatan unchecked helper tes lama tetap muncul; tidak menyebabkan kegagalan. `git diff --check` lulus; peringatan konversi LF/CRLF Git bukan kegagalan tes.
+
+## Risiko, batas, dan langkah berikutnya
+
+Stylesheet menjadi resource wajib pada classpath; bootstrap dan isinya dalam JAR telah diperiksa. Semua constructor aplikasi dalam suite memakai jalur tersebut; fixture standalone disesuaikan secara eksplisit. API baru/pemuat tema/abstraksi tambahan tidak dibuat.
+
+Belum dilakukan pada fase1: paket/EXE baru, perangkat kedua, offline fisik, DPI Windows125% nyata, perjalanan keyboard/screen reader manual, seluruh keadaan UI pada minimum760x480, benchmark atau usability mahasiswa. Emulasi125% dan pemanggilan event otomatis bukan pengganti pemeriksaan tersebut. H-02 historis ListView tetap terbuka, tidak dinyatakan selesai dari run ini. Variasi fokus/scroll pada snapshot membatasi perbandingan piksel menyeluruh; bukan alasan mengubah reader/guard di luar lingkup.
+
+Berikutnya hanya setelah persetujuan: fase2 sesuai audit, yaitu relasi label dan peran tombol/fokus, dengan aturan warna yang disetujui terlebih dahulu. Tidak memulai fase2, tree navigation, perubahan spacing, reader HTML, refactoring lain atau packaging otomatis.
+
+## Riwayat sebelum modernisasi UI fase 1
+
+# Status terbaru - perawatan Ponytail FULL, 14 November2026
 
 Baseline4dac60c/main diperiksa; dua penyederhanaan internal dipilih: hapus panduan NIM mati dan satukan validasi metadata Course. UI/engine/schema4 tetap. Baseline177/fokus16tes lulus; final179tes default+10kasus GUI+1skala proses125% lulus,0failures/errors/skipped. 14snapshot identik sebelum/sesudah. Paket0.5.4-rc1-20261114-124851: audit226hash+manifest/forbidden0/runtime17modul, seluruh227file cocok ekstraksi/JARtarget. EXE Enterlogin/save metadata/close/reopen duaexit0, SQLite4/integrity/FK dan data lama sah. SHA256ZIP445FC5DA871AD3679A73DC55FCC7B541B107713D02C77B5E2A0A0EDBCEB3EF95. Checkpoint normal main dengan receipt push aktual tmp/ponytail-checkpoint.txt/jawaban akhir; hasil terbaru di [PONYTAIL_FULL_REVIEW.md](PONYTAIL_FULL_REVIEW.md). Draf lama tetap di luar lingkup; tidak memulai dashboard.
 

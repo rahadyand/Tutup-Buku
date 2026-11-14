@@ -37,8 +37,7 @@ public final class TutupBukuApplication extends Application {
     public void start(Stage stage) {
         root = new BorderPane();
         root.setId("application-root");
-        root.setStyle(
-                "-fx-background-color: #f5f7f6; -fx-font-family: 'Segoe UI'; -fx-font-size: 13px;");
+        root.getStyleClass().add("tutup-buku-root");
         status = status("application-status");
         var footer = form(status);
         footer.visibleProperty().bind(status.textProperty().isNotEmpty());
@@ -55,7 +54,10 @@ public final class TutupBukuApplication extends Application {
                                         + databaseFile.toAbsolutePath()),
                         retry));
         stage.setTitle("Tutup Buku — Kandidat Rilis 0.5.4-rc1");
-        stage.setScene(new Scene(root, 1280, 820));
+        Scene scene = new Scene(root, 1280, 820);
+        scene.getStylesheets()
+                .add(TutupBukuApplication.class.getResource("tutup-buku.css").toExternalForm());
+        stage.setScene(scene);
         stage.setMinWidth(760);
         stage.setMinHeight(480);
         // Visual bounds sudah dalam logical pixels; aman pada DPI tinggi tanpa mengubah skala

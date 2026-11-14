@@ -64,6 +64,7 @@ final class WorkspaceView extends BorderPane {
         TextField nim = text("profile-nim", "");
         nim.setText(profile.nim());
         nim.setEditable(false);
+        nim.setAccessibleHelp("NIM akun hanya dapat dibaca dan tidak dapat diubah.");
         TextField name = text("profile-name", "Nama");
         name.setText(profile.name());
         nim.setPrefWidth(200);
@@ -82,6 +83,7 @@ final class WorkspaceView extends BorderPane {
                         "Pilih prodi lalu Simpan. Nilai lama yang kosong/tidak dikenali tetap"
                                 + " disimpan sampai Anda memilih prodi.");
         programHelp.setMaxWidth(360);
+        program.accessibleHelpProperty().bind(programHelp.textProperty());
         Label profileStatus = status("profile-status");
         Button save = button("save-profile", "Simpan profil");
         String[] savedProfile = {profile.name(), profile.studyProgram()};
@@ -148,6 +150,7 @@ final class WorkspaceView extends BorderPane {
         TabPane tabs =
                 new TabPane(dashboard, new Tab("Semester & Mata Kuliah", academicView), profileTab);
         tabs.setId("workspace-tabs");
+        tabs.setAccessibleText("Navigasi ruang kerja");
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         setCenter(tabs);
         boolean[] selecting = {false};
