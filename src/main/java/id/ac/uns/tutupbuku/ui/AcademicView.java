@@ -128,11 +128,9 @@ final class AcademicView extends BorderPane {
                                                 });
                                     });
                         });
-        number.setPrefWidth(90);
-        number.setMaxWidth(90);
+        limitWidth(number, 90);
         number.setAccessibleHelp("Nomor semester berupa bilangan bulat lebih dari nol.");
-        year.setPrefWidth(110);
-        year.setMaxWidth(110);
+        limitWidth(year, 110);
         year.setAccessibleHelp("Tahun tunggal empat digit antara 1000 dan 9998.");
         Button newForm = button("new-semester", "Semester Baru");
         newForm.setOnAction(e -> newSemester());
@@ -143,6 +141,8 @@ final class AcademicView extends BorderPane {
         save.setAccessibleHelp("Menyimpan formulir semester tanpa mengganti semester aktif.");
         save.setOnAction(e -> guardCourse(() -> saveSemester(false, () -> showCourses())));
         Button delete = button("delete-semester", "Hapus Semester");
+        save.getStyleClass().add("tb-primary");
+        delete.getStyleClass().add("tb-danger");
         delete.setOnAction(e -> deleteSemester());
         Button view = button("view-courses", "Lihat mata kuliah semester ini");
         view.setOnAction(
@@ -155,8 +155,7 @@ final class AcademicView extends BorderPane {
                                     else showCourses();
                                 }));
         for (Button button : List.of(activate, save, delete)) {
-            button.setPrefWidth(170);
-            button.setMaxWidth(170);
+            limitWidth(button, 170);
         }
         semesterPage =
                 centeredPage(
@@ -190,8 +189,19 @@ final class AcademicView extends BorderPane {
                         back);
         sidebar.setPadding(new Insets(16));
         sidebar.setPrefWidth(300);
+        sidebar.getStyleClass().add("tb-surface");
+        sidebar.prefWidthProperty().bind(widthProperty().multiply(0.27).add(10));
+        sidebar.setMinWidth(0);
         VBox.setVgrow(semesters, Priority.ALWAYS);
-        coursePage.setLeft(sidebar);
+        semesters.setPrefHeight(200);
+        semesters.setMinHeight(90);
+        sidebar.setMinHeight(Region.USE_PREF_SIZE);
+        back.setMaxWidth(Double.MAX_VALUE);
+        ScrollPane semesterSidebar = scroll(sidebar);
+        semesterSidebar.setFitToHeight(true);
+        semesterSidebar.prefWidthProperty().bind(sidebar.prefWidthProperty());
+        semesterSidebar.setMinWidth(210);
+        coursePage.setLeft(semesterSidebar);
         courses.setPrefHeight(160);
         courses.setMinHeight(90);
         courseName.setMaxWidth(480);
@@ -211,6 +221,8 @@ final class AcademicView extends BorderPane {
         Button saveCourse = button("save-course", "Simpan mata kuliah");
         saveCourse.setOnAction(e -> saveCourse(() -> {}));
         Button deleteCourse = button("delete-course", "Hapus mata kuliah");
+        saveCourse.getStyleClass().add("tb-primary");
+        deleteCourse.getStyleClass().add("tb-danger");
         deleteCourse.setOnAction(e -> deleteCourse());
         VBox courseForm =
                 form(
@@ -220,7 +232,7 @@ final class AcademicView extends BorderPane {
                         field("Nama mata kuliah", courseName),
                         field("Kode (opsional)", code),
                         field("SKS (lebih dari 0)", credits),
-                        new HBox(10, saveCourse, deleteCourse),
+                        new FlowPane(10, 8, saveCourse, deleteCourse),
                         courseStatus,
                         newCourse);
         courseForm.setMaxWidth(680);

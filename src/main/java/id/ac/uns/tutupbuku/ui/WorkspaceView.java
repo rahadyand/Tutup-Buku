@@ -28,6 +28,7 @@ final class WorkspaceView extends BorderPane {
             UserProfile profile,
             java.util.function.Consumer<String> browser,
             Runnable onLogout) {
+        getStyleClass().add("tb-workspace");
         academicService = academic;
         uiTasks = tasks;
         learningView = new LearningView(learning, academic, tasks, browser);
@@ -42,22 +43,32 @@ final class WorkspaceView extends BorderPane {
                                     onLogout.run();
                                 }));
         identity.setWrapText(true);
-        VBox titles =
-                new VBox(
-                        3,
-                        heading("Tutup Buku"),
-                        identity,
-                        active,
-                        note("Materi tertata, target terencana."));
+        Label tagline = note("Materi tertata, target terencana.");
+        tagline.visibleProperty().bind(heightProperty().greaterThanOrEqualTo(600));
+        tagline.managedProperty().bind(tagline.visibleProperty());
+        var compact = javafx.css.PseudoClass.getPseudoClass("compact");
+        heightProperty()
+                .addListener(
+                        (o, old, height) ->
+                                pseudoClassStateChanged(compact, height.doubleValue() < 600));
+        VBox titles = new VBox(3, heading("Tutup Buku"), identity, active, tagline);
         HBox.setHgrow(titles, Priority.ALWAYS);
         Button openLearning = button("open-learning", "Modul Belajar"),
                 openGrades = button("open-simulation", "Simulasi Nilai");
         HBox shortcuts = new HBox(8, openLearning, openGrades);
         shortcuts.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
         VBox navigation = new VBox(8, logout, shortcuts);
+        navigation.setMinWidth(Region.USE_PREF_SIZE);
+        openLearning.setMinWidth(Region.USE_PREF_SIZE);
+        openGrades.setMinWidth(Region.USE_PREF_SIZE);
         navigation.setAlignment(javafx.geometry.Pos.TOP_RIGHT);
         navigation.setId("workspace-shortcuts");
         HBox header = new HBox(18, titles, navigation);
+        header.getStyleClass().add("tb-workspace-header");
+        titles.setMinWidth(0);
+        identity.setMinHeight(Region.USE_PREF_SIZE);
+        active.setMaxWidth(Double.MAX_VALUE);
+        active.setMinHeight(Region.USE_PREF_SIZE);
         header.setPadding(new Insets(8));
         setTop(header);
 
@@ -67,15 +78,12 @@ final class WorkspaceView extends BorderPane {
         nim.setAccessibleHelp("NIM akun hanya dapat dibaca dan tidak dapat diubah.");
         TextField name = text("profile-name", "Nama");
         name.setText(profile.name());
-        nim.setPrefWidth(200);
-        nim.setMaxWidth(200);
-        name.setPrefWidth(300);
-        name.setMaxWidth(300);
+        limitWidth(nim, 200);
+        limitWidth(name, 300);
         ComboBox<String> program = new ComboBox<>();
         program.setId("profile-program");
         program.getItems().setAll("Informatika", "Sains Data");
-        program.setPrefWidth(240);
-        program.setMaxWidth(240);
+        limitWidth(program, 240);
         program.setPromptText("Pilih program studi");
         program.setValue(canonicalProgram(profile.studyProgram()));
         Label programHelp =
@@ -86,6 +94,8 @@ final class WorkspaceView extends BorderPane {
         program.accessibleHelpProperty().bind(programHelp.textProperty());
         Label profileStatus = status("profile-status");
         Button save = button("save-profile", "Simpan profil");
+        save.getStyleClass().add("tb-primary");
+        program.getStyleClass().add("tb-input");
         String[] savedProfile = {profile.name(), profile.studyProgram()};
         java.util.function.Consumer<Runnable> saveProfile =
                 done -> {

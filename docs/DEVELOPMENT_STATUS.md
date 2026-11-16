@@ -1,3 +1,414 @@
+# Pemeriksaan checkpoint Git - 16 November 2026 (WIB)
+
+Atas permintaan pengguna, staging diperiksa: 28 berkas UI/design system/launcher/dokumentasi/tes sesuai daftar; satu commit lokal sebelumnya843aaa9 juga diperiksa karena ikut push. .codex/config.toml, docs/academic dan draf audit/kit/morning tetap di luar staging. Build/cache/DB/log/rahasia tidak disertakan; Wrapper tetap tracked.
+
+Pemeriksaan ulang sebelum commit: `mvnw.cmd verify` **179tes lulus** dan suite14class opt-in **15kasus GUI/benchmark lulus**, seluruhnya0failures/errors/skipped. Log lokal `tmp/github-check-20261116-unit.log` dan `tmp/github-check-20261116-gui.log`. Sintaks dua script PowerShell valid; diff --cached --check lulus. Status penerimaan tetap **CONDITIONALLY READY**: tidak menjalankan uji interaktif EXE/shortcut, DPI nyata, komputer kedua atau offline fisik pada checkpoint ini; H-02 tetap OPEN. Tidak membuat paket baru atau mengubah implementasi.
+
+Build verifikasi kini menghasilkan JAR SHA256 `E5FE50A971C46A98C1C1374F3CF1A9D5868605469FD3B152F07EFC3C0A1E6053`, berbeda byte dari JAR app-image15November `6F43155BA180DE5FB04519ACA5B0E91D294E20A3C24FD0ECD81A50E977F4C6AA`; keduanya memakai versi0.5.4-rc1. Riwayat kecocokan hash Fase7 di bawah berlaku saat audit tersebut, bukan klaim kedua artefak masih identik setelah rebuild ini. Tes terbaru memverifikasi build source, bukan EXE paket; paket terdahulu dipertahankan dan tidak diregenerasi. Hasil commit/push normal main serta hash remote dicatat pada receipt lokal `tmp/ui-github-checkpoint-20261116.txt` dan jawaban akhir.
+
+---
+
+# Status Fase 7 - 16 November 2026 (WIB)
+
+**QA akhir: CONDITIONALLY READY, belum READY FOR RELEASE.** Working tree saat ini lulus `mvnw.cmd verify` (179 tes) dan suite JavaFX terpisah (15 kasus); masing-masing 0 gagal/error/skip. Source sejak Fase 5C tetap identik dan paket app-image tetap cocok dengan JAR hasil build terkini. Seluruh 30 PNG Fase 5C dan dua PNG recovery cocok ukuran/hash. Tidak ada defek UI baru yang terbukti, sehingga tidak mengubah kode aplikasi. H-02 ListView tetap OPEN; dua log baru tidak memuat exception tersebut.
+
+EXE sebelumnya terlihat membuka jendela, tetapi **interaksi EXE, login/navigasi/simpan/tutup/buka ulang melalui paket, double-click Desktop, keyboard fisik, pembaca layar, Windows DPI nyata dan komputer kedua belum diverifikasi**. Shortcut uji sementara benar; shortcut Desktop pengguna tidak ada dan Desktop berada di luar cakupan tulis sesi ini. Tidak membuat installer, staging, commit atau push; seluruh pekerjaan lama tetap tersedia. Kesimpulan, perintah tepat, bukti, tingkat isu dan langkah uji manual berada di [PHASE_7_QA.md](PHASE_7_QA.md). Jangan distribusikan sebagai rilis final sebelum gerbang interaktif diselesaikan.
+
+---
+
+# Status Fase 6 - 15 November 2026 (WIB)
+
+**App-image Windows terbaru berhasil dibangun dan diverifikasi paketnya; peluncuran EXE terlihat sebagai jendela Windows, tetapi interaksi di dalamnya serta double-click shortcut belum dapat diverifikasi. Status Fase6: sebagian terverifikasi.** Gerbang otomatis Fase5C di bawah telah lulus sebelum pekerjaan ini dimulai. Tidak ada installer, staging, commit atau push.
+
+Lokasi rilis baru: `releases/TutupBuku-0.5.4-rc1-20261115-072902/TutupBuku/TutupBuku.exe`; ZIP di direktori rilis yang sama. Versi JAR aplikasi `6F43155BA180DE5FB04519ACA5B0E91D294E20A3C24FD0ECD81A50E977F4C6AA`, identik dengan JAR target terbaru dan berbeda dari paket lama (`62AB91...`). `Verify-WindowsPackage.ps1` mengekstrak ZIP ke `tmp/Uji Paket Ekstraksi 20261115-072935`: SHA256 ZIP `CD4A5566CFFBA3A8605CAA5955CDA1C3419C933CB5B31D20F112684473A670B5`, 229file manifest lolos,0file terlarang, runtime bawaan21.0.13 menampilkan17modul, 13JAR dependensi dan dua CSS ada di JAR. Ikon merek .ico belum tersedia; shortcut memakai ikon yang diekstrak dari EXE bawaan jpackage.
+
+Build pertama `build.log` gagal pada pemeriksaan `Files.isWritable` jpackage terhadap direktori rilis sandbox, meskipun Java berhasil membuat file di sana. Probe menunjukkan temp proses writable=true. `Build-Windows.ps1` diperbaiki agar jpackage membuat image pada temp proses, lalu menyalin hasil selesai ke folder rilis baru. Build kedua `-Offline -SkipBuild` lulus pada source/JAR yang sudah diverifikasi; tidak mengulang179tes untuk perubahan packaging saja. Folder keluaran pertama `071956` ditandai `INCOMPLETE.txt` dan tidak dianggap paket. Paket lama tidak ditimpa atau dihapus.
+
+Script `scripts/Create-DesktopShortcut.ps1` ikut di app-image. Uji pada direktori sementara membuktikan `.lnk` bernama Tutup Buku mengarah ke EXE rilis baru, working directory folder image dan ikon EXE. Pemanggilan ulang tidak mengubah hash .lnk; shortcut konflik ditolak tanpa perubahan byte; paket tidak lengkap menghasilkan pesan bahasa Indonesia. **Shortcut Desktop pengguna belum dibuat**, karena writable root lingkungan tidak mencakup Desktop. File uji berada di `tmp/phase6-20261115/shortcut-test/`, bukan Desktop. Status double-click dari Desktop tetap NOT VERIFIED.
+
+EXE hasil ekstraksi dijalankan dengan `TUTUP_BUKU_DATA_DIR` absolut ke fixture `tmp/phase6-20261115/data`, JAVA_HOME/MAVEN_HOME kosong dan PATH hanya System32. Proses 12512 bertahan selama45detik dan JavaFX menulis warning lama unnamed module; inventaris Windows Computer Use melihat jendela `Tutup Buku — Kandidat Rilis 0.5.4-rc1`. Namun binding jendela gagal dengan `foreground window did not report a process id`, sehingga screenshot isi, login, navigasi, penutupan normal dan double-click nyata **tidak terbukti dari EXE**. Upaya awal tanpa sesi induk bertahan tidak menghasilkan jendela yang dapat diamati; tidak disimpulkan sebagai crash. Pengujian GUI JavaFX dari source pada Fase5C mencakup navigasi belajar/nilai, CSS, autosave/resume dan persistensi, tetapi bukan pengganti uji EXE tersebut.
+
+Fixture terisolasi dibuat dari class paket, berisi satu akun fiktif, semester/mata kuliah, lima materi contoh, huruf aktual B+ dan satu skenario. Inspeksi setelah peluncuran menemukan nilai yang sama dan `PRAGMA quick_check=ok`; tidak membaca/menulis database default pengguna. Ini bukti data uji tidak rusak, bukan bukti penyimpanan melalui interaksi EXE. Error launcher sebelum JavaFX, interaksi layar EXE, shortcut Desktop, komputer kedua, Windows DPI nyata dan offline fisik belum teruji.
+
+Dokumentasi prosedur berada pada `WINDOWS_DESKTOP_LAUNCHER.md`; bukti `tmp/phase6-20261115/` berisi log build, verifikasi ZIP, fixture, konfigurasi shortcut, proses dan diagnosa. Keluaran lama tetap tersedia. Setelah lingkungan GUI bisa mengikat proses dan Desktop dapat ditulis, uji login, navigasi, simpan/tutup/buka ulang, lalu pasang dan double-click shortcut tanpa mengganti data pengguna. Tidak memulai fase berikutnya.
+
+---
+
+# Status Fase 5C - 15 November 2026 (WIB)
+
+**Gerbang otomatis Fase5C LULUS. Fase6 baru dimulai setelah verifikasi berikut selesai.** Seluruh layar produk diinventarisasi pada UI_COMPONENTS; tema Modern Academic Workspace diterapkan pada shell, profil, akademik, belajar/editor/reader, nilai aktual, skenario/perbandingan, dialog dan startup. Pilot autentikasi dipertahankan. Tidak ada perubahan domain/service/persistence/security/schema/dependency/pom. Hash69berkas terlindungi (termasuk draf/config) identik checkpoint awal.
+
+Scope terbaru:5A=Design System,5B=pilot,5C=adopsi seluruh UI,6=launcher setelah gerbang5C, berbeda dari milestone produk/roadmap UI historis. Semua riwayat di bawah dipertahankan. Tidak ada staging/commit/push/reset, installer atau fase7.
+
+## Implementasi dan batas eksplisit
+
+Token21warna sama; native controls/table/tab/list/dialog mengikuti tema. Form card, panel putih, aksi primary/danger, penekanan hasil, code editor, reader.css dan header ringkas melengkapi fondasi. Semua guard/worker/service tetap. Footer Fase3 dan limitWidth/labelFor/password Fase2/4 tetap. Sidebar belajar memiliki cabang TitledPane collapsible dengan pilihan tetap; **TreeView pengganti dikecualikan** karena memerlukan perubahan model seleksi/worker/guard, bukan dibangun sebagai navigasi duplikat. File chooser/window chrome native dan fixture CalculationDemoView juga dikecualikan. Tidak ada layar produk lain yang sengaja tertinggal.
+
+Header compact pada tinggi<600logical px mempertahankan identitas/semester/shortcut dan menghilangkan slogan dekoratif saja. Sidebar semester/reader/editor bergulir; teks tombol wrap. Halaman minimum760x480 tetap memerlukan scroll, bukan semua data terlihat bersamaan. MarkdownRenderer/CSP/security tidak disentuh; reader memakai stylesheet UI sendiri, script halaman tetap disabled.
+
+## Bukti pengujian aktual
+
+Folder bukti: `tmp/phase5c-20261115/`. Semua DB/aset fixture @TempDir. Maven Wrapper, Temurin21.0.13+9, JavaFX21.0.10, cache offline. NO perubahan DPI Windows global.
+
+| Gerbang | Hasil | Log |
+|---|---|---|
+| Fondasi5A sebelum migrasi |1kasus lulus|design-system-gate.log|
+| Shell/profil/auth/R002 |3kasus lulus|shell.log|
+| Akademik/belajar/reader/autosave/resume |3kasus lulus|academic-learning.log|
+| Nilai/failure/guard |2kasus lulus|grades.log|
+| Regresi seluruh bisnis/persistensi |179tes,0gagal/error/skipped|final-regression.log|
+| Seluruh14class opt-in |15kasus=14GUI+1benchmark,0gagal/error/skipped|final-gui-2.log|
+| Emulasi125% |7kasus,0gagal/error/skipped|final-scale.log|
+|1024x768 M4/R002 |2kasus lulus|final-small.log|
+|760x480 M4 |1kasus lulus; footer dan viewport>=80 tetap|final-minimum.log|
+| ModernWorkspaceFxCheck |7layar x3native +125%, collapse mempertahankan pilihan, computed reader14px/script disabled, tombol/scroll/dialog/PNG|dalam suite native/scale|
+| CSS dan Git |Source/classes/JAR dua CSS identik; tanpa warning CSS/exception baru; diff --check lulus; index kosong|phase5c-verification.json|
+
+Setup: `$env:JAVA_HOME=(Resolve-Path '.tools/jdk-21.0.13+9').Path`; `$env:MAVEN_USER_HOME=Join-Path $PWD '.tools/maven-user'`. Semua perintah memakai `.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp ... verify`, GUI dengan `-DreuseForks=false`. Class suite:JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck,MilestoneFiveFxCheck,ReleaseHardeningFxCheck,RevisionOneFxCheck,RevisionTwoFxCheck,ReusableComponentsFxCheck,DesignSystemFxCheck,AuthPilotFxCheck,ModernWorkspaceFxCheck,CalculationPerformanceCheck. Scale menambah `-DargLine=-Dglass.win.uiScale=125%`; ukuranM4 lewat phase3.width/height dan R002 lewat revision.width.
+
+Kegagalan pengembangan tidak disembunyikan: fixture baru awalnya belum memilih semester (modern-layout.log); diperbaiki pada setup fixture. Minimum M4 gagal viewport55px (minimum.log), diperbaiki header compact sehingga112px tanpa melonggarkan assertion. Suite pertama gagal lookup semester-list sebelum skin ScrollPane terpasang (final-gui.log); helper count menunggu node berbatas15detik, assertion jumlah data tetap. Pengulangan terarah dan suite final di atas lulus. Tidak mengulang kegagalan tanpa diagnosis.
+
+30PNG baru pada after-native/after-scale untuk tujuh layar dan dialog. Setiap PNG baru dibaca ulang dan ukuran dicocokkan dengan Scene:1350x729,1008x729,744x441 native;1080x584 pada125%. Target Stage1366x768/1024x768/760x480 berbeda dari PNG. Dua recovery PNG1024x760 tetap disimpan dan mode exactCapture tidak diubah; tidak menjalankan ulang mode khusus tersebut. Baseline target sebelum fase disalin ke before; arsip fase lama tidak dihapus. after-native/after-scale juga memuat salinan output lama yang tidak dihasilkan ulang; jangan menghitung semuanya sebagai bukti baru.
+
+Perubahan AuthPilot hanya ekspektasi scope tema setelah login (kini workspace bertema); algoritma resize/capture/timeout recovery dipertahankan. ModernWorkspaceFxCheck baru menguji reachability, PNG aktual dan dialog; MilestoneTwoFxCheck hanya await skin. Bukti hash awal/source sebelum edit berada di initial-hashes.json/source-before. Seluruh perubahan sebelumnya tetap di workspace.
+
+**Batas:** H-02 ListView OPEN; keyboard OS/fisik, screen reader, Windows DPI nyata, perangkat kedua/offline fisik/usability belum diverifikasi. Lulus di atas adalah gerbang otomatis/presentasi pada lingkungan ini, bukan sertifikasi aksesibilitas atau penerimaan rilis lapangan. Belum ada regresi baru yang diketahui tersisa dari Fase5C.
+
+---
+
+## Riwayat sebelum Fase 5C
+
+# Recovery screenshot - 15 November 2026
+
+**Selesai: dua PNG pesan error pilot kini tepat1024x760. Tidak ada perubahan kode aplikasi.** Inspeksi state aktual menemukan perbaikan wait resize dari sesi sebelumnya sudah tersimpan dan `final-pilot-size.log`/`final-pilot-scale.log` benar-benar BUILD SUCCESS. Tidak mengulang implementasi5A/5B atau regresi yang sudah berhasil.
+
+Target sebelumnya adalah ukuran **jendela**1024x768;50arsip PNG1024 yang diperiksa pada target/verification dan after sebenarnya1008x729 karena dekorasi Windows. Itu bukan PNG1024x760, sehingga kebutuhan recovery terbaru diterapkan sebagai mode capture konten terpisah. Arsip dan penamaan lama tidak ditimpa/dihapus. Mode default/matrix historis tetap.
+
+Hanya `src/test/java/id/ac/uns/tutupbuku/service/AuthPilotFxCheck.java` dan tambahan status ini diperluas. Flag `pilot.exactCapture=true` mengatur Scene dari selisih Stage/Scene yang diukur, menunggu ukuran aktual, lalu memeriksa ulang dimensi PNG yang dibaca dari disk. Tidak memakai crop, scaling atau interpolasi gambar. Timeout kasus90detik; penantian resize memakai await berbatas yang sudah ada. Dua output baru berawalan capture membedakan target piksel dari target jendela lama.
+
+Perintah benar-benar dijalankan satu kali, exit0, BUILD SUCCESS,1kasus/0failure/error/skipped:
+
+```powershell
+$env:JAVA_HOME = (Resolve-Path '.tools/jdk-21.0.13+9').Path
+$env:MAVEN_USER_HOME = Join-Path $PWD '.tools/maven-user'
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=AuthPilotFxCheck' '-DreuseForks=false' '-Dpilot.exactCapture=true' '-Dpilot.capture.width=1024' '-Dpilot.capture.height=760' verify
+```
+
+Output `pilot-login-status-capture-native-1024x760.png` dan `pilot-register-status-capture-native-1024x760.png` di target/verification, disalin identik ke `tmp/recovery-20261115/screenshots/`. Java ImageIO dan pemeriksaan independen Pillow sama-sama memastikan kedua file valid dan tepat1024x760. Feedback wrap/terlihat setelah scroll, input gagal tetap, retry login, scope tema dan navigasi belajar/nilai tetap lulus. Bukti: `tmp/recovery-20261115/exact-capture.log` dan `verification.json`.
+
+SHA256 seluruh76file src/main dan50arsip gambar awal tetap identik; perubahan/draf awal lain dipertahankan. Command tes selesai exit0, tanpa command gagal yang dicoba berulang, staging/commit/push/reset/rollback atau fase baru. Pemeriksaan proses lewat CIM ditolak lingkungan dan hasil kosongnya tidak dianggap bukti; alternatif Get-Process benar-benar menemukan0proses java/javaw. Pengujian luas179tes/13GUI+benchmark di bawah tetap bukti sesi sebelumnya, bukan diklaim dijalankan ulang pada recovery yang hanya mengubah fixture ini.
+
+## Riwayat sebelum recovery
+
+# Status terbaru - Fase 5A dan 5B, 14 November 2026
+
+**Fase5A Formal Design System1.0 dan Fase5B satu pilot Masuk/Daftar selesai diimplementasikan dan diverifikasi otomatis.** Fondasi bukan lagi sekadar CSS root/heading:21token warna semantik, hierarki12/13/17/22/36, skala jarak/radius, kontrol/state, card/panel, navigasi dan fokus tersedia sebagai CSS opt-in. Kontrak resmi, contoh dan usulan5C ada di [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md). Seluruh perubahan tetap uncommitted, tanpa staging/push. Tidak membuat launcher/installer atau memulai5C.
+
+## Lingkup, pilot dan pemetaan riwayat
+
+Instruksi terbaru mendefinisikan5A=Formal Design System,5B=satu Modern UI Pilot,5C=perluasan yang belum diizinkan. Roadmap historis UI_AUDIT_AND_PLAN dan catatan Fase1-4 tidak ditulis ulang. Bagian fase5 tree opsional di roadmap lama bukan pekerjaan sekarang. Catatan audit launcher di bawah yang menyebut5A/5B belum terdefinisi adalah riwayat sebelum otorisasi terbaru; kedua fase sekarang telah didefinisikan/diimplementasikan. Launcher tetap ditunda karena instruksi tugas ini secara eksplisit melarang pembuatannya.
+
+Dashboard diprioritaskan dalam audit: DashboardView runtime langsung menampung LearningView dan GradeView beserta tab/guard/refresh, bukan landing page ringkasan. Mengubahnya menjadi kartu route baru memperluas migrasi ke dua modul dan mengubah struktur navigasi. Karena prioritas Dashboard bersyarat aman, dipilih **AuthView (Masuk/Daftar)** sebagai satu halaman autentikasi terisolasi. Tidak menambah route atau memodernisasi isi workspace. `.tb-theme` hanya diberikan ke AuthView; fixture memeriksa scope hilang setelah login.
+
+Audit memakai AGENTS, PRD25halaman yang telah dibaca pada audit proyek, rencana/status/roadmap/inventaris aktual, entry point/CSS dan source UI/fixture yang relevan. FormSupport/PasswordInput dipakai kembali; helper lebar dan aksesibilitas Fase2/4 dipertahankan. Implementasi baru hanya UI Java/CSS, dokumentasi dan fixture GUI; domain/service produksi/persistence/security, rumus, schema4/RULE_VERSION1, pom/Wrapper, dependency dan scripts tidak berubah.
+
+## Berkas yang ditambah/diperluas pada tugas ini
+
+| Berkas | Implementasi |
+|---|---|
+| `src/main/resources/id/ac/uns/tutupbuku/ui/tutup-buku.css` | Pertahankan rule legacy root/heading; tambah Design System opt-in,21looked-up colors, skala jarak/radius, native button/input/check/tab/list/scroll, feedback, card/panel dan fokus. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/FormSupport.java` | Tambahkan kelas peran tb-input/button/field-label/field/form/help/status/scroll pada factory yang sama. Urutan node, labelFor/password association, method limitWidth Fase4 dan konfirmasi tetap. Di luar subtree tema kelas tersebut tidak mengubah tampilan. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/AuthView.java` | Aktifkan tema hanya halaman ini; card640px/padding halaman24, eyebrow akademik, primary action dan tab, brand36 dari CSS. Status netral wrap hanya visible/managed bila ada teks. Handler login/daftar, worker, callback, Enter, guidance dan reset password tetap. |
+| `src/test/java/id/ac/uns/tutupbuku/service/DesignSystemFxCheck.java` (baru) | Galeri test-only:21warna benar-benar diselesaikan JavaFX, kontras, seluruh skala jarak/padding/radius, hierarki font, state primary/destruktif/disabled/readonly/error/focus, tab/list selected dan isolasi legacy. |
+| `src/test/java/id/ac/uns/tutupbuku/service/AuthPilotFxCheck.java` (baru) | Aplikasi asli dengan @TempDir: feedback gagal login/daftar, input dipertahankan, retry login, keluar scope tema dan navigasi belajar/nilai; tiga ukuran native+125%. Menunggu resize native benar-benar selesai. |
+| `docs/DESIGN_SYSTEM.md` (baru) | Kontrak resmi, kelas/pemakaian, intentional changes, aksesibilitas/batas dan usulan roadmap5C. |
+| `docs/DEVELOPMENT_STATUS.md` | Tambahkan laporan ini; seluruh isi awal dokumen tetap sebagai suffix riwayat di bawah. |
+
+Tidak mengedit DashboardView, WorkspaceView, AcademicView, PasswordInput, MaterialEditor, MarkdownReader atau tiga pane nilai pada tugas5A/5B. Perubahan Fase3/4 di file-file tersebut tetap ada tanpa ditimpa. Patch UI relatif awal sesi dicatat di `tmp/ui-phase5ab-20261114/phase5-ui.diff`, terpisah dari diff Git gabungan fase-fase yang belum di-commit.
+
+## Perubahan visual yang disengaja dan aksesibilitas
+
+Auth sebelumnya memakai panel580px tanpa permukaan card khusus, padding halaman12, form gap12/padding20 dan label gap4. Sekarang card putih640px/radius16/shadow tipis, padding halaman24, gap form16/padding16, label gap8, label bold13, bantuan12, deskripsi/status13, brand36 melalui kelas CSS, input radius8 dan aksi utama teal. Latar #f5f7f6/Segoe UI13 serta lebar NIM200/password260/pembungkus366/nama300 tetap. Tidak mengubah seluruh palette/layout workspace. Label status yang sama tetap menerima pesan UiTasks; panel netral tidak menebak kategori error dari teks service. State tb-error/success/warning tersedia/teruji untuk penggunaan eksplisit, bukan perubahan validasi bisnis.
+
+Fokus input memakai ring2px; tombol border2 dan ring luar3px; tab/list/check tetap native dengan indikator fokus. Tombol/field/label role dan nama aksesibel tetap. Pengukuran warna akhir: teks utama12,39:1, muted5,73:1, primary/on-primary5,47:1; status semantik5,97-6,54:1 pada permukaannya. Border akhir #738b90 memberi3,61:1 pada putih,3,35:1 pada canvas dan3,22:1 pada muted. Divider dekoratif tidak dijadikan satu-satunya batas kontrol. Ini bukti pasangan warna yang diuji, bukan sertifikasi aksesibilitas seluruh aplikasi.
+
+Pada fixture pilot, viewport native1366/1024 adalah451logical px, minimum760 adalah163px dan proses125%305,6px. Form panjang/error di bawah dicapai dengan scroll; tidak mengecilkan input atau mengklaim semua isi tampil bersamaan. Pesan gagal native memakai33px (125%33,6px), wrap/tidak terpotong dan berada dalam viewport setelah digulir.
+
+## Verifikasi aktual akhir
+
+Temurin21.0.13+9 portable, JavaFX21.0.10, Maven3.9.11 lewat Wrapper3.3.4 dan cache offline lokal. Semua DB/aset @TempDir/in-memory, bukan database default. Tidak mengubah DPI/resolusi/Java Windows global. Setup dan perintah:
+
+```powershell
+$env:JAVA_HOME = (Resolve-Path '.tools/jdk-21.0.13+9').Path
+$env:MAVEN_USER_HOME = Join-Path $PWD '.tools/maven-user'
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck,MilestoneFiveFxCheck,ReleaseHardeningFxCheck,RevisionOneFxCheck,RevisionTwoFxCheck,ReusableComponentsFxCheck,DesignSystemFxCheck,AuthPilotFxCheck,CalculationPerformanceCheck' '-DreuseForks=false' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=DesignSystemFxCheck,AuthPilotFxCheck,ReusableComponentsFxCheck,RevisionTwoFxCheck,MilestoneFourFxCheck' '-DreuseForks=false' '-DargLine=-Dglass.win.uiScale=125%' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=MilestoneFourFxCheck,RevisionTwoFxCheck' '-DreuseForks=false' '-Dphase3.width=1024' '-Dphase3.height=768' '-Drevision.width=1024' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=MilestoneFourFxCheck' '-Dphase3.width=760' '-Dphase3.height=480' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=AuthPilotFxCheck' '-DreuseForks=false' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=AuthPilotFxCheck' '-DargLine=-Dglass.win.uiScale=125%' verify
+```
+
+| Pemeriksaan | Hasil aktual; bukti relatif `tmp/ui-phase5ab-20261114/` |
+|---|---|
+| Regresi + JAR pada CSS final | BUILD SUCCESS;179tes,0failure/error/skipped; `final-verify.log`. |
+| Seluruh13class opt-in yang tersedia | BUILD SUCCESS;14kasus=13GUI+1benchmark,0failure/error/skipped; `final-gui.log`. |
+| Emulasi125% | BUILD SUCCESS;5kasus,0failure/error/skipped; `final-scale.log`. Design System, pilot, form, R002 dan M4. |
+|1024x768 | BUILD SUCCESS;2kasus M4+R002,0failure/error/skipped; `final-small.log`. |
+|760x480 M4 | BUILD SUCCESS;1kasus,0failure/error/skipped; `final-minimum.log`. Empat variasi M4 termasuk native1366 di suite dan125% di atas. |
+| Fixture pilot sesudah penguatan wait resize | Dua BUILD SUCCESS;masing-masing1kasus,0failure/error/skipped; `final-pilot-size.log` dan `final-pilot-scale.log`. Native satu kasus meliputi1366/1024/760; scale satu kasus1366/125%. Tidak mengubah kode aplikasi setelah suite luas. |
+| Keyboard/accessibility otomatis | R002 Tab/Shift+Tab/Space/Enter/F4/Escape, labelFor/password aktif, nama/peran/help/fokus dan ukuran lokal tetap lulus native/1024/125%. Tidak menambah focus stop pada dekorasi. |
+| Fungsional/regresi lintas modul | Kalkulasi batas/target/IP, current vs snapshot/attendance/review/CAS, transaksi/migrasi/isolasi, failure/input tetap/retry/guard, belajar/assets/catatan/completion/autosave/resume/restart tetap lulus pada fixture lama. Expected result bisnis tidak diganti. |
+| Benchmark |30coursex20komponen; cold74,152ms,3warmup/20sampel, median12,248ms, p9518,343ms, max20,710ms. Bukan pengukuran render atau jaminan perangkat lain. |
+| Resource/log/diff | CSS source/classes/entry JAR identik SHA256 `9b7e2ead1093e9e1489adb608c05a752fc38475eab12be360472e087f16543aa`; tidak ada ERROR/exception/warning CSS pada tujuh log akhir. Warning JavaFX unnamed module/unchecked helper lama tetap nonfatal. `git diff --check` lulus. |
+
+Baseline sebelum pilot:11kasus GUI lulus (`before-gui.log`). Fondasi5A diuji sebelum penerapan5B (`phase5a-design-system.log`,1kasus lulus). Run pengembangan `pilot-first.log`, `pilot-feedback.log` dan verify/gui/scale/small/minimum tanpa awalan final juga lulus, tetapi bukan pengganti bukti final setelah border diperkuat. Audit tambahan menemukan border awal hanya memenuhi3:1 pada putih; token digelapkan dan seluruh regresi/suite/matrix diulang pada CSS final di atas.
+
+QA screenshot menemukan dua gambar feedback bernama1024 masih1350px lebar akibat resize native belum selesai. Fixture AuthPilot kemudian menunggu ukuran Stage DAN Scene aktual, tanpa perubahan produksi. Pengulangan akhir menghasilkan native scene1350x729,1008x729,744x441 sesuai target window1366/1024/760; PNG proses125%1080x584. Gambar feedback yang salah ukuran tidak dipakai sebagai bukti1024. Fixture form dan R0021024 sudah benar ukurannya pada suite/matrix; log dan metadata PNG akhir diperiksa lagi. Tidak mengklaim hasil suite luas sebelum penguatan wait sebagai pengujian sizing baru tersebut.
+
+## Perbandingan screenshot akhir
+
+46gambar baseline native berpasangan dengan hasil akhir berukuran sama: **12gambar pilot berubah disengaja;34gambar nonpilot terdiri dari29identik byte/piksel dan5variasi.** Semua6gambar profil/semester dari fixture komponen pada1366/1024/760 identik. Direktori `before/` dan `after/` terpisah;105gambar after mencakup tambahan125%,1024,minimum, galeri serta feedback. Hanya46pasangan yang benar-benar sepadan dihitung; galeri/error baru bukan pasangan baseline. Screenshot M4 tanpa suffix disalin segera setelah suite native, sebelum run125%/minimum menimpa nama di target. Detail hash/bounding box: `comparison.json`.
+
+| Variasi nonpilot | Pengamatan / batas |
+|---|---|
+| `m3-learning.png`, `m5-learning-native.png` | Selisih kecil pada waktu materi. Reader/container lainnya sama pada pasangan akhir ini. Variasi reader/scroll historis sebelumnya tetap belum dinyatakan selesai. |
+| `m4-targets.png`, `phase3-long-comparison-native-1366x768.png` | Posisi scroll body dan state fokus Keluar berbeda; tabel hanya tampak penuh pada salah satu posisi snapshot. Header/footer/katalog dan hasil fixture tetap. Pasangan bukan bukti identitas piksel pada state scroll yang sama; variasi belum diselesaikan. |
+| `r001-semester-native.png` | Indikator fokus Keluar; area lain identik. |
+
+Tinjauan visual dilakukan pada login native1366/1024, register minimum/125%, feedback minimum/125%, galeri, dan sebelum/sesudah M4. Tidak ditemukan perubahan geometri pada halaman nonpilot yang diperiksa; tidak menyatakan seluruh screenshot identik atau semua keadaan UI/data panjang telah diverifikasi. Modernisasi halaman lain tidak diteruskan untuk memperbaiki variasi snapshot di luar lingkup.
+
+## Preservasi, sisa dan berhenti
+
+Git tetap main/HEAD `843aaa9a57266cee29b46bf5a4a703d14af02d52`, staging kosong. Awal22file berubah/untracked dicatat di `initial-hashes.json`/`initial.diff`;19file awal selain AuthView/FormSupport/status yang diperluas tetap identik SHA256. Ini mencakup empat kode/tes Fase3, PasswordInput/AcademicView/WorkspaceView dan fixture form Fase4, UI_COMPONENTS, audit launcher serta sembilan pengecualian. Isi awal DEVELOPMENT_STATUS dipertahankan byte sebagai suffix. Dashboard/engine/service produksi/persistence/security/pom/Wrapper/scripts tidak berubah. Akhir11tracked modified dan15untracked (termasuk tiga file baru5A/5B); belum stage/commit/push atau membuat branch/remote baru.
+
+H-02 tetap **OPEN**. Keyboard OS/fisik, screen reader manual, Windows UI Automation eksternal, DPI Windows nyata, komputer kedua dan usability tetap **NOT VERIFIED**. Rasio warna/KeyEvent/property/snapshot bukan penerimaan manusia atau sertifikasi aksesibilitas keseluruhan. **Fondasi Design System1.0 selesai sesuai kontrak**, sedangkan migrasi halaman lain belum dilakukan. Usulan5C ada pada DESIGN_SYSTEM: review pilot/manual, profil-akademik, shell Dashboard, nilai, lalu belajar/reader/dialog bertahap. Semua hanya rekomendasi dan memerlukan instruksi baru. Tidak memulai5C, launcher, installer, staging, commit atau push.
+
+## Riwayat sebelum Fase5A/5B
+
+# Tambahan lingkup - Windows Desktop Launcher, 14 November 2026
+
+Pengguna menambahkan launcher/shortcut Desktop **Tutup Buku** ke lingkup Fase5, dengan syarat implementasi hanya sesudah Fase5A dan Fase5B selesai serta terverifikasi. **Gerbang tersebut belum dapat diverifikasi:** dokumen lokal dan konteks yang tersedia belum memuat definisi/kriteria/bukti5A/5B. Milestone produk M5 historis tidak disamakan dengan keduanya. Tidak menebak lingkup atau memulai implementasi/Fase5C.
+
+Audit hanya-baca menemukan Launcher main biasa, JavaFX Application, Java21/JavaFX21.0.10/Wrapper3.3.4/Maven3.9.11, script app-image jpackage dan EXE lama dengan runtime/dependensi. **JAR paket lama berbeda hash dari target Fase4 dan belum memiliki resource CSS Fase1**; nomor versi sama tidak berarti kode terbaru sudah didistribusikan. Tidak mengemas ulang atau mengubah paket lama. Tidak mengklaim launcher tambahan sudah standalone, desktop shortcut sudah ada, atau double-click sudah diuji.
+
+Kebutuhan, inventaris, lokasi/hash, working directory, runtime, kontrak error dan rencana verifikasi setelah gerbang lulus dicatat di [WINDOWS_DESKTOP_LAUNCHER.md](WINDOWS_DESKTOP_LAUNCHER.md). Perubahan pada pekerjaan ini hanya dokumen tersebut dan tambahan status ini. Source/tes Fase3-4 serta draf pengguna dipertahankan; tidak menjalankan tes/launcher baru karena gerbang belum terpenuhi. Git tetap main/HEAD843aaa9, staging kosong; tidak commit/push/installer/shortcut Desktop. Hasil Fase4 di bawah tetap riwayat yang berlaku untuk kode tersebut.
+
+# Status terbaru - Fase 4 komponen UI reusable, 14 November 2026
+
+**Fase 4 selesai dalam lingkup standardisasi komponen yang disetujui; seluruh perubahan tetap di workspace tanpa staging/commit/push.** Tampilan dasar dan dimensi R002 dipertahankan. Formal Design System Foundation masih parsial; tidak dinyatakan selesai. H-02 tetap OPEN; keyboard OS, screen reader manual dan DPI Windows nyata tetap NOT VERIFIED.
+
+## Keputusan lingkup terbaru dan preservasi
+
+Instruksi pengguna terbaru secara eksplisit menetapkan Fase 4 sebagai **Reusable UI Components & Component Standardization**, menggantikan lingkup panel belajar/reader untuk pekerjaan sekarang. Roadmap historis `UI_AUDIT_AND_PLAN.md` bagian8 tetap utuh: Fase4 di sana berarti pengukuran panel belajar/reader, Fase5 adalah evaluasi tree opsional. Keduanya tidak dikerjakan otomatis. Catatan Fase3 di bawah tetap merupakan riwayat penutupan layout nilai, bukan instruksi aktif untuk commit/push atau penghambat otorisasi Fase4 terbaru.
+
+Audit: AGENTS, teks seluruh PRD25halaman melalui ekstraksi lokal yang tersedia, README, rencana milestone produk, audit/roadmap, status, requirements, arsitektur, R001/R002, hardening/known issues/backlog dan source komponen terkait. Migration Plan UI formal dan DESIGN_SYSTEM.md tidak tersedia; IMPLEMENTATION_PLAN adalah rencana milestone produk. Inventaris, keputusan ekstraksi, lokasi penggunaan, kontrak helper dan sisa pekerjaan ada di [UI_COMPONENTS.md](UI_COMPONENTS.md).
+
+Git awal: root proyek yang sama, branch main, HEAD `843aaa9a57266cee29b46bf5a4a703d14af02d52`, staging kosong. Lima perubahan tracked Fase3 dan sembilan pengecualian untracked sudah ada. Hash awal serta diff disimpan di `tmp/ui-phase4-20261114/initial-hashes.json` dan `initial.diff`. Fase4 tidak mengubah remote, branch, history, konfigurasi global atau `.codex/config.toml`.
+
+## Perubahan dan pengurangan duplikasi
+
+| Berkas Fase4 | Perubahan |
+|---|---|
+| `src/main/java/id/ac/uns/tutupbuku/ui/FormSupport.java` | Tambah limitWidth(Region,double) untuk pref+max lokal; status memakai factory note agar pembuatan Label wrap satu jalur. Factory label/input/button/layout dan konfirmasi tetap. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/PasswordInput.java` | Tiga pasangan setter lebar memakai helper. Binding dua arah, representasi aktif, toggle, labelFor/accessibility, Enter, hide/clear dan security tidak diubah. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/AuthView.java` | Tiga lokasi lebar NIM/nama memakai helper. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/WorkspaceView.java` | Tiga lokasi lebar profil memakai helper. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/AcademicView.java` | Nomor, tahun dan loop tiga tombol semester memakai helper. |
+| `src/test/java/id/ac/uns/tutupbuku/service/ReusableComponentsFxCheck.java` (baru) | Kontrak ukuran aktual/pref/max, label/password visible, CSS/judul, setiap kontrol dapat digulir ke viewport, validasi semester0 menampilkan alasan tepat dan mempertahankan isian. |
+| `docs/UI_COMPONENTS.md` (baru) | Inventaris, contoh pemakaian, analisis duplikasi, batas dan rekomendasi. |
+| `docs/DEVELOPMENT_STATUS.md` | Tambahkan hasil Fase4; seluruh isi status Fase3 sebelumnya dipertahankan di bawah. |
+
+**Duplikasi yang benar-benar dihapus:**12blok pasangan setPrefWidth/setMaxWidth dalam empat consumer menjadi12panggilan helper dengan satu implementasi pasangan setter. Baris pengaturan pada consumer24 menjadi12, berkurang12baris/50% khusus pola tersebut; bukan klaim pengurangan seluruh UI50%. Dua jalur Label wrap pada status/note menjadi satu. Tidak membuat class kontrol/framework produksi baru. Form labels, input, helper text, button dan layout yang sudah reusable dipertahankan alih-alih membuat abstraksi tandingan.
+
+Lebar NIM200, nama300, password260/pembungkus366, prodi240, semester90/tahun110/aksi170 tetap. Minimum kontrol tidak disentuh; max-only pada course/editor tetap berbeda. Gap/padding form bersama dan kepadatan lokal nilai Fase3 tetap. CSS tidak diedit: latar #f5f7f6, Segoe UI13, heading22bold, auth36, materi17 tetap. Source CSS/classes/JAR cocok byte, SHA256 `923eab21a94fe3e4fcc0f802e343258402a2f5f077c915f76e014ac1b5f1b4eb`.
+
+MaterialEditor dan MarkdownReader diaudit, tidak diedit. Tidak ada duplikasi editor/reader kedua yang membenarkan ekstraksi besar. Autosave/CAS/draft, script disabled/DOM link dan restore posisi memiliki kontrak khusus. Tidak mengubah bisnis, domain, service produksi, persistence, keamanan, schema4/RULE_VERSION1, dependency, pom/Wrapper atau scripts.
+
+## Pengujian aktual pada kode Fase4
+
+Temurin21.0.13+9 portable dan Maven Wrapper3.9.11/cache offline proyek, JavaFX21.0.10. Semua database/aset tes di @TempDir/in-memory. Tidak memakai database default pengguna atau mengubah DPI/resolusi Windows. Setup dan perintah:
+
+```powershell
+$env:JAVA_HOME = (Resolve-Path '.tools/jdk-21.0.13+9').Path
+$env:MAVEN_USER_HOME = Join-Path $PWD '.tools/maven-user'
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck,MilestoneFiveFxCheck,ReleaseHardeningFxCheck,RevisionOneFxCheck,RevisionTwoFxCheck,ReusableComponentsFxCheck' '-DreuseForks=false' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=ReusableComponentsFxCheck,RevisionTwoFxCheck,MilestoneFourFxCheck' '-DreuseForks=false' '-DargLine=-Dglass.win.uiScale=125%' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=MilestoneFourFxCheck' '-Dphase3.width=1024' '-Dphase3.height=768' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=MilestoneFourFxCheck' '-Dphase3.width=760' '-Dphase3.height=480' verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=MilestoneFourFxCheck,CalculationPerformanceCheck' '-DreuseForks=false' verify
+```
+
+| Pemeriksaan | Hasil aktual; bukti relatif `tmp/ui-phase4-20261114/` |
+|---|---|
+| Regresi default + JAR | BUILD SUCCESS;179tes,0failure/error/skipped; `verify.log`. |
+| GUI lintas modul + fixture baru | BUILD SUCCESS;11kasus=10kasus lama+1baru,0failure/error/skipped; `gui.log`. |
+| Emulasi proses125% | BUILD SUCCESS;3kasus,0failure/error/skipped; `scale.log`. M4, R002 dan fixture komponen. |
+| M4 ukuran1024 dan760 | Dua BUILD SUCCESS;masing-masing1kasus,0failure/error/skipped; `m4-small.log`, `m4-minimum.log`. |
+| M4 native1366 + benchmark | BUILD SUCCESS;2kasus,0failure/error/skipped; `m4-native-performance.log`. Native diulang agar tiga screenshot M4 tanpa suffix tidak tertukar dengan hasil minimum/125%. |
+| Cakupan ukuran | Fixture komponen memeriksa1366x768,1024x768,760x480 native dalam satu kasus, serta1366x768 pada proses125%. M4 lulus empat variasi tersebut; native juga diuji dalam suite luas. |
+| Benchmark tersedia |30coursex20komponen; cold22,818ms, median4,861ms, p957,140ms, max7,482ms;3warmup/20sampel. Bukan pengukuran render atau jaminan perangkat lain. |
+| Aksesibilitas otomatis | R002 tetap lulus asosiasi label/peran/nama/help, Tab/Shift+Tab, Space, Enter, F4/Escape dan fokus. Password masked/visible, sinkronisasi/reset, submit, validasi, profil legacy dan guard Simpan/Buang/Batal tetap. |
+| Perilaku lintas modul | Engine/target/IP/attendance, SQL/isolasi/migrasi, actual vs snapshot/usang/review, failure/input tetap/retry, autosave/catatan/completion/resume/restart tetap lulus pada fixture yang tersedia. Expected result bisnis tidak diubah. |
+| Log dan resource | Tidak ada ERROR/exception/warning CSS baru dalam enam log akhir; warning JavaFX unnamed module dan unchecked helper lama tetap nonfatal. CSS classes/JAR identik dengan source. |
+
+Baseline terpisah sebelum refactoring produksi: fixture komponen1kasus, suite lama10kasus dan emulasi komponen+R0022kasus lulus (`before-components.log`, `before-gui.log`, `before-scale.log`). Baseline125 memakai `surefire:test` atas class hasil kompilasi sebelum edit tanpa compile ulang, dengan hash class dicatat di `baseline-class.txt`; source produksi yang baru kemudian dikompilasi oleh verify. Penguatan assertion teks validasi dan formatting fixture baru tidak mengubah urutan snapshot. Baseline tidak ditambahkan ke hitungan pascaperubahan.
+
+## Perbandingan visual dan keterbatasan
+
+59gambar baseline sebelum edit dan86gambar hasil setelah edit disalin terpisah (`before/`, `after/`). **59pasangan berukuran sama;52identik byte/piksel dan7berbeda. Semua16pasangan khusus form komponen (login/daftar/profil/semester x4kondisi) identik byte.** Detail hash/bounding box pada `comparison.json`. Snapshot tanpa suffix M4 diambil ulang native sebelum dibandingkan; tidak membandingkan gambar native dengan hasil minimum yang menimpa nama output.
+
+| Gambar berbeda | Pengamatan visual / batas kesimpulan |
+|---|---|
+| `m3-learning.png` | Timestamp dan posisi scroll WebView berbeda; baseline tampak di heading, hasil baru pada paragraf setelah resume. Container di luar area waktu/reader sama. Assertion resume lulus pada kedua run; pasangan ini tidak membuktikan identitas piksel konten reader. Variasi belum diselesaikan. |
+| `m4-scenarios.png`, `phase3-long-comparison-native-1366x768.png` | Scroll body skenario berbeda (termasuk tabel yang baru terlihat penuh di salah satu snapshot) serta state fokus Keluar; header/footer/katalog dan hasil fixture tetap. Variasi sinkronisasi/state snapshot belum diselesaikan; bukan klaim semua gambar setara pada posisi scroll. |
+| `m5-grades-native.png`, `r002-profile-125%-1366.png` | Perbedaan terbatas pada indikator fokus tombol Keluar. |
+| `m5-learning-native.png` | Perbedaan kecil pada angka waktu materi. |
+| `phase2-focus-password-125%-1366.png` | Perbedaan kecil indikator input/caret. |
+
+Tinjauan visual sebelum/sesudah mencakup register760, profil125%, semester760, reader M3 dan dua skenario M4; ditambah16pasangan komponen identik. Tidak ditemukan perubahan geometri pada form yang distandardisasi. Kontrol bawah form minimum memang memerlukan scroll dan masing-masing diperiksa keterjangkauannya; tidak menjanjikan semua kontrol terlihat bersamaan atau semua data panjang sudah diuji. Variasi historis fase1-3 tetap belum dinyatakan resolved. Tidak mengubah fixture M3/M4 untuk menyembunyikan perbedaan screenshot.
+
+## Status Git, sisa dan penghentian
+
+Empat file kode/tes Fase3 (`ActualGradePane.java`, `GradeView.java`, `ScenarioPane.java`, `MilestoneFourFxCheck.java`) serta sembilan pengecualian tetap identik SHA256 dengan awal sesi. Isi awal DEVELOPMENT_STATUS dipertahankan utuh sebagai suffix setelah bagian Fase4 ini. Dokumen tersebut satu-satunya file bersama Fase3/Fase4.
+
+Pengecualian yang tetap untracked dan tidak disentuh: `.codex/config.toml`; `docs/HUMAN_ACCEPTANCE_KIT.md`, `docs/MORNING_CHECKLIST.md`, `docs/P0_AUDIT.md`; `docs/academic/DEFENSE_QA.md`, `OOP_GUIDE.md`, `PRESENTATION.md`, `README.md`, `REPORT_DRAFT.md`. Hasil akhir10file tracked modified dan11untracked=9pengecualian+2file Fase4 baru. Staging kosong, branch main dan HEAD tetap; tidak ada staging/commit/push/branch switch/remote edit. `git diff --check` lulus.
+
+**Sisa/batas:** H-02 OPEN; keyboard OS/fisik, screen reader manual dan DPI Windows nyata NOT VERIFIED. Formal Design System belum lengkap: token semantik, kontrak state/spacing lintas aplikasi, DESIGN_SYSTEM.md dan Migration Plan UI formal masih diperlukan. Rekomendasi untuk penentuan Fase5: review penerimaan manual, lengkapi kontrak formal, dan stabilkan pembanding snapshot; panel belajar/reader hanya bila kembali diizinkan. Tidak membuat installer atau memulai Fase5.
+
+## Riwayat sebelum Fase4
+
+# Status terbaru - modernisasi UI fase 3, 14 November 2026
+
+**Pekerjaan layout modul nilai selesai; Formal Design System Foundation belum selesai.** Footer status aktual/skenario selalu terlihat pada fixture yang diuji, form nilai lebih rapat secara lokal, dan nama kolom perbandingan lengkap tersedia melalui tooltip native. Regresi179tes, suite GUI10kasus dan empat run M4 akhir lulus. Pemeriksaan keyboard OS/screen reader/perangkat nyata tetap **NOT VERIFIED**; bukan validasi seluruh keadaan aplikasi. Permintaan terbaru memisahkan checkpoint Fase3 ini dari Fase4 yang belum terdefinisi dan mengizinkan commit/push hanya lima file pekerjaan layout ke `rahadyand/Tutup-Buku` pada branch yang sudah ada. Pesan commit: `fix(javafx): improve grade pane layout and responsiveness`. Installer dan implementasi fase berikutnya tetap dilarang.
+
+## Klarifikasi penutupan: layout nilai berbeda dari fondasi Design System
+
+Pengguna menegaskan bahwa tujuan Fase3 yang dimaksud adalah **Formal Design System Foundation**. Implementasi sebelumnya memakai definisi fase3 pada `docs/UI_AUDIT_AND_PLAN.md` bagian8: "Status terlihat dan kepadatan nilai" dengan ActualGradePane/ScenarioPane/GradeView. Itulah alasan perubahan berfokus pada layout nilai. Penamaan "Fase3 selesai" pada laporan sebelumnya terlalu luas terhadap tujuan formal tersebut; yang terbukti selesai hanya pekerjaan layout dan pengujiannya. Koreksi status ini tidak membatalkan atau mengubah UI yang sudah diuji.
+
+PRD hlm15–16/19 memuat arah visual dan keterbacaan, bukan katalog token atau pembagian fase modernisasi. AGENTS menegaskan preservasi perilaku/R002 dan batas UI. Migration Plan UI formal tetap tidak ditemukan; `docs/IMPLEMENTATION_PLAN.md` adalah milestone produk M1–M5, bukan penggantinya. `DESIGN_SYSTEM.md` juga tidak ditemukan pada workspace yang diperiksa. Tidak mengarang isi dokumen yang hilang atau menganggap rekomendasi audit sebagai spesifikasi formal lengkap.
+
+| Unsur fondasi | Status aktual dan bukti |
+|---|---|
+| Warna / design tokens | Parsial: CSS root memiliki literal latar `#f5f7f6`, tetapi belum ada token bernama untuk permukaan, teks, border, fokus dan status semantik. |
+| Tipografi | Parsial: Segoe UI13 dan heading22bold di CSS; auth36 di AuthView dan materi17 di MaterialEditor masih inline. Peran tersebut sudah ada, belum menjadi kontrak formal terdokumentasi. |
+| Spacing / ukuran | Parsial: helper FormSupport memakai nilai Java lokal dan pane nilai memakai spacing/padding lokal. Belum ada skala/aturan spacing bersama terdokumentasi; ukuran R002 tetap harus dipertahankan. |
+| Style reusable | Parsial: `.tutup-buku-root` dan `.section-heading` digunakan ulang; helper FormSupport/PasswordInput sudah ada. Belum ada katalog peran style kontrol/status beserta aturan pemakaiannya. |
+| Dokumentasi formal / migrasi | Belum tersedia: `DESIGN_SYSTEM.md` dan Migration Plan UI formal. Audit dan status implementasi tidak dianggap pengganti keduanya. |
+
+Sisa pekerjaan sebelum melanjutkan fase4, **belum diimplementasikan pada penutupan ini**:
+
+1. Selaraskan tujuan/penomoran fase dan Migration Plan; gunakan referensi pengguna bila tersedia atau ajukan spesifikasi terbatas untuk disetujui. Jangan mengubah definisi secara diam-diam.
+2. Dokumentasikan kontrak di `docs/DESIGN_SYSTEM.md`: token warna/semantik, peran tipografi13/17/22/36, spacing, radius/control sizing, state fokus/selected/disabled/error, dan batas lokal R002. Jangan menetapkan palet baru tanpa keputusan.
+3. Pusatkan nilai/peran berulang yang disetujui ke JavaFX CSS dan style class bersama; gunakan helper/native controls yang sudah ada, tanpa framework/dependency atau abstraksi baru yang tidak dibutuhkan.
+4. Petakan pemakaian dan pengecualian lokal, lalu migrasikan bertahap sesuai file yang disetujui. NIM200, nama course dan editor Markdown tidak boleh diseragamkan ke satu lebar tetap; navigasi/guard R002 tetap.
+5. Verifikasi resource CSS/JAR, computed style, kontrol/state, screenshot lintas modul/ukuran dan regresi; catat pengujian manual yang belum dilakukan. Tutup fondasi formal berdasarkan bukti dan review pengguna sebelum fase4.
+
+Tidak membuat DESIGN_SYSTEM.md/CSS baru atau mengubah empat file kode/tes pada langkah penutupan ini. Lima file commit tetap terdiri dari tiga pane/view UI, fixture M4, dan dokumen status ini. Sembilan file pengecualian tetap di luar staging; tidak menambah bisnis/dependency/schema. Hasil commit dilaporkan setelah Git benar-benar berhasil, bukan diasumsikan dari izin pengguna.
+
+Verifikasi ulang penutupan benar-benar dijalankan pada source yang akan di-commit: `.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp verify` **lulus179tes** dan perintah yang sama dengan `'-Dtest=MilestoneFourFxCheck'` **lulus1kasus GUI**, keduanya BUILD SUCCESS,0failure/error/skipped. Lingkungan JDK/cache sama dengan bagian build di bawah; bukti `tmp/ui-phase3-20261114/closure-verify.log` dan `closure-m4.log`. Empat file kode/tes tidak diubah pada penutupan, sehingga laporan sebelumnya tentang suite GUI10kasus/empat ukuran tetap dibedakan dari dua run ulang ini. `git diff --check` juga lulus.
+
+Percobaan commit yang diizinkan belum berhasil: `git add` lima file gagal membuat `.git/index.lock` dengan `Permission denied`; perintah commit tidak dijalankan. Metadata Git dilindungi lingkungan dan jalur approval eksekusi tambahan tidak tersedia. Sebelum percobaan, index kosong dan index.lock tidak ada; tidak menganggapnya stale lock atau menghapusnya. Tidak mengubah ACL, konfigurasi global, history atau cara penyimpanan Git untuk melewati batas. Commit belum memiliki hash baru; HEAD masih `843aaa9a57266cee29b46bf5a4a703d14af02d52`. Pengguna perlu menjalankan perintah commit terbatas dari PowerShell lokal yang memiliki izin tulis normal. Catatan ini merekam percobaan sesi, bukan hasil eksekusi manual di kemudian hari.
+
+Pada pemulihan checkpoint Fase3, staging biasa kembali ditolak dengan error izin yang sama. Permintaan eksekusi khusus staging/commit lima file melalui mekanisme approval juga ditolak otomatis karena kebijakan sesi tidak mengizinkan peningkatan izin. Diagnosis hanya-baca `git ls-remote --heads origin refs/heads/main` gagal dengan `getaddrinfo() thread failed to start`; ini belum membuktikan kegagalan autentikasi. Remote fetch/push tetap `https://github.com/rahadyand/Tutup-Buku.git`, upstream `origin/main`. Commit baru belum dibuat dan push belum dicoba; seluruh kode/tes serta sembilan pengecualian dipertahankan, tanpa implementasi Fase4.
+
+## Analisis awal dan lingkup
+
+Fase3 diizinkan melalui permintaan pengguna "Lanjut fase 3" setelah commit fase1–2 `843aaa9a57266cee29b46bf5a4a703d14af02d52`. Git awal tidak memiliki diff tracked/staged; sembilan berkas untracked sebelumnya, termasuk `.codex/config.toml`, dipertahankan. AGENTS, PRD25halaman, roadmap UI dan hasil fase2 ditinjau kembali. ZIP refactoring, Design System formal dan Migration Plan UI tetap belum tersedia; acuan fase3 adalah bagian8 `UI_AUDIT_AND_PLAN.md`, bukan contoh struktur baru.
+
+Baseline GUI M4 diperluas untuk mengukur layout sebelum perubahan produksi: empat run pada jendela target1366x768,1024x768, emulasi proses125%1366x768, serta minimum760x480 lulus. DB/trigger kegagalan hanya dalam @TempDir. Screenshot membuktikan status gagal aktual/skenario di luar viewport saat scroll0 dan baru terlihat saat scroll1. Pada1366native, header nilai64px, viewport408px, tinggi form aktual1081px/skenario1286px. Header nama skenario panjang dirender sebagai `Rencana semester de...`; nama penuh masih ada dalam data dan ringkasan bawah tabel.
+
+Lingkup file yang ditentukan sebelum perubahan produksi:
+
+| File relatif root | Koreksi minimum / batas |
+|---|---|
+| `src/main/java/id/ac/uns/tutupbuku/ui/ActualGradePane.java` | Pindahkan Label status yang sama dari form scroll ke footer; padding/gap lokal lebih rapat. Tanpa perubahan handler/guard/save/perhitungan. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/ScenarioPane.java` | Footer status yang sama, kepadatan form lokal, tooltip native berisi nama kolom lengkap untuk header yang terbukti terpotong. Saat verifikasi minimum menemukan footer terdorong oleh tinggi minimum katalog, katalog dibungkus ScrollPane native fitToHeight agar aksi tetap dicapai; wrapper tidak menambah perhentian Tab. Data, kolom, lebar, resize, sumber Aktual/Asumsi, selection/guard dan peringatan historis tetap. |
+| `src/main/java/id/ac/uns/tutupbuku/ui/GradeView.java` | Kurangi gap dan padding vertikal header lokal; semua teks, selector, tab dan event tetap. Tidak menyentuh header R002/DashboardView. |
+| `src/test/java/id/ac/uns/tutupbuku/service/MilestoneFourFxCheck.java` | Ukuran fixture dapat dipilih; screenshot/pengukuran dan assertion footer terlihat pada dua ujung scroll, pesan wrap, viewport minimum serta tooltip nama panjang; kegagalan/retry/guard/hasil lama tetap diuji. |
+| `docs/DEVELOPMENT_STATUS.md` | Analisis, hasil aktual dan batas fase3 di bagian ini. |
+
+Tidak menambah CSS/token/dependency/komponen produksi. Warna/font/heading/ukuran kontrol tetap fase1–2. H-02 historis, pembaca materi, tree navigation, perubahan perhitungan/domain/service/persistence/security/schema dan packaging di luar lingkup. Enam variasi snapshot fase2 dan tiga baseline berbeda fase1 tetap perlu review, bukan dinyatakan selesai oleh fase3. Keyboard OS, screen reader, DPI nyata/perangkat kedua tetap NOT VERIFIED.
+
+## Perubahan dan kesesuaian visual
+
+Tiga file produksi di tabel di atas hanya mengubah penyusunan node/presentasi. Label `actual-grade-status` dan `scenario-status` dipindahkan utuh ke bottom pane masing-masing, dengan padding6/8, lebar fleksibel dan minimum height sesuai preferred agar pesan wrap tidak ditekan. Footer kosong tidak mengambil ruang. Semua pemanggil UiTasks masih menerima instance Label yang sama, sehingga progress/disabled, hasil gagal/sukses, retry, dirty state, guard dan callback tidak berubah.
+
+Gap form aktual/skenario12→8 dan padding20→12 hanya diterapkan pada dua body lokal. Header GradeView memakai gap6→4 dan padding vertikal8→4, padding horizontal8 tetap. Label/konteks, jumlah bobot, urutan kontrol, tab, tombol dan tinggi ListView komponen tetap. Katalog skenario memperoleh ScrollPane native fitToHeight; list/aksi yang sama tetap dapat digulir ketika viewport pendek. Wrapper tidak menjadi tambahan target Tab. Tidak mengganti daftar dengan tree.
+
+Header tabel panjang tetap memakai ellipsis native, resize dan horizontal scroll; tooltip seluruh tabel memuat empat nama kolom lengkap. Nama penuh juga tetap tampil dalam ringkasan bawah. Tidak mengubah text/peran native TableColumn atau membuat cell factory/renderer baru. Tes membuktikan isi tooltip sama dengan keempat header, bukan bukti hover OS/screen reader manual.
+
+CSS fase1–2 tidak berubah, termasuk `#f5f7f6`, Segoe UI13, heading22bold; override auth36/material17 dan dimensi R002 tetap. Source CSS identik dengan entry JAR Maven, SHA256 `923eab21a94fe3e4fcc0f802e343258402a2f5f077c915f76e014ac1b5f1b4eb`. Hash awal/akhir membatasi perubahan pada tepat lima file di atas; sembilan draf/config untracked tetap identik. Diff domain/service/persistence/security, pom/Wrapper dan scripts kosong; tidak ada rumus, SQL, format data, schema4, RULE_VERSION1 atau dependency berubah.
+
+## Build dan pengujian aktual
+
+Temurin21.0.13+9 dan Maven Wrapper3.9.11/cache offline lokal digunakan, tanpa mengubah Java/DPI Windows global. Semua database/aset memakai fixture @TempDir. Perintah yang dijalankan:
+
+```powershell
+$env:JAVA_HOME = (Resolve-Path '.tools/jdk-21.0.13+9').Path
+$env:MAVEN_USER_HOME = Join-Path $PWD '.tools/maven-user'
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp verify
+.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=JavaFxSmokeCheck,MilestoneTwoFxCheck,MarkdownReaderFxCheck,MilestoneThreeFxCheck,MilestoneFourFxCheck,MilestoneFiveFxCheck,ReleaseHardeningFxCheck,RevisionOneFxCheck,RevisionTwoFxCheck' '-DreuseForks=false' verify
+```
+
+Empat run akhir memakai `.\mvnw.cmd '-Dmaven.repo.local=.m2/repository' -o -B -ntp '-Dtest=MilestoneFourFxCheck'` ditambah `-Dphase3.width=1366 -Dphase3.height=768`, `-Dphase3.width=1024 -Dphase3.height=768`, dan `-Dphase3.width=760 -Dphase3.height=480`, lalu `verify`. Run1366 tambahan menambahkan `'-DargLine=-Dglass.win.uiScale=125%'` untuk emulasi proses, bukan DPI Windows nyata.
+
+| Verifikasi | Hasil aktual / bukti di `tmp/ui-phase3-20261114/` |
+|---|---|
+| Regresi default / build JAR | **BUILD SUCCESS,179tes,0failure/error/skipped**; `verify.log`. |
+| Sembilan kelas GUI, fork terpisah | **BUILD SUCCESS,10kasus,0failure/error/skipped**; `gui.log`. Mencakup M2–M5, smoke/reader, hardening dan R001/R002. |
+| M4 fixture akhir pada empat ukuran | **4×BUILD SUCCESS,masing-masing1kasus,0failure/error/skipped**; `after-native.log`, `after-scale.log`, `after-small.log`, `after-minimum.log`. Suite luas lulus sebelum penyesuaian assertion keterjangkauan aksi minimum; setelah itu hanya fixture M4 berubah dan diuji ulang pada empat ukuran ini. |
+| Status / keterjangkauan aksi | Assertion footer tetap di luar scroll, seluruh pesan sesuai preferred height berada dalam pane/scene, viewport≥80logical px pada keadaan gagal fixture; scroll0 dan1. Simpan komponen serta Baru/Duplikasi/Hapus skenario masing-masing dapat digulir sampai seluruh tinggi tombol berada dalam viewport dan tombol tidak disabled. |
+| Failure / retry / guard | Trigger gagal simpan aktual dan skenario tetap menghasilkan pesan gagal, mempertahankan isian30/nama draf, lalu retry berhasil sesudah trigger dilepas. Batal menahan navigasi. Tidak mengganti kegagalan dengan status sukses. |
+| Hasil / persistensi / regresi lain | M4 tetap memeriksa saran60→55→70, IP4,00, kehadiran→E/IP0,00, basis usang/refresh, duplikasi/perbandingan dan restart. Suite lainnya mencakup kalkulasi batas/target/IP, penyimpanan/isolasi/migrasi, validasi/guard, autosave dan resume. Ini bukti otomatis pada fixture, bukan seluruh data/perangkat pengguna. |
+| Keyboard / semantik fase2 | Assertion label/peran, fokus terlihat dan KeyEvent Tab/Shift+Tab/Space/Enter/F4/Escape dalam R002 tetap lulus dalam suite GUI. Keterjangkauan scroll baru M4 diperiksa secara programatik, bukan keyboard OS. |
+| Log / diff | Tidak ditemukan `[ERROR]`, exception atau warning CSS pada enam log akhir di atas. Warning JavaFX unnamed module dan unchecked helper lama tetap. `git diff --check` lulus; warning konversi LF/CRLF bukan kegagalan. |
+
+Run pengembangan yang gagal tetap dipisahkan dari hasil akhir:
+
+- `development-compile.log`:1kesalahan kompilasi fixture karena indeks loop tertangkap lambda; diperbaiki dengan nilai final lokal, tanpa edit produksi.
+- `footer-before.log`:1error assertion baru pada implementasi lama, karena parent status masih VBox dalam scroll; membuktikan tes mendeteksi masalah sebelum koreksi.
+- `development-minimum-footer.log`/PNG:1error nyata di minimum760x480; minimum height katalog mendorong footer keluar scene. Diperbaiki dengan ScrollPane katalog dalam ScenarioPane, tidak mengubah guard/selection.
+- `development-minimum-actions.log`/PNG:1error fixture yang mengharuskan tiga tombol sekaligus terlihat pada posisi scroll paling bawah, padahal tiga baris aksi melebihi viewport pendek. Fixture diperbaiki untuk menggulir ke setiap tombol dan tetap menuntut seluruh tinggi tombol terlihat; bukan melonggarkan batas footer atau menghapus assertion. Empat run akhir di atas lulus sesudah koreksi.
+
+## Ukuran dan perbandingan screenshot
+
+Nilai berikut adalah **logical px JavaFX**, pada keadaan gagal fixture yang sama, bukan semua isi form. Ukuran target jendela termasuk bingkai OS; scene native1366 adalah1350x729, emulasi125%1080x583. Header lebih kecil tetapi footer mengurangi tinggi viewport; keuntungan kepadatan berasal dari form yang lebih pendek, bukan klaim viewport membesar.
+
+| Target / mode | Header sebelum→sesudah | Tinggi form aktual/skenario sebelum→sesudah | Viewport aktual/skenario sebelum→sesudah |
+|---|---|---|---|
+|1366x768 native|64→54|1081/1286→964/1149|408/408→389/389|
+|1366x768 emulasi125%|65,6→55,2|1110,4/1308→992/1170,4|256/256→236/236|
+|1024x768 native|64→54|1115/1320→998/1149|408/408→389/389|
+|760x480 native|64→54|1149/1354→1015/1200|120/136→101/101|
+
+Footer gagal fixture memakai29px native/30,4px emulasi125%; posisinya sama saat scroll0/1. Minimum760x480 tetap sempit: pengguna perlu menggulir body maupun katalog; bukan janji kenyamanan atau semua aksi tampil bersamaan.
+
+Baseline `before/` berisi20gambar berpasangan pada empat ukuran; `final/` berisi36gambar khusus fase3, termasuk16gambar tambahan keterjangkauan aksi. Semua20pasangan berukuran sama dan berubah sesuai penataan area nilai. Pada18pasangan,150px bagian atas identik. Dua lainnya memiliki selisih tambahan di area Keluar: `phase3-long-comparison-native-1024x768.png` `(944,6,1002,35)` dan `phase3-scenario-error-0-native-1366x768.png` `(1286,6,1344,35)`; variasi state tetap perlu review, bukan diklaim resolved.
+
+Terhadap salinan fase2, terdapat11gambar sepadan non-M4 yang benar-benar dihasilkan ulang suite GUI,7identik byte. Empat selisih:
+
+| Gambar | Area selisih / penilaian |
+|---|---|
+|`m3-learning.png`|`(699,215,730,224)`, area waktu materi; tetap dicatat sebagai variasi, bukan perbaikan resume/scroll historis.|
+|`phase2-focus-password-native-1366.png`|`(500,470,502,487)`, area indikator input; state snapshot perlu review.|
+|`r002-header-native-1366.png`|`(6,176,1344,705)`, area nilai yang memang diubah fase3; header R002 bagian atas tetap.|
+|`r002-profile-native-1366.png`|`(1286,6,1344,35)`, area Keluar; perlu review state.|
+
+Tiga screenshot lama M4 tidak dihitung sepadan terhadap fase2 karena fixture M4 kini memakai ukuran jendela eksplisit. Bukti sebelum/sesudah fase3 menggunakan nama ukuran yang sama. Tidak menghitung gambar lama yang tidak dihasilkan ulang sebagai hasil run baru. Tinjauan visual dilakukan pada gagal aktual/skenario native1366/1024, aktual emulasi125%, katalog minimum dan tabel nama panjang; footer terlihat dan kontrol yang diperiksa tidak terpotong vertikal setelah digulir. Tooltip diuji melalui properti, belum melalui hover manual. Detail piksel: `comparison.json`; suite lintas modul disalin ke `after/`, baseline fase2 ke `phase2/`.
+
+## Risiko tersisa dan penghentian
+
+**NOT VERIFIED:** keyboard OS/fisik, screen reader/Narrator/NVDA, Windows UI Automation eksternal, DPI125% nyata/perangkat kedua, hover tooltip manual, serta seluruh kemungkinan data panjang/keadaan UI. Pemeriksaan KeyEvent/property/screenshot tidak menggantikan penerimaan manusia. Minimum760x480 hanya dibuktikan untuk fixture M4 ini. Nama kolom tetap dapat berellipsis; tooltip/resize/ringkasan mempertahankan akses teks lengkap, bukan redesign tabel responsif menyeluruh.
+
+H-02 tetap **OPEN, OUT OF SCOPE**. Tidak mengubah ListViewBehavior/selection atau mengklaim akar masalah selesai; tidak ditemukannya exception pada log akhir bukan bukti perbaikan. Tiga baseline berbeda fase1 dan enam variasi fase2 tetap belum dinyatakan resolved; laporan lama dipertahankan.
+
+Pada akhir implementasi layout sebelum permintaan penutupan ini, lima file tracked berubah dan sembilan draf/config untracked tetap; belum stage/commit/push atau membuat paket/installer. Berikutnya: review manusia status/scroll minimum, keyboard/screen reader dan variasi snapshot. Fase4 (pengukuran panel belajar/reader pada roadmap yang tersedia) ditahan sampai fondasi formal diverifikasi dan ada persetujuan baru. Rollback bila perlu hanya patch lima file pekerjaan layout, tanpa reset/clean atau menyentuh data/draf lain.
+
+## Riwayat hasil fase 2
+
 # Status terbaru - modernisasi UI fase 2, 14 November 2026
 
 **Implementasi yang ditargetkan selesai; verifikasi otomatis JavaFX lulus.** Verifikasi keyboard OS, screen reader manual dan perangkat pengguna tetap **NOT VERIFIED**. Fase2 tidak dinyatakan sebagai validasi aksesibilitas menyeluruh. Aplikasi tetap0.5.4-rc1/Java21/JavaFX21.0.10/schema4/RULE_VERSION1. Tidak memulai fase3, commit, push atau paket Windows.

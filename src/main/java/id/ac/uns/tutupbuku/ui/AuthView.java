@@ -9,24 +9,33 @@ import javafx.geometry.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 final class AuthView extends StackPane {
     AuthView(AuthService auth, UiTasks tasks, Consumer<UserProfile> onLogin) {
+        getStyleClass().addAll("tb-theme", "tb-auth-page");
         TextField loginNim = text("login-nim", "NIM Anda");
         TextField registerNim = text("register-nim", "NIM Anda");
-        loginNim.setPrefWidth(200);
-        loginNim.setMaxWidth(200);
-        registerNim.setPrefWidth(200);
-        registerNim.setMaxWidth(200);
+        limitWidth(loginNim, 200);
+        limitWidth(registerNim, 200);
         PasswordInput loginPassword = new PasswordInput("login-password");
         PasswordInput registerPassword = new PasswordInput("register-password");
         PasswordInput confirmation = new PasswordInput("register-confirmation");
+        for (PasswordInput input : List.of(loginPassword, registerPassword, confirmation))
+            input.getStyleClass().add("tb-password");
         TextField name = text("register-name", "Nama lengkap");
-        name.setPrefWidth(300);
-        name.setMaxWidth(300);
+        limitWidth(name, 300);
         Label loginStatus = status("login-status"), registerStatus = status("register-status");
         Button login = button("login", "Masuk"), register = button("register", "Daftar akun lokal");
+        login.getStyleClass().add("tb-primary");
+        register.getStyleClass().add("tb-primary");
+        for (Label message : List.of(loginStatus, registerStatus)) {
+            message.setMaxWidth(460);
+            message.setMinHeight(Region.USE_PREF_SIZE);
+            message.visibleProperty().bind(message.textProperty().isNotEmpty());
+            message.managedProperty().bind(message.visibleProperty());
+        }
         Label loginHint = guidance(loginNim, null, "login-nim-guidance");
         Label registerHint = guidance(registerNim, name, "register-nim-guidance");
         loginNim.accessibleHelpProperty().bind(loginHint.textProperty());
@@ -59,6 +68,7 @@ final class AuthView extends StackPane {
         Tab registerTab = new Tab("Daftar", centeredPage(registerForm, 520));
         TabPane tabs = new TabPane(loginTab, registerTab);
         tabs.setId("auth-tabs");
+        tabs.getStyleClass().add("tb-tabs");
         tabs.setAccessibleText("Masuk dan daftar akun lokal");
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getSelectionModel()
@@ -113,18 +123,23 @@ final class AuthView extends StackPane {
         registerNim.setOnAction(e -> register.fire());
         Label title = heading("Tutup Buku");
         title.setId("auth-title");
-        title.setStyle("-fx-font-size: 36px; -fx-font-weight: bold;");
+        title.getStyleClass().add("tb-brand");
+        Label eyebrow = new Label("RUANG AKADEMIK PRIBADI");
+        eyebrow.getStyleClass().add("tb-auth-eyebrow");
         Label description =
                 note(
                         "Kelola materi kuliah dan peminatan, catatan serta progres belajar."
                                 + " Rencanakan target penilaian dan estimasi IP semester.");
         description.setId("auth-description");
+        description.getStyleClass().add("tb-auth-description");
         description.setMaxWidth(480);
         description.setMinHeight(Region.USE_PREF_SIZE);
         description.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-        VBox panel = new VBox(10, title, description, tabs);
+        VBox panel = new VBox(10, eyebrow, title, description, tabs);
+        panel.setId("auth-card");
+        panel.getStyleClass().addAll("tb-card", "tb-auth-card");
         panel.setAlignment(Pos.CENTER);
-        panel.setMaxWidth(580);
+        panel.setMaxWidth(640);
         VBox.setVgrow(tabs, Priority.ALWAYS);
         getChildren().add(panel);
         setPadding(new Insets(12));
@@ -132,6 +147,7 @@ final class AuthView extends StackPane {
 
     private Label guidance(TextField input, TextField name, String id) {
         Label label = status(id);
+        label.getStyleClass().add("tb-auth-guidance");
         Runnable update =
                 () ->
                         label.setText(

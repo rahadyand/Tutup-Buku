@@ -37,7 +37,7 @@ public final class TutupBukuApplication extends Application {
     public void start(Stage stage) {
         root = new BorderPane();
         root.setId("application-root");
-        root.getStyleClass().add("tutup-buku-root");
+        root.getStyleClass().addAll("tutup-buku-root", "tb-theme");
         status = status("application-status");
         var footer = form(status);
         footer.visibleProperty().bind(status.textProperty().isNotEmpty());

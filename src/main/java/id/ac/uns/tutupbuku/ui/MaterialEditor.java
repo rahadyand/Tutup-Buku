@@ -48,6 +48,7 @@ final class MaterialEditor extends BorderPane {
         this.onProgress = onProgress;
         markdown.setId("material-markdown");
         markdown.setWrapText(true);
+        markdown.getStyleClass().add("tb-code-editor");
         note.setId("material-note");
         note.setWrapText(true);
         note.setPrefRowCount(2);
@@ -73,6 +74,7 @@ final class MaterialEditor extends BorderPane {
                             if (!filling && selected == previewTab) preview(0);
                         });
         Button save = button("save-material", "Simpan materi & catatan");
+        save.getStyleClass().add("tb-primary");
         save.setOnAction(event -> save(() -> {}));
         Button image = button("insert-image", "Sisipkan gambar lokal");
         image.setOnAction(
@@ -155,10 +157,14 @@ final class MaterialEditor extends BorderPane {
         Label materialTitle = new Label();
         materialTitle.textProperty().bind(title.textProperty());
         materialTitle.setWrapText(true);
-        materialTitle.setStyle("-fx-font-size: 17px; -fx-font-weight: bold;");
+        materialTitle.getStyleClass().add("tb-section-title");
+        materialTitle.setMinHeight(Region.USE_PREF_SIZE);
+        metadata.setWrapText(true);
+        metadata.getStyleClass().add("tb-caption");
         VBox heading =
                 new VBox(6, materialTitle, metadata, new FlowPane(8, 6, save, image), saveStatus);
         heading.setPadding(new javafx.geometry.Insets(10));
+        heading.getStyleClass().add("tb-editor-header");
         setTop(heading);
         setCenter(tabs);
         TitledPane notesPanel =
@@ -311,6 +317,7 @@ final class MaterialEditor extends BorderPane {
         dialog.getButtonTypes().setAll(save, discard, cancel);
         ((Button) dialog.getDialogPane().lookupButton(save)).setDefaultButton(false);
         ((Button) dialog.getDialogPane().lookupButton(cancel)).setDefaultButton(true);
+        styleDialog(dialog);
         var choice = dialog.showAndWait();
         if (choice.filter(save::equals).isPresent()) save(() -> recordReading(true, action));
         else if (choice.filter(discard::equals).isPresent()) {

@@ -8,3 +8,305 @@
     -fx-font-size: 22px;
     -fx-font-weight: bold;
 }
+
+/* Tutup Buku Design System 1.0. Opt-in: hanya subtree tb-theme. */
+.tb-theme {
+    -tb-canvas: #f5f7f6;
+    -tb-surface: #ffffff;
+    -tb-surface-muted: #eef3f2;
+    -tb-text: #20383d;
+    -tb-text-muted: #536a70;
+    -tb-border: #738b90;
+    -tb-divider: #d9e4e2;
+    -tb-primary: #0f766e;
+    -tb-primary-hover: #115e59;
+    -tb-primary-pressed: #134e4a;
+    -tb-on-primary: #ffffff;
+    -tb-focus: #0f766e;
+    -tb-info-surface: #eff8f6;
+    -tb-success: #166534;
+    -tb-success-surface: #edf8ee;
+    -tb-warning: #854d0e;
+    -tb-warning-surface: #fff8e6;
+    -tb-danger: #b42318;
+    -tb-danger-hover: #912018;
+    -tb-danger-pressed: #781c16;
+    -tb-danger-surface: #fff1ef;
+    -fx-background-color: -tb-canvas;
+    -fx-font-family: 'Segoe UI';
+    -fx-font-size: 13px;
+    -fx-focus-color: -tb-focus;
+    -fx-faint-focus-color: rgba(15, 118, 110, 0.16);
+    -fx-accent: -tb-primary;
+}
+
+.tb-theme .label { -fx-text-fill: -tb-text; }
+.tb-theme .label:disabled { -fx-opacity: 1; }
+.tb-theme .tb-caption { -fx-font-size: 12px; -fx-text-fill: -tb-text-muted; }
+.tb-theme .tb-body { -fx-font-size: 13px; }
+.tb-theme .tb-section-title { -fx-font-size: 17px; -fx-font-weight: bold; }
+.tb-theme .tb-page-title { -fx-font-size: 22px; -fx-font-weight: bold; }
+.tb-theme .tb-brand { -fx-font-size: 36px; -fx-font-weight: bold; }
+.tb-theme .tb-field-label { -fx-font-weight: bold; }
+.tb-theme .tb-help { -fx-font-size: 12px; -fx-text-fill: -tb-text-muted; }
+.tb-theme .tb-field { -fx-spacing: 8; }
+.tb-theme .tb-form { -fx-spacing: 16; -fx-padding: 16; }
+
+.tb-theme .tb-card {
+    -fx-background-color: -tb-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -tb-divider;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(32, 56, 61, 0.07), 16, 0, 0, 4);
+}
+.tb-theme .tb-panel {
+    -fx-background-color: -tb-surface-muted;
+    -fx-background-radius: 12;
+    -fx-border-color: -tb-divider;
+    -fx-border-radius: 12;
+    -fx-padding: 16;
+}
+.tb-theme .tb-button {
+    -fx-background-color: -tb-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -tb-border;
+    -fx-border-radius: 8;
+    -fx-text-fill: -tb-text;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+}
+.tb-theme .tb-button:hover { -fx-background-color: -tb-surface-muted; }
+.tb-theme .tb-button:pressed { -fx-background-color: -tb-divider; }
+.tb-theme .tb-button.tb-primary {
+    -fx-background-color: -tb-primary;
+    -fx-border-color: -tb-primary;
+    -fx-text-fill: -tb-on-primary;
+    -fx-font-weight: bold;
+}
+.tb-theme .tb-button.tb-primary:hover { -fx-background-color: -tb-primary-hover; }
+.tb-theme .tb-button.tb-primary:pressed { -fx-background-color: -tb-primary-pressed; }
+.tb-theme .tb-button.tb-danger {
+    -fx-background-color: -tb-danger;
+    -fx-border-color: -tb-danger;
+    -fx-text-fill: -tb-on-primary;
+}
+.tb-theme .tb-button.tb-danger:hover { -fx-background-color: -tb-danger-hover; }
+.tb-theme .tb-button.tb-danger:pressed { -fx-background-color: -tb-danger-pressed; }
+.tb-theme .tb-button:focused {
+    -fx-effect: dropshadow(gaussian, -tb-focus, 3, 1, 0, 0);
+    -fx-background-insets: 0;
+    -fx-border-width: 2;
+    -fx-padding: 7 15;
+}
+.tb-theme .tb-button.tb-primary:focused,
+.tb-theme .tb-button.tb-danger:focused {
+    -fx-border-color: -tb-text;
+}
+.tb-theme .tb-button:disabled,
+.tb-theme .tb-button.tb-primary:disabled,
+.tb-theme .tb-button.tb-danger:disabled {
+    -fx-background-color: -tb-surface-muted;
+    -fx-border-color: -tb-divider;
+    -fx-text-fill: -tb-text-muted;
+    -fx-opacity: 1;
+    -fx-cursor: default;
+}
+.tb-theme .tb-input {
+    -fx-background-color: -tb-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -tb-border;
+    -fx-border-radius: 8;
+    -fx-padding: 8 10;
+    -fx-text-fill: -tb-text;
+    -fx-prompt-text-fill: -tb-text-muted;
+    -fx-highlight-fill: -tb-primary;
+    -fx-highlight-text-fill: -tb-on-primary;
+}
+.tb-theme .tb-input:hover { -fx-border-color: -tb-text-muted; }
+.tb-theme .tb-input:readonly { -fx-background-color: -tb-surface-muted; }
+.tb-theme .tb-input:focused {
+    -fx-background-color: -tb-focus, -tb-surface;
+    -fx-background-insets: -2, 0;
+    -fx-background-radius: 10, 8;
+    -fx-border-color: -tb-focus;
+}
+.tb-theme .tb-input:readonly:focused { -fx-background-color: -tb-focus, -tb-surface-muted; }
+.tb-theme .tb-input.tb-invalid { -fx-border-color: -tb-danger; }
+.tb-theme .tb-input.tb-invalid:focused { -fx-background-color: -tb-danger, -tb-surface; }
+.tb-theme .tb-input:disabled {
+    -fx-background-color: -tb-surface-muted;
+    -fx-text-fill: -tb-text-muted;
+    -fx-opacity: 1;
+}
+.tb-theme .text-area.tb-input .content { -fx-background-color: -tb-surface; }
+.tb-theme .combo-box.tb-input { -fx-padding: 4 6; }
+.tb-theme .combo-box.tb-input .list-cell { -fx-text-fill: -tb-text; }
+.tb-theme .tb-check,
+.tb-workspace .check-box { -fx-text-fill: -tb-text; }
+.tb-theme .tb-check > .box,
+.tb-workspace .check-box > .box {
+    -fx-background-color: -tb-surface;
+    -fx-border-color: -tb-border;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+.tb-theme .tb-check:selected > .box,
+.tb-workspace .check-box:selected > .box { -fx-background-color: -tb-primary; -fx-border-color: -tb-primary; }
+.tb-theme .tb-check:selected > .box > .mark,
+.tb-workspace .check-box:selected > .box > .mark { -fx-background-color: -tb-on-primary; }
+.tb-theme .tb-check:focused > .box,
+.tb-workspace .check-box:focused > .box { -fx-border-color: -tb-text; -fx-border-width: 2; }
+.tb-theme .tb-check:disabled,
+.tb-workspace .check-box:disabled { -fx-opacity: 0.65; }
+
+.tb-theme .tb-status {
+    -fx-background-color: -tb-info-surface;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12;
+    -fx-text-fill: -tb-text;
+    -fx-font-size: 13px;
+}
+.tb-theme .tb-status.tb-success { -fx-background-color: -tb-success-surface; -fx-text-fill: -tb-success; }
+.tb-theme .tb-status.tb-warning { -fx-background-color: -tb-warning-surface; -fx-text-fill: -tb-warning; }
+.tb-theme .tb-status.tb-error { -fx-background-color: -tb-danger-surface; -fx-text-fill: -tb-danger; }
+.tb-theme .tb-scroll, .tb-theme .tb-scroll > .viewport { -fx-background-color: transparent; }
+.tb-theme .tb-scroll { -fx-background-insets: 0; -fx-padding: 2; }
+.tb-theme .tb-scroll:focused { -fx-border-color: -tb-focus; -fx-border-radius: 8; }
+
+.tb-theme .tb-tabs > .tab-header-area,
+.tb-workspace .tab-pane > .tab-header-area { -fx-padding: 0 0 8 0; }
+.tb-theme .tb-tabs > .tab-header-area > .tab-header-background,
+.tb-workspace .tab-pane > .tab-header-area > .tab-header-background { -fx-background-color: transparent; }
+.tb-theme .tb-tabs > .tab-header-area > .headers-region > .tab,
+.tb-workspace .tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: -tb-surface-muted;
+    -fx-background-radius: 8 8 0 0;
+    -fx-padding: 8 18;
+}
+.tb-theme .tb-tabs > .tab-header-area > .headers-region > .tab .tab-label,
+.tb-workspace .tab-pane > .tab-header-area > .headers-region > .tab .tab-label { -fx-text-fill: -tb-text-muted; }
+.tb-theme .tb-tabs > .tab-header-area > .headers-region > .tab:hover,
+.tb-workspace .tab-pane > .tab-header-area > .headers-region > .tab:hover { -fx-background-color: -tb-divider; }
+.tb-theme .tb-tabs > .tab-header-area > .headers-region > .tab:selected,
+.tb-workspace .tab-pane > .tab-header-area > .headers-region > .tab:selected { -fx-background-color: -tb-info-surface; }
+.tb-theme .tb-tabs > .tab-header-area > .headers-region > .tab:selected .tab-label,
+.tb-workspace .tab-pane > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: -tb-primary;
+    -fx-font-weight: bold;
+}
+.tb-theme .tb-tabs > .tab-content-area,
+.tb-workspace .tab-pane > .tab-content-area { -fx-background-color: transparent; }
+.tb-theme .tb-tabs:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator,
+.tb-workspace .tab-pane:focused > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
+    -fx-border-color: -tb-focus;
+    -fx-border-radius: 8;
+    -fx-border-width: 2;
+}
+.tb-theme .tb-nav-list,
+.tb-workspace .list-view { -fx-background-color: -tb-surface; -fx-border-color: -tb-border; -fx-background-insets: 0; }
+.tb-theme .tb-nav-list .list-cell,
+.tb-workspace .list-view .list-cell { -fx-background-color: -tb-surface; -fx-text-fill: -tb-text; -fx-padding: 8 12; }
+.tb-theme .tb-nav-list .list-cell:filled:hover,
+.tb-workspace .list-view .list-cell:filled:hover { -fx-background-color: -tb-info-surface; }
+.tb-theme .tb-nav-list .list-cell:filled:selected,
+.tb-workspace .list-view .list-cell:filled:selected { -fx-background-color: -tb-primary; -fx-text-fill: -tb-on-primary; }
+.tb-theme .tb-nav-list:focused,
+.tb-workspace .list-view:focused { -fx-border-color: -tb-focus; -fx-border-width: 2; }
+
+/* Utilitas eksplisit sesudah komponen; JavaFX tidak memakai variabel numerik browser. */
+.tb-theme .tb-gap-1 { -fx-spacing: 4; }
+.tb-theme .tb-gap-2 { -fx-spacing: 8; }
+.tb-theme .tb-gap-3 { -fx-spacing: 12; }
+.tb-theme .tb-gap-4 { -fx-spacing: 16; }
+.tb-theme .tb-gap-6 { -fx-spacing: 24; }
+.tb-theme .tb-gap-8 { -fx-spacing: 32; }
+.tb-theme .tb-pad-2 { -fx-padding: 8; }
+.tb-theme .tb-pad-3 { -fx-padding: 12; }
+.tb-theme .tb-pad-4 { -fx-padding: 16; }
+.tb-theme .tb-pad-6 { -fx-padding: 24; }
+.tb-theme .tb-pad-8 { -fx-padding: 32; }
+.tb-theme .tb-radius-sm { -fx-background-radius: 8; -fx-border-radius: 8; }
+.tb-theme .tb-radius-md { -fx-background-radius: 12; -fx-border-radius: 12; }
+.tb-theme .tb-radius-lg { -fx-background-radius: 16; -fx-border-radius: 16; }
+
+/* Satu pilot: AuthView. Selector ini tidak menjangkau workspace setelah login. */
+.tb-theme.tb-auth-page { -fx-padding: 24; }
+.tb-theme .tb-auth-card { -fx-spacing: 12; }
+.tb-theme .tb-auth-eyebrow { -fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: -tb-primary; }
+.tb-theme .tb-auth-description { -fx-font-size: 13px; -fx-text-fill: -tb-text-muted; }
+.tb-theme .tb-auth-guidance {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-text-fill: -tb-text-muted;
+    -fx-font-size: 12px;
+}
+.tb-theme .tb-password .tb-button { -fx-padding: 8; }
+.tb-theme .tb-password .tb-button:focused { -fx-padding: 7; -fx-border-color: -tb-focus; }
+
+/* Fase 5C: workspace ringkas; ukuran R002 dan footer Fase3 dipertahankan. */
+.tb-workspace { -fx-background-color: -tb-canvas; }
+.tb-workspace .tb-workspace-header {
+    -fx-background-color: -tb-surface;
+    -fx-border-color: transparent transparent -tb-divider transparent;
+    -fx-padding: 8 12;
+}
+.tb-workspace .tb-form-card {
+    -fx-background-color: -tb-surface;
+    -fx-background-radius: 12;
+    -fx-border-color: -tb-divider;
+    -fx-border-radius: 12;
+}
+.tb-theme .tb-workspace .tb-button, .tb-workspace.tb-dialog .tb-button { -fx-padding: 4 10; }
+.tb-theme .tb-workspace .tb-button:focused, .tb-workspace.tb-dialog .tb-button:focused { -fx-padding: 3 9; }
+.tb-workspace .tb-field { -fx-spacing: 4; }
+.tb-workspace .tb-form { -fx-spacing: 12; -fx-padding: 16; }
+.tb-workspace .tb-status { -fx-padding: 4 8; }
+.tb-workspace .tab-pane > .tab-header-area { -fx-padding: 0 0 4 0; }
+.tb-workspace .tab-pane > .tab-header-area > .headers-region > .tab { -fx-padding: 4 12; }
+.tb-workspace .combo-box {
+    -fx-background-color: -tb-surface;
+    -fx-border-color: -tb-border;
+    -fx-background-radius: 8; -fx-border-radius: 8;
+    -fx-padding: 2 4;
+}
+.tb-workspace .combo-box:focused { -fx-border-color: -tb-focus; -fx-effect: dropshadow(gaussian, -tb-focus, 2, 1, 0, 0); }
+.tb-workspace .combo-box .list-cell { -fx-text-fill: -tb-text; }
+.tb-workspace .text-area {
+    -fx-background-color: -tb-surface; -fx-border-color: -tb-border;
+    -fx-background-radius: 8; -fx-border-radius: 8;
+    -fx-text-fill: -tb-text; -fx-highlight-fill: -tb-primary;
+    -fx-highlight-text-fill: -tb-on-primary;
+}
+.tb-workspace .text-area .content { -fx-background-color: -tb-surface; }
+.tb-workspace .text-area:focused { -fx-border-color: -tb-focus; -fx-effect: dropshadow(gaussian, -tb-focus, 2, 1, 0, 0); }
+.tb-workspace .split-pane { -fx-background-color: transparent; -fx-padding: 0; }
+.tb-workspace .split-pane > .split-pane-divider { -fx-background-color: -tb-divider; -fx-padding: 0 2; }
+.tb-workspace .titled-pane > .title {
+    -fx-background-color: -tb-surface-muted; -fx-background-radius: 8;
+    -fx-padding: 6 8; -fx-font-weight: bold;
+}
+.tb-workspace .titled-pane > .content { -fx-background-color: -tb-surface; -fx-border-color: -tb-divider; }
+.tb-workspace .titled-pane:focused > .title { -fx-border-color: -tb-focus; -fx-border-radius: 8; }
+.tb-workspace .titled-pane > .title > .arrow-button .arrow { -fx-background-color: -tb-primary; }
+.tb-workspace .table-view { -fx-background-color: -tb-surface; -fx-border-color: -tb-border; -fx-background-insets: 0; }
+.tb-workspace .table-view .column-header, .tb-workspace .table-view .filler { -fx-background-color: -tb-surface-muted; -fx-border-color: -tb-divider; }
+.tb-workspace .table-view .column-header .label { -fx-text-fill: -tb-text; -fx-font-weight: bold; -fx-padding: 6; }
+.tb-workspace .table-row-cell { -fx-background-color: -tb-surface; }
+.tb-workspace .table-row-cell:odd { -fx-background-color: -tb-canvas; }
+.tb-workspace .table-row-cell .table-cell { -fx-text-fill: -tb-text; -fx-border-color: transparent transparent -tb-divider transparent; -fx-padding: 6; }
+.tb-workspace .table-row-cell:filled:selected { -fx-background-color: -tb-primary; }
+.tb-workspace .table-row-cell:filled:selected .table-cell { -fx-text-fill: -tb-on-primary; }
+.tb-workspace .table-view:focused { -fx-border-color: -tb-focus; }
+.tb-workspace .tb-surface { -fx-background-color: -tb-surface; -fx-background-radius: 8; }
+.tb-workspace .tb-result { -fx-font-weight: bold; -fx-padding: 8; -fx-background-color: -tb-info-surface; }
+.tb-workspace .tb-editor-header { -fx-background-color: -tb-surface; -fx-border-color: transparent transparent -tb-divider transparent; }
+.tb-workspace .tb-code-editor { -fx-font-family: Consolas; -fx-font-size: 13px; }
+.tb-dialog > .header-panel { -fx-background-color: -tb-surface-muted; }
+.tb-dialog > .content.label { -fx-padding: 16; -fx-wrap-text: true; }
+
+.tb-workspace .tb-button { -fx-wrap-text: true; }
+.tb-workspace:compact .tb-workspace-header { -fx-padding: 4 12; }
+.tb-workspace:compact .tb-workspace-header .section-heading { -fx-font-size: 17px; }
+.tb-workspace:compact .tb-workspace-header .tb-status { -fx-padding: 0; -fx-font-size: 12px; }

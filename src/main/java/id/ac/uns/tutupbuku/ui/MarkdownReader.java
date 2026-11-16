@@ -19,6 +19,8 @@ public final class MarkdownReader extends BorderPane {
     public MarkdownReader(Consumer<String> openExternal, Runnable onScroll) {
         browser.setId("material-reader"); browser.setContextMenuEnabled(false);
         browser.getEngine().setJavaScriptEnabled(false);
+        browser.getEngine().setUserStyleSheetLocation(
+                MarkdownReader.class.getResource("reader.css").toExternalForm());
         browser.getEngine().setCreatePopupHandler(configuration -> null);
         browser.getEngine().getLoadWorker().stateProperty().addListener((obs, old, state) -> {
             if (state != Worker.State.SUCCEEDED || browser.getEngine().getDocument() == null) return;

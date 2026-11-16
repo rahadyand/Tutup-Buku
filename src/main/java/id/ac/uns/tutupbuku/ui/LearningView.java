@@ -250,8 +250,7 @@ final class LearningView extends BorderPane {
                                                     + selected.title()
                                                     + " beserta catatan dan status selesainya? Aset"
                                                     + " gambar tetap tersedia; materi lain tidak"
-                                                    + " dihapus."))
-                                        return;
+                                                    + " dihapus.")) return;
                                     tasks.run(
                                             status,
                                             () -> {
@@ -277,7 +276,7 @@ final class LearningView extends BorderPane {
                                     if (course == null) {
                                         status.setText(
                                                 "Buat/pilih mata kuliah di jalur Kuliah terlebih"
-                                                    + " dahulu.");
+                                                        + " dahulu.");
                                         return;
                                     }
                                     ButtonType copy =
@@ -298,6 +297,7 @@ final class LearningView extends BorderPane {
                                                     cancel);
                                     confirm.initOwner(getScene().getWindow());
                                     confirm.setHeaderText("Salin koleksi contoh asli Tutup Buku");
+                                    styleDialog(confirm);
                                     if (confirm.showAndWait().filter(copy::equals).isEmpty())
                                         return;
                                     tasks.run(
@@ -328,24 +328,41 @@ final class LearningView extends BorderPane {
                                 }));
         Button refresh = button("learning-refresh", "Muat ulang daftar");
         refresh.setOnAction(event -> guard(this::refresh));
+        folders.setPrefHeight(150);
+        folders.setMinHeight(100);
+        TitledPane contextBranch =
+                new TitledPane(
+                        "1. Lokasi belajar",
+                        new VBox(
+                                8,
+                                field("Jalur", path),
+                                field("Semester", semesters),
+                                field("Mata kuliah", courses)));
+        contextBranch.setId("learning-context-branch");
+        contextBranch.setAnimated(false);
+        TitledPane folderBranch =
+                new TitledPane(
+                        "2. Bab / bidang",
+                        new VBox(
+                                8,
+                                folders,
+                                field("Nama bab / bidang", folderName),
+                                new FlowPane(5, 5, addFolder, rename, deleteFolder),
+                                new FlowPane(5, 5, folderUp, folderDown)));
+        folderBranch.setId("learning-folder-branch");
+        folderBranch.setAnimated(false);
         VBox sidebar =
                 new VBox(
                         8,
                         heading("Modul belajar"),
-                        path,
-                        field("Semester", semesters),
-                        field("Mata kuliah", courses),
-                        note("Bab kuliah / bidang peminatan"),
-                        folders,
-                        folderName,
-                        new FlowPane(5, 5, addFolder, rename, deleteFolder),
-                        new FlowPane(5, 5, folderUp, folderDown),
+                        contextBranch,
+                        folderBranch,
                         resume,
                         seed,
                         refresh);
         sidebar.setPadding(new javafx.geometry.Insets(10));
         VBox.setVgrow(folders, Priority.ALWAYS);
-        sidebar.setMinWidth(210);
+        sidebar.setMinWidth(0);
         sidebar.setPrefWidth(240);
         VBox list =
                 new VBox(
@@ -357,16 +374,25 @@ final class LearningView extends BorderPane {
                         progress);
         list.setPadding(new javafx.geometry.Insets(10));
         VBox.setVgrow(materials, Priority.ALWAYS);
-        list.setMinWidth(170);
+        list.setMinWidth(0);
         list.setPrefWidth(220);
         progress.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
         progress.setMaxWidth(Double.MAX_VALUE);
-        sidebar.setMinHeight(540);
+        sidebar.setMinHeight(Region.USE_PREF_SIZE);
+        sidebar.getStyleClass().add("tb-surface");
+        list.getStyleClass().add("tb-surface");
+        addMaterial.getStyleClass().add("tb-primary");
+        deleteMaterial.getStyleClass().add("tb-danger");
         list.setMinHeight(260);
         ScrollPane sidebarScroll = scroll(sidebar), listScroll = scroll(list);
         sidebarScroll.setMinWidth(180);
         listScroll.setMinWidth(155);
-        SplitPane split = new SplitPane(sidebarScroll, listScroll, editor);
+        editor.setMinHeight(360);
+        editor.setMinWidth(280);
+        ScrollPane editorScroll = scroll(editor);
+        editorScroll.setFitToHeight(true);
+        editorScroll.setMinWidth(280);
+        SplitPane split = new SplitPane(sidebarScroll, listScroll, editorScroll);
         split.setDividerPositions(0.23, 0.44);
         setCenter(split);
         status.setPadding(new javafx.geometry.Insets(8));
@@ -453,7 +479,7 @@ final class LearningView extends BorderPane {
             filling = false;
             status.setText(
                     "Belum ada mata kuliah. Buat semester/mata kuliah di tab akademik, lalu Muat"
-                        + " ulang daftar. Peminatan dapat dipakai tanpa mata kuliah.");
+                            + " ulang daftar. Peminatan dapat dipakai tanpa mata kuliah.");
             progress.setText("Belum ada materi");
             if (after != null) after.run();
             return;
@@ -476,7 +502,7 @@ final class LearningView extends BorderPane {
                     status.setText(
                             loaded.isEmpty()
                                     ? "Belum ada bab/bidang. Isi nama lalu Tambah, atau salin"
-                                          + " koleksi contoh."
+                                            + " koleksi contoh."
                                     : "Pilih bab/bidang dan materi.");
                     if (selectedFolder() != null) loadMaterials(0, after);
                     else {

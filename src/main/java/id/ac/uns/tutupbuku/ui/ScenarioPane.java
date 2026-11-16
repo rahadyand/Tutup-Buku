@@ -202,6 +202,11 @@ final class ScenarioPane extends BorderPane {
         refresh.setOnAction(e -> refreshBasis());
         clearEstimate.setOnAction(e -> estimate.setValue(null));
         compare.setOnAction(e -> compare());
+        save.getStyleClass().add("tb-primary");
+        calculate.getStyleClass().add("tb-primary");
+        delete.getStyleClass().add("tb-danger");
+        gpaResult.getStyleClass().add("tb-result");
+        courseResult.getStyleClass().add("tb-result");
         VBox left =
                 form(
                         heading("Skenario tersimpan"),
@@ -254,13 +259,26 @@ final class ScenarioPane extends BorderPane {
                                         + " snapshot tersimpan; basis usang diberi peringatan."),
                         field("Skenario pembanding", comparison),
                         compare,
-                        comparisonContent,
-                        status);
-        SplitPane split = new SplitPane(left, scroll(body));
+                        comparisonContent);
+        body.setSpacing(8);
+        body.getStyleClass().add("tb-surface");
+        left.getStyleClass().add("tb-surface");
+        body.setPadding(new javafx.geometry.Insets(12));
+        ScrollPane catalog = scroll(left);
+        catalog.setFitToHeight(true);
+        catalog.setMinWidth(210);
+        catalog.setFocusTraversable(false);
+        SplitPane split = new SplitPane(catalog, scroll(body));
         split.setDividerPositions(0.27);
         setCenter(split);
         context.setPadding(new javafx.geometry.Insets(6));
         setTop(context);
+        status.setPadding(new javafx.geometry.Insets(6, 8, 6, 8));
+        status.setMinHeight(Region.USE_PREF_SIZE);
+        status.setMaxWidth(Double.MAX_VALUE);
+        status.visibleProperty().bind(status.textProperty().isNotEmpty());
+        status.managedProperty().bind(status.visibleProperty());
+        setBottom(status);
         show(null);
     }
 
@@ -576,6 +594,7 @@ final class ScenarioPane extends BorderPane {
                         dialog.initOwner(getScene().getWindow());
                         dialog.setHeaderText("Tinjau perubahan basis skenario");
                         dialog.setTitle("Perbarui basis");
+                        styleDialog(dialog);
                         if (dialog.showAndWait().filter(apply::equals).isPresent())
                             tasks.run(
                                     status,
@@ -620,6 +639,7 @@ final class ScenarioPane extends BorderPane {
                         a.scenario().name() + " · efektif",
                         b.scenario().name() + " · efektif"
                     };
+                    table.setTooltip(new Tooltip(String.join("\n", headings)));
                     for (int i = 0; i < headings.length; i++) {
                         final int column = i;
                         TableColumn<List<String>, String> col = new TableColumn<>(headings[i]);

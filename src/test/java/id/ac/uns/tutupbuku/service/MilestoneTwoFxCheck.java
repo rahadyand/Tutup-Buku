@@ -160,6 +160,8 @@ class MilestoneTwoFxCheck {
     }
 
     private int count(String id) throws Exception {
+        // Konten sidebar ScrollPane baru dipasang ke scene graph sesudah pulse/skin.
+        await(() -> stage.getScene().lookup("#" + id) != null);
         return fx(() -> ((ListView<?>) node(id)).getItems().size());
     }
 

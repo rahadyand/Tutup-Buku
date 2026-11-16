@@ -36,13 +36,13 @@ final class GradeView extends BorderPane {
         refresh.setOnAction(e -> guard(this::refresh));
         VBox header =
                 new VBox(
-                        6,
+                        4,
                         new FlowPane(10, 6, new Label("Semester perencanaan"), semesters, refresh),
                         note(
                                 "Nilai aktual dan asumsi skenario tersimpan terpisah. IP hanya"
                                         + " dihitung setelah semua mata kuliah memiliki hasil"
                                         + " efektif."));
-        header.setPadding(new javafx.geometry.Insets(8));
+        header.setPadding(new javafx.geometry.Insets(4, 8, 4, 8));
         setTop(header);
         Tab actualTab = new Tab("Komponen & aktual", actual),
                 scenarioTab = new Tab("Skenario, target & IP", scenarios);

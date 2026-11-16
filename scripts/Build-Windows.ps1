@@ -44,11 +44,19 @@ try {
     $modules = 'java.base,java.desktop,java.net.http,java.sql,jdk.jfr,jdk.jsobject,jdk.unsupported,jdk.xml.dom,jdk.unsupported.desktop,jdk.crypto.ec,jdk.charsets,jdk.localedata'
     & (Join-Path $JdkHome 'bin/jlink.exe') --add-modules $modules --strip-debug --no-header-files --no-man-pages --compress=2 --include-locales=en,id --output $runtime
     if ($LASTEXITCODE -ne 0) { throw 'jlink gagal.' }
-    & (Join-Path $JdkHome 'bin/jpackage.exe') --type app-image --name TutupBuku --app-version 0.5.4 --vendor 'Tim Tutup Buku' --description 'Modul Belajar dan Simulasi Nilai lokal' --input $inputFolder --main-jar "tutup-buku-$releaseVersion.jar" --main-class id.ac.uns.tutupbuku.ui.Launcher --runtime-image $runtime --dest $release
+    # jpackage memeriksa Files.isWritable; folder workspace sandbox dapat salah-negatif
+    # walaupun createFile berhasil. Gunakan temp proses yang diizinkan, lalu salin image
+    # yang selesai ke folder rilis baru. Tidak mengubah ACL atau menghapus paket lama.
+    $packageDestination = Join-Path ([IO.Path]::GetTempPath()) "TutupBuku-package-$stamp"
+    if (Test-Path -LiteralPath $packageDestination) { throw 'Folder temp packaging sudah ada; tidak ditimpa.' }
+    New-Item -ItemType Directory -Path $packageDestination | Out-Null
+    & (Join-Path $JdkHome 'bin/jpackage.exe') --type app-image --name TutupBuku --app-version 0.5.4 --vendor 'Tim Tutup Buku' --description 'Modul Belajar dan Simulasi Nilai lokal' --input $inputFolder --main-jar "tutup-buku-$releaseVersion.jar" --main-class id.ac.uns.tutupbuku.ui.Launcher --runtime-image $runtime --dest $packageDestination
     if ($LASTEXITCODE -ne 0) { throw 'jpackage gagal; artefak sebelumnya tidak dihapus.' }
+    Copy-Item -LiteralPath (Join-Path $packageDestination 'TutupBuku') -Destination $release -Recurse
     $image = Join-Path $release 'TutupBuku'; $guideFolder = Join-Path $image 'panduan'
     New-Item -ItemType Directory -Path $guideFolder | Out-Null
-    foreach ($document in @('USER_GUIDE.md','RELEASE_NOTES.md','RELEASE_ACCEPTANCE.md','DEMO_SCRIPT.md','THIRD_PARTY_NOTICES.md')) { Copy-Item -LiteralPath (Join-Path $projectRoot "docs/$document") -Destination $guideFolder }
+    foreach ($document in @('USER_GUIDE.md','RELEASE_NOTES.md','RELEASE_ACCEPTANCE.md','DEMO_SCRIPT.md','THIRD_PARTY_NOTICES.md','WINDOWS_DESKTOP_LAUNCHER.md','DESIGN_SYSTEM.md')) { Copy-Item -LiteralPath (Join-Path $projectRoot "docs/$document") -Destination $guideFolder }
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Create-DesktopShortcut.ps1') -Destination $image
     $legal = Join-Path $image 'licenses'; New-Item -ItemType Directory -Path $legal | Out-Null
     foreach ($module in @('javafx.base','javafx.graphics','javafx.controls','javafx.web','javafx.media')) { Copy-Item -LiteralPath (Join-Path $JavaFxSdkHome "legal/$module") -Destination $legal -Recurse }
     Add-Type -AssemblyName System.IO.Compression.FileSystem

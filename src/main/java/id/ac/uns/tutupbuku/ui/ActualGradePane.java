@@ -146,6 +146,10 @@ final class ActualGradePane extends BorderPane {
                                 }));
         up.setOnAction(e -> move(-1));
         down.setOnAction(e -> move(1));
+        saveItem.getStyleClass().add("tb-primary");
+        saveSettings.getStyleClass().add("tb-primary");
+        delete.getStyleClass().add("tb-danger");
+        result.getStyleClass().add("tb-result");
         VBox body =
                 form(
                         heading("Nilai aktual"),
@@ -172,13 +176,21 @@ final class ActualGradePane extends BorderPane {
                         field("Bobot terhadap nilai akhir (%)", weight),
                         field("Perolehan aktual (kosong ≠ 0)", earned),
                         field("Maksimum skor (>0)", maximum),
-                        saveItem,
-                        status);
+                        saveItem);
+        body.setSpacing(8);
+        body.getStyleClass().add("tb-surface");
+        body.setPadding(new javafx.geometry.Insets(12));
         SplitPane split = new SplitPane(courses, scroll(body));
         split.setDividerPositions(0.25);
         setCenter(split);
         total.setPadding(new javafx.geometry.Insets(6));
         setTop(total);
+        status.setPadding(new javafx.geometry.Insets(6, 8, 6, 8));
+        status.setMinHeight(Region.USE_PREF_SIZE);
+        status.setMaxWidth(Double.MAX_VALUE);
+        status.visibleProperty().bind(status.textProperty().isNotEmpty());
+        status.managedProperty().bind(status.visibleProperty());
+        setBottom(status);
     }
 
     void load(long semester, List<ActualCourse> values) {

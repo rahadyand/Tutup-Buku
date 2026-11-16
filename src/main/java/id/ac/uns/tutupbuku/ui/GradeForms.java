@@ -87,6 +87,7 @@ final class GradeForms {
         dialog.setHeaderText("Simpan sebelum berpindah?");
         ((Button) dialog.getDialogPane().lookupButton(keep)).setDefaultButton(false);
         ((Button) dialog.getDialogPane().lookupButton(cancel)).setDefaultButton(true);
+        FormSupport.styleDialog(dialog);
         dialog.showAndWait()
                 .ifPresent(
                         choice -> {
@@ -112,6 +113,7 @@ final class GradeForms {
         dialog.initOwner(owner.getScene().getWindow());
         dialog.setTitle("Ganti mode penilaian");
         dialog.setHeaderText("Gunakan " + mode + "?");
+        FormSupport.styleDialog(dialog);
         return dialog.showAndWait().filter(apply::equals).isPresent();
     }
 

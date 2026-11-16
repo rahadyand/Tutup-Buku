@@ -8,7 +8,10 @@ import id.ac.uns.tutupbuku.security.PasswordHasher;
 import id.ac.uns.tutupbuku.ui.TutupBukuApplication;
 
 import javafx.application.Platform;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Region;
 import javafx.stage.*;
 
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,95 @@ import java.util.concurrent.*;
 
 /** Peluncuran aplikasi asli dan interaksi kontrol JavaFX; seluruh data hanya di @TempDir. */
 class MilestoneFourFxCheck extends FxTestSupport {
+    private final String layoutSuffix =
+            System.getProperty("glass.win.uiScale", "native")
+                    + "-"
+                    + System.getProperty("phase3.width", "1366")
+                    + "x"
+                    + System.getProperty("phase3.height", "768");
+
+    private void sizeWindow() {
+        stage.setWidth(Integer.getInteger("phase3.width", 1366) / stage.getOutputScaleX());
+        stage.setHeight(Integer.getInteger("phase3.height", 768) / stage.getOutputScaleY());
+    }
+
+    private void statusLayout(String statusId, String inputId, String state) throws Exception {
+        for (int position = 0; position <= 1; position++) {
+            int scrollPosition = position;
+            scroll(inputId, position);
+            screenshot("phase3-" + state + "-" + position + "-" + layoutSuffix + ".png");
+            fx(
+                    () -> {
+                        Label message = (Label) node(statusId);
+                        Node parent = node(inputId);
+                        while (!(parent instanceof ScrollPane)) parent = parent.getParent();
+                        ScrollPane scroll = (ScrollPane) parent;
+                        var bounds = message.localToScene(message.getLayoutBounds());
+                        Region header = (Region) node("grade-semester").getParent().getParent();
+                        System.out.printf(
+                                java.util.Locale.ROOT,
+                                "PHASE3 %s scroll=%d scene=%.0fx%.0f header=%.1f viewport=%.1f"
+                                        + " body=%.1f statusY=%.1f statusHeight=%.1f parent=%s%n",
+                                state,
+                                scrollPosition,
+                                stage.getScene().getWidth(),
+                                stage.getScene().getHeight(),
+                                header.getHeight(),
+                                scroll.getViewportBounds().getHeight(),
+                                scroll.getContent().getLayoutBounds().getHeight(),
+                                bounds.getMinY(),
+                                message.getHeight(),
+                                message.getParent().getClass().getSimpleName());
+                        var pane = assertInstanceOf(BorderPane.class, message.getParent());
+                        assertSame(message, pane.getBottom());
+                        assertTrue(message.isWrapText());
+                        assertTrue(
+                                message.getHeight() + 0.1
+                                        >= message.prefHeight(message.getWidth()));
+                        var paneBounds = pane.localToScene(pane.getLayoutBounds());
+                        assertTrue(bounds.getMinY() >= paneBounds.getMinY());
+                        assertTrue(bounds.getMaxY() <= paneBounds.getMaxY() + 0.1);
+                        assertTrue(bounds.getMaxY() <= stage.getScene().getHeight());
+                        assertTrue(scroll.getViewportBounds().getHeight() >= 80);
+                        return null;
+                    });
+        }
+        String[] actions =
+                statusId.equals("actual-grade-status")
+                        ? new String[] {"save-component"}
+                        : new String[] {"new-scenario", "duplicate-scenario", "delete-scenario"};
+        for (String id : actions) {
+            fx(
+                    () -> {
+                        Node button = node(id), parent = button.getParent();
+                        while (!(parent instanceof ScrollPane)) parent = parent.getParent();
+                        ScrollPane page = (ScrollPane) parent;
+                        var target =
+                                page.getContent()
+                                        .sceneToLocal(
+                                                button.localToScene(button.getLayoutBounds()));
+                        double viewport = page.getViewportBounds().getHeight();
+                        double range = page.getContent().getLayoutBounds().getHeight() - viewport;
+                        double offset = target.getMinY() - (viewport - target.getHeight()) / 2;
+                        page.setVvalue(range <= 0 ? 0 : Math.max(0, Math.min(1, offset / range)));
+                        return null;
+                    });
+            screenshot("phase3-" + state + "-" + id + "-" + layoutSuffix + ".png");
+            fx(
+                    () -> {
+                        Node button = node(id), parent = button.getParent();
+                        while (!(parent instanceof ScrollPane)) parent = parent.getParent();
+                        Node viewport = parent.lookup(".viewport");
+                        var bounds = button.localToScene(button.getLayoutBounds());
+                        var visible = viewport.localToScene(viewport.getLayoutBounds());
+                        assertTrue(bounds.getMinY() >= visible.getMinY(), id);
+                        assertTrue(bounds.getMaxY() <= visible.getMaxY() + 0.1, id);
+                        assertFalse(button.isDisabled(), id);
+                        return null;
+                    });
+        }
+    }
+
     @Test
     void actualTargetsSavedScenariosReviewComparisonAndFailureRecovery() throws Exception {
         Path file = directory.resolve("m4-ui.db");
@@ -62,6 +154,7 @@ class MilestoneFourFxCheck extends FxTestSupport {
                         stage = new Stage();
                         application = new TutupBukuApplication(file);
                         application.start(stage);
+                        sizeWindow();
                         return null;
                     });
             idle();
@@ -105,6 +198,7 @@ class MilestoneFourFxCheck extends FxTestSupport {
                 click("save-component");
                 assertTrue(label("actual-grade-status").contains("gagal disimpan"));
                 assertEquals("30", fx(() -> ((TextField) node("component-earned")).getText()));
+                statusLayout("actual-grade-status", "component-earned", "actual-error");
                 inspection.write(
                         c -> {
                             try (var s = c.createStatement()) {
@@ -168,6 +262,7 @@ class MilestoneFourFxCheck extends FxTestSupport {
                 assertEquals(
                         "Isian tidak hilang",
                         fx(() -> ((TextField) node("scenario-name")).getText()));
+                statusLayout("scenario-status", "scenario-name", "scenario-error");
                 dialog(
                         () -> ((TabPane) node("workspace-tabs")).getSelectionModel().select(1),
                         ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -200,6 +295,7 @@ class MilestoneFourFxCheck extends FxTestSupport {
                         stage = new Stage();
                         application = new TutupBukuApplication(file);
                         application.start(stage);
+                        sizeWindow();
                         return null;
                     });
             idle();
@@ -210,6 +306,46 @@ class MilestoneFourFxCheck extends FxTestSupport {
             assertEquals(
                     "Isian tidak hilang", fx(() -> ((TextField) node("scenario-name")).getText()));
             assertTrue(label("scenario-gpa-result").contains("4,00"));
+            String longName =
+                    "Rencana semester dengan target akademik dan asumsi yang perlu ditinjau"
+                            + " bersama";
+            text("scenario-name", longName);
+            click("save-scenario");
+            fx(
+                    () -> {
+                        var box = (ComboBox<SemesterScenario>) node("compare-scenario");
+                        box.setValue(
+                                box.getItems().stream()
+                                        .filter(s -> !s.name().equals(longName))
+                                        .findFirst()
+                                        .orElseThrow());
+                        return null;
+                    });
+            click("compare-scenarios");
+            scroll("scenario-comparison-table", 1);
+            screenshot("phase3-long-comparison-" + layoutSuffix + ".png");
+            fx(
+                    () -> {
+                        var table = (TableView<?>) node("scenario-comparison-table");
+                        assertNotNull(table.getTooltip());
+                        assertTrue(table.getTooltip().getText().contains(longName));
+                        assertEquals(
+                                String.join(
+                                        "\n",
+                                        table.getColumns().stream()
+                                                .map(TableColumn::getText)
+                                                .toList()),
+                                table.getTooltip().getText());
+                        for (Node item : table.lookupAll(".column-header .label")) {
+                            if (item instanceof Label label
+                                    && label.getText().startsWith(longName)) {
+                                var rendered = (javafx.scene.text.Text) label.lookup(".text");
+                                System.out.println(
+                                        "PHASE3 long header rendered=" + rendered.getText());
+                            }
+                        }
+                        return null;
+                    });
         } catch (Throwable error) {
             screenshot("m4-failure.png");
             throw error;
