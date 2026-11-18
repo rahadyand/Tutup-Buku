@@ -29,12 +29,16 @@ final class MaterialEditor extends BorderPane {
     private final MarkdownReader reader;
     private final TabPane tabs;
     private final Tab writeTab, previewTab;
+    private final VBox readHeader, editHeader;
     private final PauseTransition autosave = new PauseTransition(Duration.seconds(2));
     private final PauseTransition readingPause = new PauseTransition(Duration.millis(700));
     private EditorDraft draft;
     private boolean filling, suspended;
     private long renderedRevision;
     private String renderedMarkdown = "";
+    private boolean readMode = true;
+    private double readingRatio;
+    private long readingRevision;
 
     MaterialEditor(
             LearningService learning,
@@ -62,7 +66,9 @@ final class MaterialEditor extends BorderPane {
                         markdown);
         writing.setPadding(new javafx.geometry.Insets(8));
         VBox.setVgrow(markdown, Priority.ALWAYS);
-        writeTab = new Tab("Tulis", writing);
+        writing.setMinHeight(Region.USE_PREF_SIZE);
+        markdown.setPrefRowCount(8);
+        writeTab = new Tab("Tulis", scroll(writing));
         previewTab = new Tab("Pratinjau / Baca", reader);
         tabs = new TabPane(writeTab, previewTab);
         tabs.setId("material-tabs");
@@ -71,9 +77,9 @@ final class MaterialEditor extends BorderPane {
                 .selectedItemProperty()
                 .addListener(
                         (obs, old, selected) -> {
-                            if (!filling && selected == previewTab) preview(0);
+                            if (!filling && selected == previewTab) preview(readingPosition());
                         });
-        Button save = button("save-material", "Simpan materi & catatan");
+        Button save = button("save-material", "Simpan");
         save.getStyleClass().add("tb-primary");
         save.setOnAction(event -> save(() -> {}));
         Button image = button("insert-image", "Sisipkan gambar lokal");
@@ -103,7 +109,7 @@ final class MaterialEditor extends BorderPane {
                                 tabs.getSelectionModel().select(writeTab);
                                 readStatus.setText(
                                         "Gambar disalin. Simpan materi untuk menyimpan"
-                                            + " referensinya.");
+                                                + " referensinya.");
                             });
                 });
         Button deleteNote = button("delete-note", "Hapus catatan");
@@ -117,7 +123,7 @@ final class MaterialEditor extends BorderPane {
                                                     this,
                                                     "Hapus catatan?",
                                                     "Hapus catatan pribadi materi ini? Isi materi"
-                                                        + " dan ringkasan tidak dihapus."))
+                                                            + " dan ringkasan tidak dihapus."))
                                         return;
                                     MaterialReading base = draft.base();
                                     tasks.save(
@@ -128,7 +134,7 @@ final class MaterialEditor extends BorderPane {
                                                             "",
                                                             base.noteRevision()),
                                             saved -> {
-                                                load(saved, reader.scrollRatio(), false);
+                                                load(saved, readingPosition(), readMode);
                                                 onSaved.accept(saved.material());
                                             },
                                             error ->
@@ -154,26 +160,44 @@ final class MaterialEditor extends BorderPane {
                             },
                             error -> complete.setSelected(!value));
                 });
-        Label materialTitle = new Label();
-        materialTitle.textProperty().bind(title.textProperty());
-        materialTitle.setWrapText(true);
-        materialTitle.getStyleClass().add("tb-section-title");
-        materialTitle.setMinHeight(Region.USE_PREF_SIZE);
         metadata.setWrapText(true);
         metadata.getStyleClass().add("tb-caption");
-        VBox heading =
-                new VBox(6, materialTitle, metadata, new FlowPane(8, 6, save, image), saveStatus);
-        heading.setPadding(new javafx.geometry.Insets(10));
-        heading.getStyleClass().add("tb-editor-header");
-        setTop(heading);
-        setCenter(tabs);
+        Button edit = button("edit-material", "Ubah Materi");
+        edit.setOnAction(event -> guard(this::showEditMode));
+        Button read = button("read-material", "Kembali Membaca");
+        read.setOnAction(event -> guard(this::showReadMode));
+        Label infoText = note("");
+        infoText.textProperty()
+                .bind(
+                        title.textProperty()
+                                .concat("\nSumber: ")
+                                .concat(source.textProperty())
+                                .concat("\n")
+                                .concat(metadata.textProperty()));
+        TitledPane info = new TitledPane("Info materi", infoText);
+        info.setId("material-info");
+        info.setExpanded(false);
+        info.setAnimated(false);
+        info.setPrefWidth(150);
+        readHeader = new VBox(4, new FlowPane(8, 6, note("Mode Baca"), edit, info));
+        editHeader = new VBox(4, new FlowPane(8, 6, save, image, read));
+        for (VBox header : new VBox[] {readHeader, editHeader}) {
+            header.setPadding(new javafx.geometry.Insets(8));
+            header.getStyleClass().add("tb-editor-header");
+        }
+        Button saveNote = button("save-note", "Simpan catatan");
+        saveNote.setOnAction(event -> save(() -> {}));
         TitledPane notesPanel =
                 new TitledPane(
                         "Catatan pribadi (terpisah dari isi dan Ringkasan)",
-                        new VBox(6, note, deleteNote));
+                        new VBox(6, note, new FlowPane(8, 6, saveNote, deleteNote)));
         notesPanel.setId("material-notes-pane");
         notesPanel.setExpanded(false);
-        VBox notes = new VBox(6, complete, notesPanel, readStatus);
+        VBox notes = new VBox(4, complete, notesPanel, saveStatus, readStatus);
+        saveStatus.visibleProperty().bind(saveStatus.textProperty().isNotEmpty());
+        saveStatus.managedProperty().bind(saveStatus.visibleProperty());
+        readStatus.visibleProperty().bind(readStatus.textProperty().isNotEmpty());
+        readStatus.managedProperty().bind(readStatus.visibleProperty());
         notes.setPadding(new javafx.geometry.Insets(8));
         setBottom(notes);
         for (TextInputControl field : new TextInputControl[] {title, source, markdown, note})
@@ -190,7 +214,9 @@ final class MaterialEditor extends BorderPane {
     private void edited() {
         if (filling || draft == null || suspended) return;
         draft.edit(title.getText(), markdown.getText(), source.getText(), note.getText());
-        saveStatus.setText("Belum tersimpan — simpan otomatis setelah 2 detik.");
+        saveStatus.setText(
+                (contentChanged() ? "Materi/catatan" : "Catatan")
+                        + " belum tersimpan — simpan otomatis setelah 2 detik.");
         autosave.playFromStart();
     }
 
@@ -210,9 +236,10 @@ final class MaterialEditor extends BorderPane {
         metadata.setText(metadata(reading.material()));
         saveStatus.setText(reading.material().id() == 0 ? "Belum tersimpan" : "Tersimpan");
         readStatus.setText("");
-        tabs.getSelectionModel().select(read ? previewTab : writeTab);
+        readingRatio = ratio;
+        readingRevision = reading.material().revision();
         filling = false;
-        if (read) preview(ratio);
+        showMode(read);
     }
 
     void clear() {
@@ -220,6 +247,7 @@ final class MaterialEditor extends BorderPane {
         readingPause.stop();
         filling = true;
         draft = null;
+        readingRatio = 0;
         title.clear();
         source.clear();
         markdown.clear();
@@ -229,6 +257,7 @@ final class MaterialEditor extends BorderPane {
         saveStatus.setText("");
         setDisable(true);
         filling = false;
+        showMode(true);
         reader.showHtml(
                 "<html><body>Pilih atau buat materi untuk mulai membaca.</body></html>",
                 0,
@@ -247,6 +276,74 @@ final class MaterialEditor extends BorderPane {
         suspended = true;
         autosave.stop();
         readingPause.stop();
+    }
+
+    private boolean showingReader() {
+        return readMode || tabs.getSelectionModel().getSelectedItem() == previewTab;
+    }
+
+    private boolean contentChanged() {
+        if (draft == null) return false;
+        Material base = draft.base().material();
+        return !title.getText().trim().equals(base.title())
+                || !source.getText().equals(base.source())
+                || !markdown.getText().equals(base.markdown());
+    }
+
+    private double readingPosition() {
+        return draft != null
+                        && readingRevision == draft.base().material().revision()
+                        && !contentChanged()
+                ? readingRatio
+                : 0;
+    }
+
+    private void rememberPosition() {
+        if (getScene() != null
+                && draft != null
+                && showingReader()
+                && reader.ready()
+                && !contentChanged()
+                && renderedRevision == draft.base().material().revision()) {
+            readingRatio = reader.scrollRatio();
+            readingRevision = renderedRevision;
+        }
+    }
+
+    void preservePosition(Runnable layoutChange) {
+        rememberPosition();
+        double ratio = readingPosition();
+        layoutChange.run();
+        javafx.application.Platform.runLater(
+                () -> {
+                    if (showingReader() && reader.ready()) reader.restorePosition(ratio);
+                });
+    }
+
+    void showReadMode() {
+        showMode(true);
+    }
+
+    void showEditMode() {
+        showMode(false);
+    }
+
+    private void showMode(boolean read) {
+        readMode = read;
+        // WebView dan draft yang sama dipindahkan, bukan dibuat ulang per mode.
+        previewTab.setContent(null);
+        setCenter(null);
+        setTop(read ? readHeader : editHeader);
+        if (read) {
+            setCenter(reader);
+            if (draft != null) preview(readingPosition());
+        } else {
+            previewTab.setContent(reader);
+            setCenter(tabs);
+            filling = true;
+            tabs.getSelectionModel().select(writeTab);
+            filling = false;
+        }
     }
 
     private void preview(double ratio) {
@@ -277,6 +374,9 @@ final class MaterialEditor extends BorderPane {
             return;
         }
         EditorDraft current = draft;
+        rememberPosition();
+        long previousRevision = current.base().material().revision();
+        boolean materialChanged = contentChanged();
         EditorDraft.SaveSnapshot snapshot;
         try {
             snapshot = current.snapshot();
@@ -290,17 +390,28 @@ final class MaterialEditor extends BorderPane {
                 saved -> {
                     if (draft != current) return;
                     current.acknowledge(snapshot, saved);
+                    if (saved.material().revision() != previousRevision) readingRatio = 0;
+                    readingRevision = saved.material().revision();
                     complete.setDisable(false);
                     metadata.setText(metadata(saved.material()));
-                    saveStatus.setText(current.dirty() ? "Belum tersimpan" : "Tersimpan");
+                    saveStatus.setText(
+                            current.dirty()
+                                    ? "Belum tersimpan"
+                                    : materialChanged
+                                            ? "Materi & catatan tersimpan."
+                                            : "Catatan tersimpan.");
                     onSaved.accept(saved.material());
-                    if (tabs.getSelectionModel().getSelectedItem() == previewTab) preview(0);
+                    if (showingReader()
+                            && (renderedRevision != saved.material().revision()
+                                    || !renderedMarkdown.equals(markdown.getText())))
+                        preview(readingPosition());
                     afterSave.run();
                 },
                 error -> saveStatus.setText("Gagal menyimpan: " + error.getMessage()));
     }
 
     void guard(Runnable action) {
+        rememberPosition();
         autosave.stop();
         readingPause.stop();
         if (!dirty()) {
@@ -323,17 +434,18 @@ final class MaterialEditor extends BorderPane {
         else if (choice.filter(discard::equals).isPresent()) {
             MaterialReading previous = draft.base();
             if (previous.material().id() == 0) clear();
-            else load(previous, 0, false);
+            else load(previous, readingPosition(), readMode);
             action.run();
         } else if (dirty()) autosave.playFromStart();
     }
 
     private void recordReading(boolean blocking, Runnable after) {
         if (draft == null
+                || getScene() == null
                 || suspended
                 || current().id() == 0
                 || !reader.ready()
-                || tabs.getSelectionModel().getSelectedItem() != previewTab
+                || !showingReader()
                 || current().revision() != renderedRevision
                 || !current().markdown().equals(renderedMarkdown)) {
             after.run();
@@ -353,8 +465,13 @@ final class MaterialEditor extends BorderPane {
                         writer.run();
                         return null;
                     },
-                    ignored -> after.run(),
-                    error -> after.run());
+                    ignored -> {
+                        readStatus.setText("");
+                        after.run();
+                    },
+                    error ->
+                            readStatus.setText(
+                                    "Posisi baca gagal disimpan. Coba lagi sebelum berpindah."));
         else
             tasks.background(
                     readStatus,
@@ -362,7 +479,10 @@ final class MaterialEditor extends BorderPane {
                         writer.run();
                         return null;
                     },
-                    ignored -> after.run());
+                    ignored -> {
+                        readStatus.setText("");
+                        after.run();
+                    });
     }
 
     private String metadata(Material material) {

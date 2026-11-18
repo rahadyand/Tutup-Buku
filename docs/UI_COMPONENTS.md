@@ -1,3 +1,18 @@
+# Kontrak layar belajar — 19 November 2026
+
+- **Baca** adalah default saat memilih materi. Satu katalog (`learning-catalog`) menyatukan lokasi, bab/bidang dan materi; cabang lokasi dapat dilipat. Kontrol CRUD/urut/seed/reload hanya berada dalam **Kelola Daftar**, tidak ikut mengambil ruang di Baca. Tidak ada ScrollPane luar yang membungkus WebView saat Baca.
+- **Tutup/Buka daftar materi** melepaskan/memasang node katalog yang sama; pilihan tetap dan rasio gulir dipulihkan setelah layout. Ini perubahan presentasi, tanpa dialog dirty.
+- **Ubah Materi** memindahkan reader yang sama ke tab preview editor, dengan judul/sumber/Markdown/gambar/Simpan/autosave yang sudah ada. **Kembali Membaca** melewati guard. Editor dapat digulir pada tinggi kecil. Info materi dilipat pada header baca.
+- **Kelola Daftar** mengganti area kanan; pilihan kiri tetap menjadi konteks semua aksi. Materi baru membuka editor; Ubah Materi terpilih memakai draft yang sama. Seluruh CRUD, urutan, salin contoh sekali dan muat ulang tetap tersedia.
+- **Catatan pribadi** dan completion tetap di bawah bacaan/editor; catatan tidak menjadi bagian Markdown. Simpan catatan dan autosave memakai snapshot/CAS atomik yang sama. Status membedakan catatan saja dari materi+catatan. Simpan catatan saja tidak merender ulang bacaan atau mengubah revisi isi.
+- Semua perpindahan material/lokasi/mode/keluar/tutup tetap melalui guard tunggal. Bersih tanpa dialog; Simpan menunggu berhasil, Buang memuat basis tersimpan, Batal tidak menjalankan aksi. Gagal simpan mempertahankan draf/mode/seleksi. Kegagalan menyimpan posisi baca pada perpindahan juga menahan navigasi dan menampilkan pesan.
+- Rasio baca disimpan sebelum perpindahan mode. Konten/revisi sama → rasio yang sama; konten direvisi →0. EditorDraft, seleksi, worker dan reader masing-masing satu; tidak ada state note tandingan atau migrasi data.
+- Token tema, kontrol native, global header/navigation dan layar di luar belajar tetap. Label materi terpilih mengikuti warna teks cell tema, termasuk indikator `[Draf]`.
+
+Verifikasi aktual dan batas penerimaan dicatat pada DEVELOPMENT_STATUS.md; inventaris historis di bawah tetap sebagai riwayat.
+
+---
+
 # Adopsi komponen Fase 5C — 15 November 2026
 
 Inventaris berikut mencakup seluruh layar produk yang tersedia, bukan fitur baru. Catatan Fase4 di bawah tetap menjadi riwayat.

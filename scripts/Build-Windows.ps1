@@ -13,7 +13,7 @@ $JavaFxSdkHome = (Resolve-Path -LiteralPath $JavaFxSdkHome).Path
 foreach ($tool in @('java.exe','jlink.exe','jpackage.exe')) { if (!(Test-Path -LiteralPath (Join-Path $JdkHome "bin/$tool"))) { throw "$tool tidak ada; jalankan Prepare-PackagingTools.ps1." } }
 $jdkRelease = Get-Content (Join-Path $JdkHome 'release') -Raw
 if ($jdkRelease -notmatch 'IMPLEMENTOR="Eclipse Adoptium"' -or $jdkRelease -notmatch 'JAVA_VERSION="21\.0\.13"') { throw 'Gunakan Temurin21.0.13 portable yang terdokumentasi agar runtime/legal paket konsisten.' }
-$releaseVersion = '0.5.4-rc1'
+$releaseVersion = '0.5.5-rc1'
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $release = Join-Path $projectRoot "releases/TutupBuku-$releaseVersion-$stamp"
 if (Test-Path -LiteralPath $release) { throw 'Folder rilis sudah ada; tidak ditimpa. Jalankan lagi pada detik berbeda.' }
@@ -50,7 +50,7 @@ try {
     $packageDestination = Join-Path ([IO.Path]::GetTempPath()) "TutupBuku-package-$stamp"
     if (Test-Path -LiteralPath $packageDestination) { throw 'Folder temp packaging sudah ada; tidak ditimpa.' }
     New-Item -ItemType Directory -Path $packageDestination | Out-Null
-    & (Join-Path $JdkHome 'bin/jpackage.exe') --type app-image --name TutupBuku --app-version 0.5.4 --vendor 'Tim Tutup Buku' --description 'Modul Belajar dan Simulasi Nilai lokal' --input $inputFolder --main-jar "tutup-buku-$releaseVersion.jar" --main-class id.ac.uns.tutupbuku.ui.Launcher --runtime-image $runtime --dest $packageDestination
+    & (Join-Path $JdkHome 'bin/jpackage.exe') --type app-image --name TutupBuku --app-version 0.5.5 --vendor 'Tim Tutup Buku' --description 'Modul Belajar dan Simulasi Nilai lokal' --input $inputFolder --main-jar "tutup-buku-$releaseVersion.jar" --main-class id.ac.uns.tutupbuku.ui.Launcher --runtime-image $runtime --dest $packageDestination
     if ($LASTEXITCODE -ne 0) { throw 'jpackage gagal; artefak sebelumnya tidak dihapus.' }
     Copy-Item -LiteralPath (Join-Path $packageDestination 'TutupBuku') -Destination $release -Recurse
     $image = Join-Path $release 'TutupBuku'; $guideFolder = Join-Path $image 'panduan'
@@ -72,9 +72,9 @@ try {
     $sourceRevision = 'source archive, Git metadata unavailable'; $sourceDirty = 'unknown'
     if ((Get-Command git -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath (Join-Path $projectRoot '.git'))) {
         $sourceRevision = git rev-parse HEAD
-        $sourceDirty = @(git status --porcelain).Count -gt 0
+        $sourceDirty = @(git status --porcelain --untracked-files=no).Count -gt 0
     }
-    @("Tutup Buku $releaseVersion","Source baseline=$sourceRevision; working-tree changes=$sourceDirty",'Temurin21.0.13+9; JavaFX21.0.10; schema4',"Runtime modules=$modules",'Build input hashes:') + @(Get-ChildItem $inputFolder -File | ForEach-Object { "$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)  $($_.Name)" }) | Set-Content -LiteralPath (Join-Path $image 'BUILD-INFO.txt') -Encoding UTF8
+    @("Tutup Buku $releaseVersion","Source baseline=$sourceRevision; tracked working-tree changes=$sourceDirty",'Temurin21.0.13+9; JavaFX21.0.10; schema4',"Runtime modules=$modules",'Build input hashes:') + @(Get-ChildItem $inputFolder -File | ForEach-Object { "$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)  $($_.Name)" }) | Set-Content -LiteralPath (Join-Path $image 'BUILD-INFO.txt') -Encoding UTF8
     $forbidden = @(Get-ChildItem $image -Recurse -File | Where-Object { $_.FullName -match '\\(\.git|\.m2|\.tools|target|assets|secrets)\\|\.(db|sqlite|sqlite3|log|pem|key|pfx|java|class)$|\\\.env(\.|$)' })
     if ($forbidden.Count -gt 0) { throw "Artefak terlarang dalam paket: $($forbidden.FullName -join ', ')" }
     $checksums = @(Get-ChildItem $image -Recurse -File | ForEach-Object { "$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)  $($_.FullName.Substring($image.Length+1))" })

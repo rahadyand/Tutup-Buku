@@ -35,7 +35,7 @@ public final class MarkdownReader extends BorderPane {
             }, true);
             Platform.runLater(() -> {
                 // Hanya ekspresi milik aplikasi, tidak pernah menyisipkan teks Markdown ke script.
-                browser.getEngine().executeScript("window.scrollTo(0, Math.max(0,document.documentElement.scrollHeight-window.innerHeight)*" + restoreRatio + ")");
+                restorePosition(restoreRatio);
                 ready = true; onReady.run();
             });
         });
@@ -52,6 +52,11 @@ public final class MarkdownReader extends BorderPane {
         if (!ready) return restoreRatio;
         Object value = browser.getEngine().executeScript("(function(){var h=document.documentElement.scrollHeight-window.innerHeight;return h>0?Math.max(0,Math.min(1,window.pageYOffset/h)):0;})()");
         return value instanceof Number number ? number.doubleValue() : 0;
+    }
+    /** Pulihkan rasio setelah perubahan lebar katalog tanpa merender ulang konten. */
+    public void restorePosition(double ratio) {
+        restoreRatio = Math.max(0, Math.min(1, ratio));
+        browser.getEngine().executeScript("window.scrollTo(0, Math.max(0,document.documentElement.scrollHeight-window.innerHeight)*" + restoreRatio + ")");
     }
     public boolean ready() { return ready; }
 }

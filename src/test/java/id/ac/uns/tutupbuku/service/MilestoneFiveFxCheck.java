@@ -133,6 +133,7 @@ class MilestoneFiveFxCheck extends FxTestSupport {
                         return null;
                     });
             idle();
+            click("manage-learning");
             text("learning-folder-name", "Bab Integrasi");
             click("learning-add-folder");
             click("learning-new-material");

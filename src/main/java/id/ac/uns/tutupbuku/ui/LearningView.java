@@ -27,6 +27,10 @@ final class LearningView extends BorderPane {
     private Map<Long, List<Course>> catalog = Map.of();
     private boolean filling;
     private Long preferredSemester;
+    private final BorderPane workspace = new BorderPane();
+    private final Button manage = button("manage-learning", "Kelola Daftar");
+    private ScrollPane management;
+    private boolean managing;
 
     void preferSemester(Optional<Long> id) {
         preferredSemester = id.orElse(null);
@@ -57,7 +61,7 @@ final class LearningView extends BorderPane {
         semesters.setMaxWidth(Double.MAX_VALUE);
         courses.setMaxWidth(Double.MAX_VALUE);
         path.setMaxWidth(Double.MAX_VALUE);
-        folders.setPlaceholder(note("Belum ada bab/bidang. Tambahkan nama di bawah."));
+        folders.setPlaceholder(note("Belum ada bab/bidang. Buka Kelola Daftar untuk menambah."));
         materials.setPlaceholder(note("Pilih bab/bidang; buat materi baru atau salin contoh."));
         path.getSelectionModel()
                 .selectedItemProperty()
@@ -231,6 +235,7 @@ final class LearningView extends BorderPane {
                                                     0),
                                             0,
                                             false);
+                                    showEditor();
                                 }));
         Button deleteMaterial = button("learning-delete-material", "Hapus materi");
         deleteMaterial.setOnAction(
@@ -328,74 +333,161 @@ final class LearningView extends BorderPane {
                                 }));
         Button refresh = button("learning-refresh", "Muat ulang daftar");
         refresh.setOnAction(event -> guard(this::refresh));
-        folders.setPrefHeight(150);
-        folders.setMinHeight(100);
+        folders.setPrefHeight(95);
+        folders.setMinHeight(75);
+        materials.setPrefHeight(160);
+        materials.setMinHeight(100);
+        for (ListView<?> list : List.of(folders, materials)) {
+            list.setMinWidth(0);
+        }
+        materials.setCellFactory(
+                list ->
+                        new ListCell<>() {
+                            private final Label title = note("");
+
+                            {
+                                title.maxWidthProperty().bind(widthProperty().subtract(24));
+                                title.textFillProperty().bind(textFillProperty());
+                            }
+
+                            @Override
+                            protected void updateItem(Material value, boolean empty) {
+                                super.updateItem(value, empty);
+                                title.setText(empty || value == null ? "" : value.toString());
+                                setGraphic(empty ? null : title);
+                                setText(null);
+                            }
+                        });
         TitledPane contextBranch =
                 new TitledPane(
-                        "1. Lokasi belajar",
+                        "Lokasi belajar",
                         new VBox(
-                                8,
+                                6,
                                 field("Jalur", path),
                                 field("Semester", semesters),
                                 field("Mata kuliah", courses)));
         contextBranch.setId("learning-context-branch");
         contextBranch.setAnimated(false);
-        TitledPane folderBranch =
-                new TitledPane(
-                        "2. Bab / bidang",
-                        new VBox(
-                                8,
-                                folders,
-                                field("Nama bab / bidang", folderName),
-                                new FlowPane(5, 5, addFolder, rename, deleteFolder),
-                                new FlowPane(5, 5, folderUp, folderDown)));
+        contextBranch.setExpanded(false);
+        TitledPane folderBranch = new TitledPane("Bab / bidang", folders);
         folderBranch.setId("learning-folder-branch");
         folderBranch.setAnimated(false);
+        Label context = note("");
+        context.textProperty()
+                .bind(
+                        javafx.beans.binding.Bindings.createStringBinding(
+                                () ->
+                                        kind() == LearningLocation.Kind.INTEREST
+                                                ? "Peminatan"
+                                                : courses.getValue() == null
+                                                        ? "Pilih lokasi belajar"
+                                                        : courses.getValue().name(),
+                                path.valueProperty(),
+                                courses.valueProperty()));
         VBox sidebar =
                 new VBox(
                         8,
-                        heading("Modul belajar"),
+                        heading("Pilih materi"),
+                        context,
                         contextBranch,
                         folderBranch,
-                        resume,
-                        seed,
-                        refresh);
-        sidebar.setPadding(new javafx.geometry.Insets(10));
-        VBox.setVgrow(folders, Priority.ALWAYS);
-        sidebar.setMinWidth(0);
-        sidebar.setPrefWidth(240);
-        VBox list =
-                new VBox(
-                        8,
                         heading("Materi"),
                         materials,
-                        new FlowPane(5, 5, addMaterial, deleteMaterial),
-                        new FlowPane(5, 5, materialUp, materialDown),
-                        progress);
-        list.setPadding(new javafx.geometry.Insets(10));
-        VBox.setVgrow(materials, Priority.ALWAYS);
-        list.setMinWidth(0);
-        list.setPrefWidth(220);
-        progress.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
-        progress.setMaxWidth(Double.MAX_VALUE);
+                        progress,
+                        resume);
+        sidebar.setPadding(new javafx.geometry.Insets(10));
         sidebar.setMinHeight(Region.USE_PREF_SIZE);
         sidebar.getStyleClass().add("tb-surface");
-        list.getStyleClass().add("tb-surface");
+        VBox.setVgrow(materials, Priority.ALWAYS);
+        ScrollPane catalogPane = scroll(sidebar);
+        catalogPane.setId("learning-catalog");
+        catalogPane.setFitToHeight(true);
+        catalogPane.prefWidthProperty().bind(widthProperty().multiply(0.27));
+        catalogPane.setMinWidth(220);
+        catalogPane.setMaxWidth(300);
+        workspace.setLeft(catalogPane);
+        workspace.setCenter(editor);
+        Button hide = button("toggle-learning-catalog", "Tutup daftar materi");
+        hide.setOnAction(
+                event ->
+                        editor.preservePosition(
+                                () -> {
+                                    boolean visible = workspace.getLeft() != null;
+                                    workspace.setLeft(visible ? null : catalogPane);
+                                    hide.setText(
+                                            visible ? "Buka daftar materi" : "Tutup daftar materi");
+                                }));
+        Label selection = note("");
+        selection
+                .textProperty()
+                .bind(
+                        javafx.beans.binding.Bindings.createStringBinding(
+                                () ->
+                                        "Bab/bidang: "
+                                                + (selectedFolder() == null
+                                                        ? "belum dipilih"
+                                                        : selectedFolder().name())
+                                                + "\nMateri: "
+                                                + (materials.getSelectionModel().getSelectedItem()
+                                                                == null
+                                                        ? "belum dipilih"
+                                                        : materials
+                                                                .getSelectionModel()
+                                                                .getSelectedItem()
+                                                                .title()),
+                                folders.getSelectionModel().selectedItemProperty(),
+                                materials.getSelectionModel().selectedItemProperty()));
+        Button editSelected = button("manage-edit-material", "Ubah Materi terpilih");
+        editSelected.setOnAction(
+                event ->
+                        guard(
+                                () -> {
+                                    if (editor.current() == null) {
+                                        status.setText("Pilih materi terlebih dahulu.");
+                                        return;
+                                    }
+                                    showEditor();
+                                    editor.showEditMode();
+                                }));
         addMaterial.getStyleClass().add("tb-primary");
         deleteMaterial.getStyleClass().add("tb-danger");
-        list.setMinHeight(260);
-        ScrollPane sidebarScroll = scroll(sidebar), listScroll = scroll(list);
-        sidebarScroll.setMinWidth(180);
-        listScroll.setMinWidth(155);
-        editor.setMinHeight(360);
-        editor.setMinWidth(280);
-        ScrollPane editorScroll = scroll(editor);
-        editorScroll.setFitToHeight(true);
-        editorScroll.setMinWidth(280);
-        SplitPane split = new SplitPane(sidebarScroll, listScroll, editorScroll);
-        split.setDividerPositions(0.23, 0.44);
-        setCenter(split);
-        status.setPadding(new javafx.geometry.Insets(8));
+        deleteFolder.getStyleClass().add("tb-danger");
+        VBox manager =
+                form(
+                        heading("Kelola Daftar"),
+                        selection,
+                        field("Nama bab / bidang", folderName),
+                        new FlowPane(8, 6, addFolder, rename, deleteFolder),
+                        new FlowPane(8, 6, folderUp, folderDown),
+                        heading("Materi terpilih"),
+                        new FlowPane(8, 6, addMaterial, editSelected, deleteMaterial),
+                        new FlowPane(8, 6, materialUp, materialDown),
+                        seed,
+                        refresh);
+        manager.getStyleClass().add("tb-surface");
+        manager.setMinHeight(Region.USE_PREF_SIZE);
+        management = scroll(manager);
+        management.setId("learning-management");
+        manage.setOnAction(
+                event ->
+                        guard(
+                                () -> {
+                                    if (managing) {
+                                        showEditor();
+                                        editor.showReadMode();
+                                    } else {
+                                        managing = true;
+                                        workspace.setCenter(management);
+                                        manage.setText("Kembali Membaca");
+                                        if (workspace.getLeft() == null) {
+                                            workspace.setLeft(catalogPane);
+                                            hide.setText("Tutup daftar materi");
+                                        }
+                                    }
+                                }));
+        setTop(new FlowPane(10, 6, hide, manage));
+        setCenter(workspace);
+        status.setPadding(new javafx.geometry.Insets(6));
         setBottom(status);
     }
 
@@ -407,6 +499,12 @@ final class LearningView extends BorderPane {
 
     private LearningFolder selectedFolder() {
         return folders.getSelectionModel().getSelectedItem();
+    }
+
+    private void showEditor() {
+        managing = false;
+        manage.setText("Kelola Daftar");
+        workspace.setCenter(editor);
     }
 
     void guard(Runnable action) {
@@ -501,8 +599,8 @@ final class LearningView extends BorderPane {
                     folderName.setText(selectedFolder() == null ? "" : selectedFolder().name());
                     status.setText(
                             loaded.isEmpty()
-                                    ? "Belum ada bab/bidang. Isi nama lalu Tambah, atau salin"
-                                            + " koleksi contoh."
+                                    ? "Belum ada bab/bidang. Buka Kelola Daftar untuk tambah atau"
+                                          + " salin koleksi contoh."
                                     : "Pilih bab/bidang dan materi.");
                     if (selectedFolder() != null) loadMaterials(0, after);
                     else {
@@ -619,6 +717,7 @@ final class LearningView extends BorderPane {
     }
 
     private void resume() {
+        showEditor();
         tasks.run(
                 status,
                 learning::resume,

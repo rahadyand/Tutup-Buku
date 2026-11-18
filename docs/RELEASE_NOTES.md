@@ -1,3 +1,11 @@
+# Kandidat0.5.5-rc1 — layar belajar mendahulukan membaca
+
+Materi terpilih langsung tampil dalam mode Baca, dengan satu katalog kiri yang dapat ditutup. Ubah Materi memakai editor/draft yang sama; Kelola Daftar memisahkan seluruh aksi pengelolaan dari bacaan. Catatan, simpan catatan dan completion tersedia saat membaca. Posisi baca dipertahankan pada perubahan tata letak/mode selama revisi sama, dan kembali ke awal saat konten direvisi.
+
+Guard Simpan/Buang/Batal, autosave berurutan, CAS, kepemilikan, Markdown aman dan pengelolaan lengkap tetap. Tidak ada perubahan schema4, dependency, perhitungan nilai, header global, dashboard, profil atau akademik. Versi paket terpisah dari0.5.4. Bukti dan batas aktual di DEVELOPMENT_STATUS.md repository.
+
+## Riwayat kandidat sebelumnya
+
 # Kandidat0.5.4-rc1 — perawatan internal
 
 Menghapus panduan NIM pra-Revision002 yang tidak lagi dipanggil aplikasi dan menyatukan validasi metadata Course sebelum cabang tambah/edit. Tampilan/alur Revision002, schema4, engine, hash password dan pemisahan aktual/skenario tetap. Query edit metadata tetap tidak menyentuh kehadiran.

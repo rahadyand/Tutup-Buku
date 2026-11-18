@@ -1,3 +1,41 @@
+# Layar belajar Baca/Ubah/Kelola — 19 November 2026 (WIB)
+
+**Implementasi dan verifikasi source selesai; checkpoint/package0.5.5-rc1 belum dibuat pada catatan ini.** Baseline sebelum perubahan: `5d55027ab322cb0e7574f6770d2ba3f611b2abe6`, main/origin main sama. Handoff TUTUP_BUKU_PROJECT_REVIEW diperiksa terhadap Git, source dan bukti lokal; modernisasi lama dipertahankan. Paket0.5.4-rc1 lama tidak mewakili source layar baru.
+
+## Perubahan terbatas yang disetujui
+
+Baca default, satu katalog kiri, baca dominan kanan tanpa ScrollPane pembungkus WebView. Tutup/Buka katalog mempertahankan pilihan/rasio. Ubah Materi memakai editor, reader dan EditorDraft yang sama; Kelola Daftar memuat seluruh CRUD/urutan/seed/reload dengan konteks pilihan yang sama. Catatan dan completion tetap tersedia saat membaca; simpan catatan saja tidak mengubah revisi isi atau merender ulang bacaan. Info materi dapat dilipat. Posisi baca sama untuk revisi sama; isi direvisi kembali ke0.
+
+Guard Simpan/Buang/Batal tetap untuk mode/lokasi/materi/navigasi/logout/close; gagal simpan menahan perpindahan dan mempertahankan isian. Gagal bookmark saat perpindahan bersih kini juga menahan navigasi. Autosave2detik/worker tunggal/CAS/kepemilikan/konfirmasi hapus tetap. Label materi terpilih memakai warna cell tema dan penanda draf tetap. Tidak mengubah dependency, schema4, domain/service/persistence/security/perhitungan, CSS tema/header global/dashboard/profil/akademik/simulasi. Versi aplikasi/pom/script menjadi0.5.5-rc1; BUILD-INFO membedakan perubahan tracked dari draf untracked agar provenance tidak rancu.
+
+## Pemeriksaan yang benar-benar dijalankan
+
+Temurin21.0.13+9 portable, Maven Wrapper3.9.11, JavaFX21.0.10, cache offline. Semua DB/aset tes terisolasi; database AppData pengguna tidak dipakai.
+
+| Pemeriksaan | Hasil | Bukti lokal di tmp/learning-screen-20261119/ |
+|---|---|---|
+| Baseline sebelum edit |179tes lulus|reading-baseline.log|
+| `mvnw.cmd -Dmaven.repo.local=.m2/repository -o -B -ntp -Pwindows-package verify` |179tes,0gagal/error/skip; JAR0.5.5 dan13runtime libs dibuat|reading-final-unit.log|
+| Seluruh15class opt-in, `-DreuseForks=false test` |16kasus=15GUI+1benchmark,0gagal/error/skip|reading-final-gui.log|
+| `LearningReadingFxCheck` setelah penantian capture diperketat |1kasus lulus,12PNG baru|reading-final-capture.log|
+| LearningReading/ModernWorkspace/MilestoneThree dengan `-DargLine=-Dglass.win.uiScale=125%` |3kasus lulus; emulasi proses JavaFX, bukan DPI Windows nyata|reading-final-scale.log|
+| PNG empat mode pada3ukuran native +125% |16PNG diperiksa; dimensi/hash di screenshots.json|learning-{read,edit,manage,hidden}-*.png|
+| Git diff --check; sintaks script |diff bersih; parser PowerShell diperiksa sebelum commit|checkpoint berikut|
+
+Tes baru memeriksa default Baca, absennya editor/management dari layout Baca, tidak ada ScrollPane luar reader, hide/show+seleksi+rasio, semua transisi mode, catatan/autosave/completion dari Baca, catatan gagal tersimpan/ulang berhasil, Batal pemilihan materi/lokasi, Simpan/Buang/Batal saat masuk Kelola, ketersediaan seluruh fungsi management, resume, perubahan revisi kembali0, judul trim tetap revisi/rasio, dan gagal bookmark menahan navigasi. Regresi M3 tetap mencakup gagal simpan isi/rollback, guard navigasi/close, urutan/hapus, restart dan catatan; M5 mencakup perjalanan belajar–akademik–nilai. Pengujian bukan klik/ketik manusia.
+
+Tangkapan native menargetkan **jendela**1366×768,1024×768,minimum760×480; PNG Scene masing-masing1350×729,1008×729,744×441. Emulasi125% jendela fisik1366×768 menghasilkan Scene1080×584. Reader Baca minimum≥80logical px saat catatan dilipat; katalog dan editor tetap memerlukan gulir pada minimum. Pemeriksaan gambar memastikan kontrol pengelolaan tidak mengambil ruang Baca dan katalog tersembunyi meluaskan WebView. Tes capture awal menangkap Scene/WebView sebelum pulse resize selesai; penantian diperketat dan PNG dihasilkan ulang, tanpa mengubah skala gambar.
+
+Kegagalan pengembangan disimpan pada tmp/reading-regression-first.log dan reading-focused-{2,3}.log: tes lama masih mengakses kontrol management yang kini terpisah; penantian skin dan langkah masuk mode diperbaiki. Footer status sukses berulang mengurangi viewport minimum; status bookmark sukses dikosongkan sehingga viewport Baca memenuhi80px. Gerbang akhir di atas lulus.
+
+## Batas dan langkah berikut
+
+Paket/ZIP/launcher/source commit/push akan dicatat sesudah checkpoint dan pengemasan, terpisah dari gerbang source ini. Tidak mengklaim paket lama sudah memuat perubahan. H-02 ListView historis tetap OPEN; suite akhir tidak mereproduksinya. Windows DPI nyata, keyboard fisik/screen reader, perangkat kedua/offline fisik dan penilaian kenyamanan pengguna masih PENDING. Pada minimum, lipat catatan dan gulir katalog/editor; bukan semua kontrol tampil sekaligus.
+
+Perubahan dashboard/simulasi, laporan/presentasi dan fitur tambahan ditunda. Tunggu review pengguna atas layar ini. Draf .codex/, docs/academic/ dan empat draf audit/kit/review/morning tidak diubah atau disertakan.
+
+---
+
 # Pemeriksaan checkpoint Git - 16 November 2026 (WIB)
 
 Atas permintaan pengguna, staging diperiksa: 28 berkas UI/design system/launcher/dokumentasi/tes sesuai daftar; satu commit lokal sebelumnya843aaa9 juga diperiksa karena ikut push. .codex/config.toml, docs/academic dan draf audit/kit/morning tetap di luar staging. Build/cache/DB/log/rahasia tidak disertakan; Wrapper tetap tracked.

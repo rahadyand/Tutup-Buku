@@ -1,4 +1,4 @@
-# Panduan Tutup Buku 0.5.4-rc1 — Windows x64
+# Panduan Tutup Buku 0.5.5-rc1 — Windows x64
 
 ## Membuka paket
 1. Ekstrak seluruh ZIP memakai **Extract All**, misalnya ke `D:\Aplikasi Saya\TutupBuku`. Jangan menjalankan EXE langsung dari tampilan ZIP.
@@ -19,14 +19,16 @@ Paket kandidat belum ditandatangani digital. Bila Windows memblokir, catat pesan
 - Tidak ada kehadiran pada form course. Nama/kode/SKS dapat diubah tanpa mengubah kehadiran, konfirmasi atau acuan. Acuan/checkbox tersedia pada Simulasi Nilai → Komponen & aktual. Course baru tetap berasumsi kehadiran terpenuhi, belum diverifikasi.
 - Arsip dari format lama mempertahankan ID/periode/data. Label menampilkan tahun tunggal serta arsip Ganjil/Genap+#ID supaya dua arsip yang sama nomor/tahun tidak tertukar. Tidak ada penggabungan otomatis. Cadangkan DB+assets saat app tertutup sebelum memperbarui; versi lama tidak membuka schema 4.
 
-## Modul Belajar
-1. Pilih Kuliah → semester/course → tambah bab; atau Peminatan → bidang yang terpisah dari semester.
-2. Salin5materi contoh jika diinginkan (sekali per akun), atau Materi baru. Konten contoh asli singkat dan dapat diedit.
-3. Isi judul wajib, sumber opsional, Markdown. Gunakan heading/list/tabel/fenced code. Ringkasan adalah heading manual `## Ringkasan`.
-4. Sisipkan gambar lokal PNG/JPEG; salinan dikelola aplikasi. File asal tidak diperlukan setelah impor. Rumus menggunakan gambar. Batas10MB/16juta piksel.
-5. Pratinjau/Baca menampilkan materi. Kode/HTML/script tidak dijalankan. Link http/https dibuka browser setelah klik dan dapat memerlukan internet.
-6. Buka panel **Catatan pribadi** untuk mengedit note; panel dapat dilipat agar area baca tetap luas. Catatan terpisah dari isi. Simpan eksplisit atau tunggu autosave2detik. Status selesai ditandai manual, bukan bukti penguasaan materi.
-7. Gulir, keluar/tutup, buka kembali dan Lanjutkan Membaca. Revisi isi berubah → awal; materi dihapus → penjelasan. Sidebar panjang dapat digulir.
+## Modul Belajar — Baca, Ubah Materi, Kelola Daftar
+
+1. Pada katalog kiri, buka **Lokasi belajar** untuk memilih Kuliah → semester/mata kuliah, atau Peminatan. Pilih bab/bidang lalu materi. Materi langsung terbuka dalam **Mode Baca**; isi bergulir dalam area baca kanan.
+2. **Tutup daftar materi** meluaskan bacaan; **Buka daftar materi** mengembalikan katalog beserta pilihan dan posisi baca. Ini tidak memunculkan konfirmasi atau mengubah isi.
+3. **Ubah Materi** membuka editor materi terpilih. Isi judul wajib, sumber opsional, Markdown, lalu **Simpan** atau tunggu autosave dua detik. Tab **Pratinjau / Baca** untuk memeriksa hasil; **Kembali Membaca** menutup editor. Ringkasan adalah bagian manual `## Ringkasan`, bukan ringkasan AI.
+4. **Sisipkan gambar lokal** memakai PNG/JPEG yang disalin aplikasi, maksimum10MB/16juta piksel. Rumus awal memakai gambar. Tabel dan fenced code didukung. HTML/script tidak dijalankan. Link http/https hanya membuka browser setelah diklik dan mungkin memerlukan internet.
+5. Buka panel **Catatan pribadi** sambil membaca, tanpa perlu Ubah Materi. **Simpan catatan** atau autosave menyimpan catatan terpisah dari konten; status menyebut catatan saat hanya catatan berubah. Checkbox **Selesai** tetap manual, bukan bukti penguasaan materi. Lipat catatan untuk meluaskan bacaan.
+6. **Kelola Daftar** menampilkan nama bab/bidang terpilih, tambah/ubah nama/hapus, urutan naik/turun, tambah/ubah/hapus/urutkan materi, salin lima materi contoh sekali per akun, serta muat ulang. Pilih objek melalui katalog yang sama; **Kembali Membaca** menutup pengelolaan. Penghapusan tetap meminta konfirmasi.
+7. Perubahan belum tersimpan saat berpindah materi/lokasi/mode, logout atau menutup jendela menawarkan **Simpan / Buang perubahan / Batal**. Gagal simpan mempertahankan isian dan menghentikan perpindahan; Batal mempertahankan pilihan/mode. Perpindahan bersih tidak meminta konfirmasi. Jangan menutup paksa saat menyimpan.
+8. Kembali dari editor/pengelolaan mempertahankan rasio baca bila revisi isi sama. Jika isi berubah, kembali ke awal sesuai aturan resume. **Lanjutkan Membaca** memulihkan bacaan terakhir; materi dihapus menampilkan penjelasan. Pada jendela minimum760×480 katalog dan editor dapat digulir; menutup katalog memberi lebar lebih luas.
 
 ## Simulasi Nilai
 1. Komponen & aktual: pilih course, tambah nama/bobot/perolehan/maksimum. UTS/UAS tidak wajib. Kosong berarti belum diketahui;0 adalah nilai aktual. Bobot0 informatif.

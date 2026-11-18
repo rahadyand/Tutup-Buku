@@ -125,9 +125,12 @@ class ModernWorkspaceFxCheck extends FxTestSupport {
                     });
             login();
             click("open-learning");
+            click("manage-learning");
+            await(() -> stage.getScene().lookup("#initialize-starter") != null);
             dialog(
                     () -> ((Button) node("initialize-starter")).fire(),
                     ButtonBar.ButtonData.OK_DONE);
+            click("manage-learning");
             int[][] sizes =
                     System.getProperty("glass.win.uiScale") == null
                             ? new int[][] {{1366, 768}, {1024, 768}, {760, 480}}
@@ -200,11 +203,14 @@ class ModernWorkspaceFxCheck extends FxTestSupport {
                                             .getSelectedItem());
                             return null;
                         });
+                capture("learning");
+                click("manage-learning");
                 reachable("learning-refresh");
                 reachable("learning-new-material");
+                capture("manage");
+                click("manage-learning");
+                click("edit-material");
                 reachable("save-material");
-                capture("learning");
-                tab("material-tabs", 0);
                 reachable("material-title");
                 capture("editor");
                 click("open-simulation");
