@@ -39,6 +39,14 @@ $env:MAVEN_USER_HOME = "$PWD\.tools\maven-user"
 
 Hilangkan -o pada unduhan pertama jika cache belum ada. Git mengabaikan .m2/, .tools/, target/, tmp/, database, aset pengguna, log dan rahasia; **.mvn/wrapper/** dan skrip Wrapper tetap dilacak. Tidak perlu alat format lokal untuk membangun aplikasi.
 
+Uji layar belajar terarah (database sementara, membutuhkan desktop JavaFX):
+
+```powershell
+.\mvnw.cmd '-Dtest=LearningReadingFxCheck,MilestoneThreeFxCheck,ModernWorkspaceFxCheck' '-DreuseForks=false' test
+```
+
+Kandidat layar belajar terverifikasi: `releases/TutupBuku-0.5.5-rc1-20261119-060834/`, source aplikasi `636a147454159c33b93b8d2d245c677d4b3f1c0b`. Ekstrak seluruh ZIP lalu buka TutupBuku/TutupBuku.exe. Commit dokumentasi penutup tidak mengubah biner. Hash, hasil EXE dan batas penerimaan ada pada DEVELOPMENT_STATUS.
+
 ## Data lokal dan migrasi
 
 Default **%LOCALAPPDATA%\TutupBuku\tutup-buku.db**; fallback user.home/AppData/Local/TutupBuku. Demo terisolasi:

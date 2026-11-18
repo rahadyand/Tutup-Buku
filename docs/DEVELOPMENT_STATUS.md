@@ -1,3 +1,27 @@
+# Verifikasi penutup kandidat — 19 November 2026
+
+**Layar belajar0.5.5-rc1 selesai, source dan paket terverifikasi.** Source aplikasi/paket: `636a147454159c33b93b8d2d245c677d4b3f1c0b` (`feat(ui): prioritize reading in learning workspace`), branch `main`, repository https://github.com/rahadyand/Tutup-Buku. BUILD-INFO mencatat tracked working-tree changes=False; draf untracked dikecualikan tanpa dihapus. Commit dokumentasi penutup sesudahnya tidak mengubah aplikasi. Status push/hash remote dicatat pada receipt lokal `tmp/learning-screen-20261119/git-checkpoint.txt` dan handoff chat setelah verifikasi remote.
+
+- **ZIP:** `releases/TutupBuku-0.5.5-rc1-20261119-060834/TutupBuku-0.5.5-rc1-windows-x64.zip`.
+- **Launcher distribusi:** `releases/TutupBuku-0.5.5-rc1-20261119-060834/TutupBuku/TutupBuku.exe`.
+- **Payload ekstraksi yang diuji:** `tmp/Uji Paket Ekstraksi 20261119-060934/TutupBuku/`.
+- SHA256 ZIP: `3F2703DA35ADB9BC7C73C9FB46DF7346A90EB6467D74A432F266FEC036C2B5AD`.
+- SHA256 JAR build/extracted/distribusi: `491D70A403ACF3CD6108000AA94407D5AEFC4A1B27F97DF3D5892BBAF13C7AAF`.
+
+Pengemasan `scripts/Build-Windows.ps1 -Offline -SkipBuild` memakai JAR hasil verify yang dicatat di bawah, dari commit source di atas. Verify-WindowsPackage memeriksa229entri manifest+manifest itu sendiri=230file, hash ZIP/runtime/legal dan nol berkas terlarang. Perbandingan langsung setiap file ZIP dengan ekstraksi sesudah pengujian mencocokkan230file. Main JAR dan seluruh13dependency sama dengan input build; rincian `package-integrity.json`. Tidak membawa DB/aset pengguna/cache/log/source/test/rahasia. Semua paket lama dipertahankan;0.5.4 tetap artefak historis.
+
+**Uji otomatis payload distribusi:** harness sementara memanggil `LearningReadingFxCheck` dan `MilestoneThreeFxCheck` dalam dua proses Java terpisah, menggunakan runtime21.0.13 dari ekstraksi dan classpath app/*.jar + target/test-classes + dependensi assertion JUnit. Tidak memasukkan target/classes. Harness memeriksa lokasi kelas TutupBukuApplication benar-benar packaged JAR. Kedua alur LULUS: mode, catatan/completion, guard/failure/retry, resume/revisi, pengelolaan dan tutup/buka ulang. Log `packaged-check/reading.log` dan `restart.log`; ini tes otomatis, bukan usability manusia. Source tes/harness tetap di luar ZIP.
+
+**Uji EXE melalui kontrol Windows:** EXE ekstraksi dibuka dengan JAVA_HOME/MAVEN_HOME kosong, PATH hanya System32, TUTUP_BUKU_DATA_DIR=`tmp/learning-screen-20261119/exe-data` (salinan DB fiktif tes). Login001, Lanjutkan Membaca, Mode Baca, catatan terpisah dan completion teramati. Catatan diubah menjadi “Catatan uji EXE 0.5.5: tetap setelah dibuka ulang.”, tombol Simpan catatan menghasilkan status Catatan tersimpan. Proses ditutup normal, exit0/PID9540, lalu EXE baru dibuka pada DB yang sama; login/resume/panel catatan memperlihatkan teks yang sama. Bukti AX/screenshot berada dalam hasil tool chat, PID/lingkungan/exit pertama di exe-launch.txt. Jendela kedua dibiarkan terbuka pada akun fiktif untuk review; exit kedua belum diklaim. Tidak menguji ulang grade/skenario secara interaktif dalam task layar belajar ini. Input awal pada pembukaan kedua belum berfokus di field; fokus diperbaiki lalu login berhasil, tanpa perubahan source.
+
+Regresi source:179tes bisnis/persistensi,16kasus GUI/benchmark,1pengulangan capture terarah dan3kasus emulasi125%, seluruhnya0gagal/error/skip.16PNG final empat mode/ukuran tersimpan beserta dimensi/hash di folder bukti. Proses JavaFX125% bukan DPI Windows fisik. Warning unnamed-module JavaFX, unchecked test helper dan jlink compress deprecated tetap tercatat; tidak ada exception ListView/CSS baru pada log final. H-02 historis tetap OPEN. Pemeriksaan tanda kredensial pada15berkas staged, scope, .gitignore, Wrapper dan diff --check lulus; Git Credential Manager dipakai, tanpa meminta token. gh tidak tersedia di PATH; operasi remote dilakukan dengan Git.
+
+**Batas penerimaan:** penilaian kenyamanan pengguna, keyboard fisik/screen reader, DPI Windows nyata, perangkat kedua, jaringan fisik terputus dan shortcut Desktop masih PENDING. Ukuran minimum760×480 memerlukan gulir katalog/editor dan catatan dilipat untuk meluaskan baca. Jangan menganggap gerbang otomatis sebagai penerimaan manusia. Review layar ini lebih dahulu; tidak melanjutkan dashboard/simulasi atau fitur lain.
+
+Panduan interaksi di USER_GUIDE/UI_COMPONENTS diperbarui sebelum paket dibuat. Catatan hasil di repository ditambahkan sesudah paket; paket tidak dibuat ulang untuk perubahan dokumentasi bukti saja. Seluruh draf lokal yang tidak terkait tetap untracked.
+
+---
+
 # Layar belajar Baca/Ubah/Kelola — 19 November 2026 (WIB)
 
 **Implementasi dan verifikasi source selesai; checkpoint/package0.5.5-rc1 belum dibuat pada catatan ini.** Baseline sebelum perubahan: `5d55027ab322cb0e7574f6770d2ba3f611b2abe6`, main/origin main sama. Handoff TUTUP_BUKU_PROJECT_REVIEW diperiksa terhadap Git, source dan bukti lokal; modernisasi lama dipertahankan. Paket0.5.4-rc1 lama tidak mewakili source layar baru.
