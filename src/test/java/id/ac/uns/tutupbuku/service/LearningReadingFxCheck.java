@@ -50,6 +50,33 @@ class LearningReadingFxCheck extends FxTestSupport {
                                                     - web.getWidth())
                                     < 20;
                 });
+        // Ukuran DOM bisa baru sementara texture WebView masih frame sebelumnya.
+        var painted = new CompletableFuture<Void>();
+        fx(
+                () -> {
+                    new javafx.animation.AnimationTimer() {
+                        private int frames;
+
+                        @Override
+                        public void handle(long now) {
+                            if (++frames == 3) {
+                                stop();
+                                painted.complete(null);
+                            }
+                        }
+                    }.start();
+                    return null;
+                });
+        painted.get(5, TimeUnit.SECONDS);
+        fx(
+                () -> {
+                    if (stage.getScene().lookup("#learning-catalog") == null)
+                        assertTrue(
+                                ((WebView) node("material-reader")).getWidth()
+                                        >= stage.getScene().getWidth() - 24,
+                                "Katalog tersembunyi tidak mengambil ruang baca");
+                    return null;
+                });
     }
 
     private void mode(String action, String expected) throws Exception {

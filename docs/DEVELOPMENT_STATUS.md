@@ -1,3 +1,11 @@
+# Penajaman bukti screenshot — 19 November 2026
+
+Pemeriksaan akhir setelah push menemukan satu PNG katalog tersembunyi1024 masih memakai texture WebView dari frame sebelum resize, walaupun ukuran Scene/DOM sudah benar. `LearningReadingFxCheck.readerLayout` kini menunggu tiga pulse render dan menegaskan reader memakai lebar Scene−maksimum24px saat katalog tersembunyi. Ini perubahan tes/capture saja; kode aplikasi, JAR dan ZIP tidak berubah. Tidak membangun ulang paket0.5.5 yang sama.
+
+Kasus terarah diulang pada tiga ukuran native dan emulasi JavaFX125%: **masing-masing1kasus,0gagal/error/skip**, log `tmp/learning-screen-20261119/reading-final-frames{,-scale}.log`.16PNG akhir dan screenshots.json diperbarui; capture sebelumnya tetap di previous-capture/. Pemeriksaan gambar tersembunyi1366/1024/minimum/125% kini memperlihatkan WebView mengisi lebar yang tersedia. Gerbang179regresi,16GUI/benchmark dan dua alur paket di bawah tetap sah; helper tambahan hanya memperketat bukti gambar. Paket tetap berasal dari source aplikasi636a147, sedangkan commit setelahnya hanya dokumentasi/tes.
+
+---
+
 # Verifikasi penutup kandidat — 19 November 2026
 
 **Layar belajar0.5.5-rc1 selesai, source dan paket terverifikasi.** Source aplikasi/paket: `636a147454159c33b93b8d2d245c677d4b3f1c0b` (`feat(ui): prioritize reading in learning workspace`), branch `main`, repository https://github.com/rahadyand/Tutup-Buku. BUILD-INFO mencatat tracked working-tree changes=False; draf untracked dikecualikan tanpa dihapus. Commit dokumentasi penutup sesudahnya tidak mengubah aplikasi. Status push/hash remote dicatat pada receipt lokal `tmp/learning-screen-20261119/git-checkpoint.txt` dan handoff chat setelah verifikasi remote.
