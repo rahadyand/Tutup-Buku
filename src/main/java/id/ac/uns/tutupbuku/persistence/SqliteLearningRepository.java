@@ -157,6 +157,10 @@ public final class SqliteLearningRepository implements LearningRepository {
             Material current = find(connection, owner, bookmark.materialId()).orElseThrow(() -> new IllegalArgumentException("Materi terakhir telah dihapus.")).material();
             if (!current.location().equals(bookmark.location())) throw new IllegalArgumentException("Lokasi bacaan tidak sesuai.");
             try (var update = statement(connection, "INSERT INTO last_reading(owner_nim,material_id,material_revision,scroll_ratio,location_kind,location_id) VALUES(?,?,?,?,?,?) ON CONFLICT(owner_nim) DO UPDATE SET material_id=excluded.material_id,material_revision=excluded.material_revision,scroll_ratio=excluded.scroll_ratio,location_kind=excluded.location_kind,location_id=excluded.location_id", owner, bookmark.materialId(), bookmark.revision(), bookmark.scrollRatio(), bookmark.location().kind().name(), bookmark.location().id())) { update.executeUpdate(); }
+            if (current.location().kind() == LearningLocation.Kind.CHAPTER) {
+                long course = folder(connection, owner, current.location()).courseId();
+                try (var update = statement(connection, "INSERT INTO course_reading(owner_nim,course_id,material_id,material_revision,scroll_ratio,location_kind,location_id) VALUES(?,?,?,?,?,'CHAPTER',?) ON CONFLICT(owner_nim,course_id) DO UPDATE SET material_id=excluded.material_id,material_revision=excluded.material_revision,scroll_ratio=excluded.scroll_ratio,location_id=excluded.location_id", owner, course, bookmark.materialId(), bookmark.revision(), bookmark.scrollRatio(), bookmark.location().id())) { update.executeUpdate(); }
+            }
             return null;
         });
     }
@@ -164,6 +168,14 @@ public final class SqliteLearningRepository implements LearningRepository {
         return database.read(connection -> {
             try (var query = statement(connection, "SELECT * FROM last_reading WHERE owner_nim=?", owner); var rows = query.executeQuery()) {
                 return rows.next() ? Optional.of(new ReadingBookmark(rows.getLong("material_id"), rows.getLong("material_revision"), rows.getDouble("scroll_ratio"), new LearningLocation(LearningLocation.Kind.valueOf(rows.getString("location_kind")), rows.getLong("location_id")))) : Optional.empty();
+            }
+        });
+    }
+    @Override public Optional<ReadingBookmark> lastCourseReading(String owner, long courseId) {
+        return database.read(connection -> {
+            requireCourse(connection, owner, courseId);
+            try (var query = statement(connection, "SELECT * FROM course_reading WHERE owner_nim=? AND course_id=?", owner, courseId); var rows = query.executeQuery()) {
+                return rows.next() ? Optional.of(new ReadingBookmark(rows.getLong("material_id"), rows.getLong("material_revision"), rows.getDouble("scroll_ratio"), new LearningLocation(LearningLocation.Kind.CHAPTER, rows.getLong("location_id")))) : Optional.empty();
             }
         });
     }

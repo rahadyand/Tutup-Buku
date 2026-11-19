@@ -31,6 +31,130 @@ final class LearningView extends BorderPane {
     private final Button manage = button("manage-learning", "Kelola Daftar");
     private ScrollPane management;
     private boolean managing;
+    private TitledPane contextBranch;
+    private long hubCourse;
+
+    void courseScope(boolean scoped) {
+        editor.minHeightProperty().unbind();
+        editor.setMinHeight(Region.USE_COMPUTED_SIZE);
+        // Pada hub sempit, beri ruang reader di atas catatan; panel luar menggulir bila perlu.
+        if (scoped)
+            editor.minHeightProperty()
+                    .bind(
+                            javafx.beans.binding.Bindings.max(
+                                    250, ((Region) editor.getBottom()).heightProperty().add(150)));
+        hubCourse = scoped && courses.getValue() != null ? courses.getValue().id() : 0;
+        contextBranch.setVisible(!scoped);
+        contextBranch.setManaged(!scoped);
+    }
+
+    void openCourse(Semester semester, Course course, boolean resumeRequested) {
+        hubCourse = course.id();
+        if (!resumeRequested
+                && courses.getValue() != null
+                && courses.getValue().id() == course.id()
+                && kind() == LearningLocation.Kind.CHAPTER
+                && editor.current() != null) {
+            showEditor();
+            filling = true;
+            semesters.getItems().setAll(semester);
+            semesters.setValue(semester);
+            courses.getItems().setAll(course);
+            courses.setValue(course);
+            catalog = Map.of(semester.id(), List.of(course));
+            filling = false;
+            editor.showReadMode();
+            return;
+        }
+        editor.clear();
+        filling = true;
+        folders.getItems().clear();
+        materials.getItems().clear();
+        filling = false;
+        tasks.run(
+                status,
+                () ->
+                        new CourseReading(
+                                learning.folders(LearningLocation.Kind.CHAPTER, course.id()),
+                                learning.resumeCourse(course.id())),
+                loaded -> {
+                    filling = true;
+                    path.setValue("Kuliah");
+                    semesters.setDisable(false);
+                    courses.setDisable(false);
+                    semesters.getItems().setAll(semester);
+                    semesters.setValue(semester);
+                    courses.getItems().setAll(course);
+                    courses.setValue(course);
+                    catalog = Map.of(semester.id(), List.of(course));
+                    folders.getItems().setAll(loaded.folders());
+                    folders.getSelectionModel()
+                            .select(
+                                    loaded.folders().stream()
+                                            .filter(
+                                                    f ->
+                                                            loaded.resume()
+                                                                    .previousLocation()
+                                                                    .filter(f.location()::equals)
+                                                                    .isPresent())
+                                            .findFirst()
+                                            .orElse(
+                                                    loaded.folders().isEmpty()
+                                                            ? null
+                                                            : loaded.folders().getFirst()));
+                    filling = false;
+                    editor.clear();
+                    showEditor();
+                    folderName.setText(selectedFolder() == null ? "" : selectedFolder().name());
+                    long material =
+                            loaded.resume().reading().map(r -> r.material().id()).orElse(0L);
+                    loadMaterials(
+                            material,
+                            () -> {
+                                Material selected = materials.getSelectionModel().getSelectedItem();
+                                if (selected == null && !materials.getItems().isEmpty())
+                                    selected = materials.getItems().getFirst();
+                                if (selected == null) {
+                                    status.setText(
+                                            "Belum ada materi. Buka Kelola Daftar untuk menambah"
+                                                    + " bab dan materi.");
+                                    return;
+                                }
+                                Material target = selected;
+                                filling = true;
+                                materials.getSelectionModel().select(target);
+                                filling = false;
+                                tasks.run(
+                                        status,
+                                        () -> learning.open(target.id()),
+                                        reading -> {
+                                            boolean same =
+                                                    loaded.resume()
+                                                            .reading()
+                                                            .filter(
+                                                                    r ->
+                                                                            r.material().id()
+                                                                                            == reading.material()
+                                                                                                    .id()
+                                                                                    && r.material()
+                                                                                                    .revision()
+                                                                                            == reading.material()
+                                                                                                    .revision())
+                                                            .isPresent();
+                                            editor.load(
+                                                    reading,
+                                                    same ? loaded.resume().scrollRatio() : 0,
+                                                    true);
+                                            status.setText(
+                                                    same
+                                                            ? loaded.resume().message()
+                                                            : "Materi dibuka pada mode Baca.");
+                                        });
+                            });
+                });
+    }
+
+    private record CourseReading(List<LearningFolder> folders, ResumeResult resume) {}
 
     void preferSemester(Optional<Long> id) {
         preferredSemester = id.orElse(null);
@@ -358,7 +482,7 @@ final class LearningView extends BorderPane {
                                 setText(null);
                             }
                         });
-        TitledPane contextBranch =
+        contextBranch =
                 new TitledPane(
                         "Lokasi belajar",
                         new VBox(
@@ -520,6 +644,9 @@ final class LearningView extends BorderPane {
     }
 
     void refresh() {
+        Material previousMaterial = editor.current();
+        double ratio = editor.readingPosition();
+        long previousFolder = selectedFolder() == null ? 0 : selectedFolder().id();
         Long previousSemester =
                 semesters.getValue() == null
                         ? preferredSemester
@@ -563,7 +690,35 @@ final class LearningView extends BorderPane {
                     filling = false;
                     seed.setDisable(loaded.seeded());
                     editor.clear();
-                    loadFolders(0, null);
+                    loadFolders(
+                            previousFolder,
+                            () -> {
+                                if (previousMaterial == null
+                                        || previousMaterial.id() == 0
+                                        || selectedFolder() == null
+                                        || !previousMaterial
+                                                .location()
+                                                .equals(selectedFolder().location())) return;
+                                loadMaterials(
+                                        previousMaterial.id(),
+                                        () -> {
+                                            Material found =
+                                                    materials.getSelectionModel().getSelectedItem();
+                                            if (found == null) return;
+                                            tasks.run(
+                                                    status,
+                                                    () -> learning.open(found.id()),
+                                                    reading ->
+                                                            editor.load(
+                                                                    reading,
+                                                                    reading.material().revision()
+                                                                                    == previousMaterial
+                                                                                            .revision()
+                                                                            ? ratio
+                                                                            : 0,
+                                                                    true));
+                                        });
+                            });
                 });
     }
 
@@ -600,7 +755,7 @@ final class LearningView extends BorderPane {
                     status.setText(
                             loaded.isEmpty()
                                     ? "Belum ada bab/bidang. Buka Kelola Daftar untuk tambah atau"
-                                          + " salin koleksi contoh."
+                                            + " salin koleksi contoh."
                                     : "Pilih bab/bidang dan materi.");
                     if (selectedFolder() != null) loadMaterials(0, after);
                     else {
@@ -720,7 +875,7 @@ final class LearningView extends BorderPane {
         showEditor();
         tasks.run(
                 status,
-                learning::resume,
+                () -> hubCourse == 0 ? learning.resume() : learning.resumeCourse(hubCourse),
                 result -> {
                     if (result.previousLocation().isEmpty()) {
                         status.setText(result.message());

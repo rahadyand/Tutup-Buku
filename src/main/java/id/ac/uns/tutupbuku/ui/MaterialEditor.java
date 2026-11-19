@@ -290,7 +290,7 @@ final class MaterialEditor extends BorderPane {
                 || !markdown.getText().equals(base.markdown());
     }
 
-    private double readingPosition() {
+    double readingPosition() {
         return draft != null
                         && readingRevision == draft.base().material().revision()
                         && !contentChanged()

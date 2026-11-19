@@ -1,3 +1,15 @@
+# Phase 3 — Ruang mata kuliah, 19 November 2026 (WIB)
+
+**Source Phase 3 selesai**, baseline `main/7f9455702c1c57cc64154b5c00da97d21c2290b7`. Tab Mata Kuliah menambahkan Ringkasan/Materi/Nilai tanpa mengganti dua pintu global. Konteks semester/course eksplisit, arsip tidak diaktifkan, progres/resume course dan hasil aktual memakai service lama. Reader/editor/notes dan grade/What If/scenario tetap instance tunggal yang dipindahkan, dengan guard Simpan/Buang/Batal. Save gagal/Batal menahan selector, section dan input; rencana semester menjelaskan cakupan IP dan tidak memilih skenario otomatis. Course yang dihapus di akademik diperiksa ulang saat kembali.
+
+Schema **5 → 6** aditif diperlukan karena referensi global lama tidak dapat menyimpan resume dua course. `course_reading` memakai ReadingBookmark lama, owner+course, FK course, transaksi bersama bookmark global, seed hanya dari referensi global yang dapat dipetakan. Nilai/materi/aset/catatan/completion/skenario lama tidak di-reset. **Cadangkan DB+aset saat aplikasi tertutup; source schema 5/EXE lama tidak membuka DB schema 6.** Tidak ada perubahan engine, dependency, CSS token atau paket baru.
+
+Verifikasi: **200 tes verify** lulus (194 lama + 6 baru). **7 GUI regresi** dan **4 emulasi JavaFX125%** pada source final juga lulus, semuanya 0 gagal/error/skip. Tes menangkap error JavaFX asinkron dan ruang reader pada ukuran kecil. Screenshot hub representatif/empty/arsip/direct, materi dan nilai diperiksa pada 1366/1024/minimum760. Pada minimum diperlukan gulir isi hub; selector dan section tetap terlihat, reader diberi ruang walaupun catatan terbuka. Ini tes JavaFX produksi otomatis, bukan usability manusia/DPI Windows nyata.
+
+Alur, migrasi, berkas, log dan langkah review: **COURSE_HUB_PHASE_3.md**. Bukti lokal `tmp/course-hub-phase3-20261119/` dan `target/verification/course-hub-*.png`. Graphify diperbarui AST lokal tanpa API (1361node/5103relasi,0endpoint yatim,1self-loop statis lama); hasil/draf awal tetap di luar commit. Commit/push normal hanya perubahan fase, hash remote dicatat setelah verifikasi di receipt lokal/handoff. Tidak ada installer/ZIP; paket0.5.5 lama tetap historis, tidak mewakili Phase1–3. Human DPI/usability/keyboard fisik/screen reader/perangkat kedua dan H-02 historis tetap pending. Berhenti di Phase3.
+
+---
+
 # Phase 2 What If — 19 November 2026 (WIB)
 
 **Implementasi source selesai**, baseline `main/eda5d315b72fb26cc1896ad034e2324f152b3b45`. Eksperimen kini dapat disimpan bernama, dibuka/diedit, diperbarui atau disalin independen, diserahkan ke layar skenario/IP yang sama, dan dibandingkan lewat ID stabil. Status sementara/tersimpan/berubah/usang, pulihkan tersimpan tanpa rebase, Simpan/Buang/Batal, save gagal/retry dan proteksi input dipertahankan. Mata kuliah lain pada rencana dari What If hanya memakai aktual sampai pengguna mengaktifkan proyeksi; IP tetap ditahan jika satu course wajib belum lengkap. Sumber hasil per course dan basis historis terlihat.

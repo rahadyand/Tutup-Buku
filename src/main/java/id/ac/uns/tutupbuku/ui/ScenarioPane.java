@@ -326,6 +326,9 @@ final class ScenarioPane extends BorderPane {
         show(null);
     }
 
+    private long preferredCourse;
+    void preferCourse(long id) { preferredCourse = id; }
+
     void load(long semester, List<SemesterScenario> list) {
         this.semester = semester;
         setList(list);
@@ -346,12 +349,12 @@ final class ScenarioPane extends BorderPane {
         filling = false;
     }
 
-    private void reloadList() {
+    void reloadList() {
         tasks.run(status, () -> service.scenarios(semester), this::setList);
     }
 
     private void show(SemesterScenario value) {
-        long courseId = current == null ? 0 : current.basis().course().id();
+        long courseId = current == null ? preferredCourse : current.basis().course().id();
         draft = value;
         dirty = false;
         outdated = false;

@@ -47,6 +47,7 @@ class ScenarioMigrationTest {
                 var s = c.createStatement()) {
             s.execute("ALTER TABLE scenario_items DROP COLUMN override_score");
             s.execute("ALTER TABLE scenario_courses DROP COLUMN projection_enabled");
+            s.execute("DROP TABLE course_reading");
             s.execute("PRAGMA user_version=4");
         }
         return saved;
@@ -70,7 +71,7 @@ class ScenarioMigrationTest {
                             try (var q = c.createStatement();
                                     var r = q.executeQuery("PRAGMA user_version")) {
                                 r.next();
-                                assertEquals(5, r.getInt(1));
+                                assertEquals(6, r.getInt(1));
                             }
                             return null;
                         });
@@ -109,7 +110,7 @@ class ScenarioMigrationTest {
     }
 
     @Test
-    void brokenVersionFiveIsReportedAndNotSilentlyRebuilt() throws Exception {
+    void brokenCurrentVersionIsReportedAndNotSilentlyRebuilt() throws Exception {
         Path file = directory.resolve("broken.db");
         var before = legacy(file);
         try (var ignored = new SqliteDatabase(file)) {}

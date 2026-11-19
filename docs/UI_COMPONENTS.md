@@ -1,3 +1,13 @@
+# Ruang mata kuliah — Phase 3, 19 November 2026
+
+Dashboard mempertahankan pintu global Modul belajar/Simulasi nilai dan urutannya; tab Mata Kuliah menambahkan konteks semester dilihat/course serta Ringkasan/Materi/Nilai. Semester aktif tetap label terpisah dan tidak berubah saat browsing arsip. Ringkasan memiliki aksi nyata ke materi, resume course, aktual, What If dan rencana/IP semester; hasil aktual/proyeksi/unknown tidak dicampur. Tidak ada tab Tasks/Calendar/Schedule kosong.
+
+View LearningView/GradeView yang sama dipindahkan setelah melepas parent lama. Dalam hub, pemilih lokasi/course internal tidak bersaing dengan selector hub; saat kembali global, pemilih lengkap dipulihkan. Record, note, completion, draft dan timer tetap satu. Read default, katalog hide/show, editor/manajemen terpisah, resume revision fallback, autosave dan guard lama tetap berlaku. Hub menyimpan satu konteks selector/section, bukan model akademik baru. Rencana/IP menyatakan cakupan semester; skenario tidak dipilih otomatis pada konteks baru. What If course lain pada rencana menggunakan pintu global dengan headingnya sendiri.
+
+Seluruh perpindahan memakai guard workspace. Selector/tab dipulihkan sebelum dialog; Save gagal/Batal menahan input dan context. Ringkasan dan konteks setelah perubahan akademik dimuat ulang. Native controls/token/fokus lama dipakai tanpa CSS baru. Panel isi hub memakai ScrollPane luar hanya bila ruang tidak cukup; grade diberi minimum300px, reader mempertahankan ruang di atas catatan. Minimum760×480 membutuhkan gulir; selector/section tetap terjangkau. Detail hasil dan batas: COURSE_HUB_PHASE_3.md.
+
+---
+
 # What If dan rencana semester — Phase 2, 19 November 2026
 
 Menggantikan kontrak Phase 1 untuk penyimpanan/guard; fitur kalkulasi dan layout dasar Phase 1 tetap. **Simpan sebagai skenario** membuat snapshot semester; course lain hanya aktual sampai opt-in proyeksi. State sementara/tersimpan/perubahan belum disimpan/BASIS USANG tampil dengan nama. Perbarui ID yang sama dan Simpan salinan terpisah. Reset sementara membersihkan asumsi pada basis masuk; Pulihkan tersimpan memuat versi tersimpan, tidak merebase aktual.

@@ -34,6 +34,32 @@ final class ActualGradePane extends BorderPane {
     private boolean filling, componentDirty, settingsDirty;
     private long semester;
     private final Button whatIf = button("open-what-if", "Simulasi Target (What If)");
+    private SplitPane split;
+
+    void courseScope(boolean scoped) {
+        if (scoped) split.getItems().remove(courses);
+        else if (!split.getItems().contains(courses)) split.getItems().addFirst(courses);
+    }
+
+    long courseId() {
+        return current == null ? 0 : current.course().id();
+    }
+
+    ActualCourse selectedCourse() {
+        return current;
+    }
+
+    void selectCourse(long id) {
+        ActualCourse value =
+                courses.getItems().stream()
+                        .filter(c -> c.course().id() == id)
+                        .findFirst()
+                        .orElseThrow();
+        filling = true;
+        courses.getSelectionModel().select(value);
+        filling = false;
+        showCourse(value);
+    }
 
     ActualGradePane(
             GradePlanningService service,
@@ -186,7 +212,7 @@ final class ActualGradePane extends BorderPane {
         body.setSpacing(8);
         body.getStyleClass().add("tb-surface");
         body.setPadding(new javafx.geometry.Insets(12));
-        SplitPane split = new SplitPane(courses, scroll(body));
+        split = new SplitPane(courses, scroll(body));
         split.setDividerPositions(0.25);
         setCenter(split);
         total.setPadding(new javafx.geometry.Insets(6));

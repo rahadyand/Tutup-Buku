@@ -24,6 +24,98 @@ final class GradeView extends BorderPane {
     private boolean simulating;
     private boolean filling;
     private Long preferredSemester;
+    private long scopedCourse;
+    private long loadedSemester;
+    private Runnable widerCourse = () -> {};
+
+    enum Entry {
+        KEEP,
+        ACTUAL,
+        WHAT_IF,
+        PLANNING
+    }
+
+    void onWiderCourse(Runnable action) {
+        widerCourse = action;
+    }
+
+    void courseScope(boolean scoped) {
+        setMinHeight(scoped ? 300 : Region.USE_COMPUTED_SIZE);
+        if (!scoped) scopedCourse = 0;
+        getTop().setVisible(!scoped);
+        getTop().setManaged(!scoped);
+        actual.courseScope(scoped);
+    }
+
+    void openCourse(Semester semester, Course course, Entry entry) {
+        boolean newContext = scopedCourse != course.id() || loadedSemester != semester.id();
+        scopedCourse = course.id();
+        scenarios.preferCourse(course.id());
+        Runnable select =
+                () -> {
+                    if (entry == Entry.PLANNING) tabs.getSelectionModel().select(scenarioTab);
+                    else if (entry != Entry.KEEP) {
+                        tabs.getSelectionModel().select(actualTab);
+                        if (entry == Entry.WHAT_IF) beginWhatIf(actual.selectedCourse());
+                    }
+                };
+        if (loadedSemester == semester.id()
+                && actual.courseId() == course.id()
+                && actual.selectedCourse().course().revision() == course.revision()) {
+            if (newContext) {
+                scenarios.load(semester.id(), List.of());
+                scenarios.reloadList();
+                tabs.getSelectionModel().select(actualTab);
+            }
+            select.run();
+            return;
+        }
+        actual.load(0, List.of());
+        scenarios.load(semester.id(), List.of());
+        tasks.run(
+                status,
+                () -> {
+                    var values = planning.courses(semester.id());
+                    if (values.stream().noneMatch(c -> c.course().id() == course.id()))
+                        throw new IllegalArgumentException(
+                                "Mata kuliah sudah dihapus. Muat ulang ringkasan.");
+                    return new Catalog(values, planning.scenarios(semester.id()));
+                },
+                value -> {
+                    filling = true;
+                    semesters.getItems().setAll(semester);
+                    semesters.setValue(semester);
+                    filling = false;
+                    actual.load(semester.id(), value.courses());
+                    actual.selectCourse(course.id());
+                    scenarios.preferCourse(course.id());
+                    scenarios.load(semester.id(), value.scenarios());
+                    loadedSemester = semester.id();
+                    tabs.getSelectionModel().select(actualTab);
+                    select.run();
+                });
+    }
+
+    void openGlobal() {
+        courseScope(false);
+        Long viewed = semesters.getValue() == null ? null : semesters.getValue().id();
+        if (viewed == null) {
+            refresh();
+            return;
+        }
+        tasks.run(
+                status,
+                academic::semesters,
+                values -> {
+                    filling = true;
+                    semesters.getItems().setAll(values);
+                    semesters.setValue(
+                            values.stream().filter(s -> s.id() == viewed).findFirst().orElse(null));
+                    filling = false;
+                    if (semesters.getValue() == null) load();
+                    else scenarios.reloadList();
+                });
+    }
 
     void preferSemester(java.util.Optional<Long> id) {
         preferredSemester = id.orElse(null);
@@ -164,6 +256,7 @@ final class GradeView extends BorderPane {
         filling = true;
         tabs.getSelectionModel().select(actualTab);
         filling = false;
+        if (scopedCourse != 0 && scopedCourse != input.courseId()) widerCourse.run();
     }
 
     private void openSaved() {
@@ -219,6 +312,7 @@ final class GradeView extends BorderPane {
                 status,
                 () -> new Catalog(planning.courses(id), planning.scenarios(id)),
                 value -> {
+                    loadedSemester = id;
                     actual.load(id, value.courses());
                     scenarios.load(id, value.scenarios());
                     status.setText("Data semester dimuat.");

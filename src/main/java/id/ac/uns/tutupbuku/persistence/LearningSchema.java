@@ -50,6 +50,37 @@ final class LearningSchema {
         } catch (SQLException error) { connection.rollback(); throw error; }
         finally { connection.setAutoCommit(true); }
     }
+    /** Riwayat per course diperlukan karena last_reading hanya menyimpan satu baris per akun. */
+    static void migrateCourseReading(Connection connection) throws SQLException {
+        connection.setAutoCommit(false);
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("""
+                CREATE TABLE course_reading (
+                  owner_nim TEXT NOT NULL, course_id INTEGER NOT NULL,
+                  material_id INTEGER NOT NULL, material_revision INTEGER NOT NULL,
+                  scroll_ratio REAL NOT NULL CHECK(scroll_ratio>=0 AND scroll_ratio<=1),
+                  location_kind TEXT NOT NULL CHECK(location_kind='CHAPTER'), location_id INTEGER NOT NULL,
+                  PRIMARY KEY(owner_nim,course_id),
+                  FOREIGN KEY(course_id,owner_nim) REFERENCES courses(id,owner_nim) ON DELETE CASCADE)
+                """);
+            // Material tidak diberi FK: referensi terhapus tetap dapat dijelaskan oleh resume.
+            statement.execute("""
+                INSERT INTO course_reading
+                SELECT r.owner_nim,c.course_id,r.material_id,r.material_revision,r.scroll_ratio,r.location_kind,r.location_id
+                FROM last_reading r JOIN learning_chapters c ON c.id=r.location_id AND c.owner_nim=r.owner_nim
+                WHERE r.location_kind='CHAPTER'
+                """);
+            validateCourseReading(connection);
+            statement.execute("PRAGMA user_version=6");
+            connection.commit();
+        } catch (SQLException error) { connection.rollback(); throw error; }
+        finally { connection.setAutoCommit(true); }
+    }
+    static void validateCourseReading(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            statement.executeQuery("SELECT owner_nim,course_id,material_id,material_revision,scroll_ratio,location_kind,location_id FROM course_reading LIMIT 0").close();
+        }
+    }
     static void validate(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             for (String query : new String[]{"SELECT id,owner_nim,course_id,name,position FROM learning_chapters LIMIT 0",

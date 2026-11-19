@@ -1,8 +1,14 @@
 # Arsitektur Tutup Buku — M1–M5
 
+## Phase 3 — course hub dan resume per course (schema 6)
+
+CourseHubView adalah koordinator konteks UI Ringkasan/Materi/Nilai. Summary memakai AcademicService/LearningService/GradePlanningService dan hasil domain lama, tanpa SQL/rumus di UI. DashboardView memindahkan satu LearningView/GradeView antara pintu global dan hub; WorkspaceView.requestLeave menjaga draf materi/catatan/nilai/skenario/metadata/profil. Selector hub dikembalikan sebelum guard dan diterapkan setelah save berhasil; Batal/gagal tidak meneruskan perpindahan. Masuk dari konteks global baru tidak memilih skenario lama secara implisit. Rencana/IP tetap snapshot semester; membuka What If course lain dalam rencana memindahkan view sama ke pintu global dengan konteks jelas.
+
+Schema aktif6 menambah course_reading secara transaksional, memakai ReadingBookmark/ResumeResult lama. Schema5 hanya menyimpan satu last_reading per akun sehingga query saja tidak dapat melanjutkan A sesudah B/peminatan. Bookmark global dan course ditulis atomik; peminatan tetap global/terpisah; migrasi menyalin hanya referensi global yang dapat dipetakan. FK course cascade, referensi material terhapus tetap dapat dijelaskan; revisi berbeda fallback0, owner divalidasi tiap query. Semua data lama dan RULE_VERSION1 tetap. Source schema5/EXE lama tidak kompatibel dengan DB6; cadangkan DB+aset sebelum upgrade. Lihat COURSE_HUB_PHASE_3.md untuk kontrak/bukti.
+
 ## Phase 2 — snapshot What If (schema 5, 19 November 2026)
 
-Schema aktif adalah 5; bagian schema 1–4 di bawah merupakan riwayat. Dua kolom aditif `scenario_items.override_score` dan `scenario_courses.projection_enabled` menutup gap penyimpanan override/basis asli dan opt-in proyeksi. Migrasi 4→5 atomik, default proyeksi true untuk skenario lama, ID/data tetap, gagal rollback tanpa reset. Aplikasi lama schema 4 tidak membuka schema 5; cadangkan folder data+aset sebelum mencoba pada data sendiri.
+Schema saat Phase 2 adalah 5; bagian schema 1–4 di bawah merupakan riwayat. Dua kolom aditif `scenario_items.override_score` dan `scenario_courses.projection_enabled` menutup gap penyimpanan override/basis asli dan opt-in proyeksi. Migrasi 4→5 atomik, default proyeksi true untuk skenario lama, ID/data tetap, gagal rollback tanpa reset. Aplikasi lama schema 4 tidak membuka schema 5; cadangkan folder data+aset sebelum mencoba pada data sendiri.
 
 ScenarioCourse tetap immutable; constructor lama tetap tersedia. GradePlanningService memakai evaluator/solver/GPA M1, repository CAS M4, dan tambahan fromWhatIf/replaceCourse/saveCopy. Override menutupi aktual hanya pada salinan evaluasi; earned/max basis tidak diubah. Rencana dari satu eksperimen memakai actualOnly untuk course lain, bukan target otomatis. evaluate menahan IP jika course wajib belum ada di snapshot atau belum resolved. Tidak ada arsitektur penggabungan skenario per course.
 

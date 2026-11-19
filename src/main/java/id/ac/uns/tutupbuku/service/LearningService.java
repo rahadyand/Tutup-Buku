@@ -37,6 +37,20 @@ public final class LearningService {
     }
     public ResumeResult resume() {
         String owner = session.requireNim(); Optional<ReadingBookmark> last = repository.lastReading(owner);
+        return resume(owner, last);
+    }
+    public ResumeResult resumeCourse(long courseId) {
+        String owner = session.requireNim();
+        ResumeResult result = resume(owner, repository.lastCourseReading(owner, courseId));
+        if (result.reading().isPresent()) {
+            Material material = result.reading().orElseThrow().material();
+            Optional<LearningFolder> folder = repository.findFolder(owner, material.location());
+            if (material.location().kind() != LearningLocation.Kind.CHAPTER || folder.isEmpty() || folder.orElseThrow().courseId() != courseId)
+                return new ResumeResult(Optional.empty(), Optional.empty(), 0, "Bacaan tidak lagi tersedia pada mata kuliah ini. Pilih materi dari daftar.");
+        }
+        return result;
+    }
+    private ResumeResult resume(String owner, Optional<ReadingBookmark> last) {
         if (last.isEmpty()) return new ResumeResult(Optional.empty(), Optional.empty(), 0, "Belum ada bacaan terakhir.");
         ReadingBookmark bookmark = last.orElseThrow(); Optional<MaterialReading> reading = repository.find(owner, bookmark.materialId());
         if (reading.isEmpty()) return new ResumeResult(Optional.empty(), Optional.of(bookmark.location()), 0, "Materi terakhir telah dihapus. Silakan pilih materi dari daftar.");

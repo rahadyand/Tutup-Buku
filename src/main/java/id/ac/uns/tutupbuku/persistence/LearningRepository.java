@@ -20,6 +20,7 @@ public interface LearningRepository {
     LearningProgress courseProgress(String owner, long courseId);
     void recordReading(String owner, ReadingBookmark bookmark);
     Optional<ReadingBookmark> lastReading(String owner);
+    Optional<ReadingBookmark> lastCourseReading(String owner, long courseId);
     boolean seedInitialized(String owner);
     boolean initializeStarter(String owner, long courseId);
 }

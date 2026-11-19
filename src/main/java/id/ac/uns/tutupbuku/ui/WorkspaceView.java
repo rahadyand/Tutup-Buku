@@ -15,6 +15,7 @@ final class WorkspaceView extends BorderPane {
     private final LearningView learningView;
     private final GradeView gradeView;
     private final AcademicView academicView;
+    private final CourseHubView courseHub;
     private AcademicService academicService;
     private UiTasks uiTasks;
     private java.util.function.Consumer<Runnable> profileGuard = Runnable::run;
@@ -33,6 +34,15 @@ final class WorkspaceView extends BorderPane {
         uiTasks = tasks;
         learningView = new LearningView(learning, academic, tasks, browser);
         gradeView = new GradeView(academic, planning, tasks);
+        courseHub =
+                new CourseHubView(
+                        academic,
+                        learning,
+                        planning,
+                        tasks,
+                        this::requestLeave,
+                        learningView,
+                        gradeView);
         Button logout = button("logout", "Keluar");
         logout.setOnAction(
                 event ->
@@ -142,7 +152,8 @@ final class WorkspaceView extends BorderPane {
                         gradeView,
                         this::requestLeave,
                         learningView::refresh,
-                        gradeView::refresh);
+                        gradeView::refresh,
+                        courseHub);
         Tab dashboard = new Tab("Dashboard", dashboardContent);
         Tab profileTab =
                 new Tab(
@@ -178,8 +189,7 @@ final class WorkspaceView extends BorderPane {
                                         tabs.getSelectionModel().select(selected);
                                         selecting[0] = false;
                                         if (selected == dashboard) {
-                                            learningView.refresh();
-                                            gradeView.refresh();
+                                            dashboardContent.refreshCurrentArea();
                                         } else if (selected.getContent() == academicView) {
                                             // Kehadiran juga bisa diubah di editor aktual. Muat
                                             // ulang
@@ -208,6 +218,7 @@ final class WorkspaceView extends BorderPane {
     private void showProfile(UserProfile profile) {
         learningView.preferSemester(profile.activeSemesterId());
         gradeView.preferSemester(profile.activeSemesterId());
+        courseHub.activeSemester(profile.activeSemesterId());
         identity.setText("Selamat datang, " + profile.name() + " · NIM " + profile.nim());
         String program =
                 profile.studyProgram().isBlank()

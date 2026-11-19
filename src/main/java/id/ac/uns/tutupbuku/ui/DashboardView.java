@@ -12,6 +12,11 @@ import java.util.function.Consumer;
 /** Shell dua pilar dari M1, dipertahankan setelah login M2. */
 public final class DashboardView extends VBox {
     private java.util.function.IntConsumer openArea;
+    private Runnable refreshCurrent = () -> {};
+
+    void refreshCurrentArea() {
+        refreshCurrent.run();
+    }
 
     void openArea(int index) {
         openArea.accept(index);
@@ -31,6 +36,16 @@ public final class DashboardView extends VBox {
             Consumer<Runnable> guard,
             Runnable refreshLearning,
             Runnable refreshGrades) {
+        this(learningContent, gradeContent, guard, refreshLearning, refreshGrades, null);
+    }
+
+    DashboardView(
+            Node learningContent,
+            Node gradeContent,
+            Consumer<Runnable> guard,
+            Runnable refreshLearning,
+            Runnable refreshGrades,
+            CourseHubView hub) {
         super(8);
         setPadding(new Insets(6));
         Tab learningTab =
@@ -49,10 +64,48 @@ public final class DashboardView extends VBox {
                                                         + " membuka fitur belajar M3."))
                                 : learningContent);
         Tab simulationTab = new Tab("Simulasi nilai", gradeContent);
+        Node actualLearningContent = learningTab.getContent();
         TabPane tabs = new TabPane(learningTab, simulationTab);
+        if (hub != null) {
+            tabs.getTabs().add(new Tab("Mata Kuliah", hub));
+            hub.releaseGlobal(
+                    () -> {
+                        learningTab.setContent(null);
+                        simulationTab.setContent(null);
+                    });
+        }
         tabs.setId("main-tabs");
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         boolean[] selecting = {false};
+        refreshCurrent =
+                () -> {
+                    if (hub != null && tabs.getSelectionModel().getSelectedIndex() == 2)
+                        hub.refresh();
+                    else {
+                        refreshLearning.run();
+                        refreshGrades.run();
+                    }
+                };
+        java.util.function.IntConsumer mount =
+                index -> {
+                    boolean fromHub =
+                            learningTab.getContent() == null || simulationTab.getContent() == null;
+                    if (hub != null) hub.detach();
+                    learningTab.setContent(null);
+                    simulationTab.setContent(null);
+                    if (index == 0) {
+                        if (learningContent instanceof LearningView view) view.courseScope(false);
+                        learningTab.setContent(actualLearningContent);
+                        refreshLearning.run();
+                    } else if (index == 1) {
+                        simulationTab.setContent(gradeContent);
+                        if (gradeContent instanceof GradeView view) {
+                            view.courseScope(false);
+                            if (fromHub) view.openGlobal();
+                            else refreshGrades.run();
+                        } else refreshGrades.run();
+                    } else if (hub != null) hub.refresh();
+                };
         tabs.getSelectionModel()
                 .selectedItemProperty()
                 .addListener(
@@ -66,8 +119,7 @@ public final class DashboardView extends VBox {
                                         selecting[0] = true;
                                         tabs.getSelectionModel().select(selected);
                                         selecting[0] = false;
-                                        if (selected == learningTab) refreshLearning.run();
-                                        else refreshGrades.run();
+                                        mount.accept(tabs.getTabs().indexOf(selected));
                                     });
                         });
         openArea =
@@ -75,9 +127,18 @@ public final class DashboardView extends VBox {
                     selecting[0] = true;
                     tabs.getSelectionModel().select(index);
                     selecting[0] = false;
-                    if (index == 0) refreshLearning.run();
-                    else refreshGrades.run();
+                    mount.accept(index);
                 };
+        if (gradeContent instanceof GradeView view)
+            view.onWiderCourse(
+                    () -> {
+                        if (hub != null) hub.detach();
+                        simulationTab.setContent(gradeContent);
+                        view.openGlobal();
+                        selecting[0] = true;
+                        tabs.getSelectionModel().select(simulationTab);
+                        selecting[0] = false;
+                    });
         getChildren().add(tabs);
         VBox.setVgrow(tabs, Priority.ALWAYS);
     }

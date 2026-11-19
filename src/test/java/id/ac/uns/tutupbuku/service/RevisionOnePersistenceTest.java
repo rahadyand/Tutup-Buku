@@ -241,6 +241,7 @@ class RevisionOnePersistenceTest {
             s.execute("ALTER TABLE semesters_v3 RENAME TO semesters");
             s.execute("ALTER TABLE scenario_items DROP COLUMN override_score");
             s.execute("ALTER TABLE scenario_courses DROP COLUMN projection_enabled");
+            s.execute("DROP TABLE course_reading");
             s.execute("PRAGMA user_version=3");
             if (collision) s.execute("CREATE TABLE semesters_r001(marker TEXT)");
             c.commit();
