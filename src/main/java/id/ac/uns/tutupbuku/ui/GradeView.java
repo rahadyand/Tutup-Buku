@@ -18,6 +18,10 @@ final class GradeView extends BorderPane {
     private final Label status = status("grade-status");
     private final ActualGradePane actual;
     private final ScenarioPane scenarios;
+    private final WhatIfPane whatIf;
+    private final TabPane tabs;
+    private final Tab actualTab, scenarioTab;
+    private boolean simulating;
     private boolean filling;
     private Long preferredSemester;
 
@@ -29,8 +33,9 @@ final class GradeView extends BorderPane {
         this.academic = academic;
         this.planning = planning;
         this.tasks = tasks;
-        actual = new ActualGradePane(planning, tasks);
+        actual = new ActualGradePane(planning, tasks, this::beginWhatIf);
         scenarios = new ScenarioPane(planning, tasks);
+        whatIf = new WhatIfPane(planning, tasks, this::returnActual, this::openSaved);
         semesters.setId("grade-semester");
         Button refresh = button("grade-refresh", "Muat ulang data");
         refresh.setOnAction(e -> guard(this::refresh));
@@ -44,13 +49,29 @@ final class GradeView extends BorderPane {
                                         + " efektif."));
         header.setPadding(new javafx.geometry.Insets(4, 8, 4, 8));
         setTop(header);
-        Tab actualTab = new Tab("Komponen & aktual", actual),
-                scenarioTab = new Tab("Skenario, target & IP", scenarios);
-        TabPane tabs = new TabPane(actualTab, scenarioTab);
+        actualTab = new Tab("Komponen & aktual", actual);
+        scenarioTab = new Tab("Skenario, target & IP", scenarios);
+        tabs = new TabPane(actualTab, scenarioTab);
         tabs.setId("grade-tabs");
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         setCenter(tabs);
         setBottom(status);
+        tabs.getSelectionModel()
+                .selectedItemProperty()
+                .addListener(
+                        (o, old, selected) -> {
+                            if (filling || !simulating) return;
+                            filling = true;
+                            tabs.getSelectionModel().select(old);
+                            filling = false;
+                            whatIf.guard(
+                                    () -> {
+                                        endWhatIf();
+                                        filling = true;
+                                        tabs.getSelectionModel().select(selected);
+                                        filling = false;
+                                    });
+                        });
         // Berpindah aktual/skenario mempertahankan form masing-masing; keluar semester/dashboard
         // memakai guard.
         semesters
@@ -94,6 +115,52 @@ final class GradeView extends BorderPane {
 
     private record Catalog(List<ActualCourse> courses, List<SemesterScenario> scenarios) {}
 
+    private void beginWhatIf(ActualCourse selected) {
+        if (selected == null || semesters.getValue() == null) return;
+        long semester = semesters.getValue().id(), course = selected.course().id();
+        tasks.run(
+                status,
+                () -> planning.courses(semester),
+                values -> {
+                    ActualCourse basis =
+                            values.stream()
+                                    .filter(c -> c.course().id() == course)
+                                    .findFirst()
+                                    .orElse(null);
+                    if (basis == null) {
+                        status.setText("Mata kuliah telah dihapus. Muat ulang data.");
+                        return;
+                    }
+                    actual.load(semester, values);
+                    whatIf.open(basis);
+                    simulating = true;
+                    actualTab.setContent(whatIf);
+                    setBottom(
+                            null); // Status kalkulasi berada di WhatIfPane; beri ruang untuk baris
+                                   // nilai.
+                });
+    }
+
+    private void returnActual() {
+        whatIf.guard(this::endWhatIf);
+    }
+
+    private void openSaved() {
+        whatIf.guard(
+                () -> {
+                    endWhatIf();
+                    tabs.getSelectionModel().select(scenarioTab);
+                });
+    }
+
+    private void endWhatIf() {
+        if (!simulating) return;
+        simulating = false;
+        whatIf.clear();
+        actualTab.setContent(actual);
+        setBottom(status);
+    }
+
     private void load() {
         Semester semester = semesters.getValue();
         if (semester == null) {
@@ -114,6 +181,14 @@ final class GradeView extends BorderPane {
     }
 
     void guard(Runnable action) {
-        actual.guard(() -> scenarios.guard(action));
+        whatIf.guard(
+                () ->
+                        actual.guard(
+                                () ->
+                                        scenarios.guard(
+                                                () -> {
+                                                    endWhatIf();
+                                                    action.run();
+                                                })));
     }
 }

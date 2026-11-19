@@ -1,3 +1,11 @@
+# Simulasi Target / What If — Phase 1,19 November2026
+
+Tombol pada Komponen & aktual membuka draft sementara satu mata kuliah dengan basis terbaru dan SKS/konteks tetap. Target angka/huruf tersinkron; input dan output kebutuhan terpisah. Baris menampilkan aktual asli, kunci asumsi, override/pulih serta kebutuhan; kosong bukan nol. Satu ScrollPane untuk hasil/baris, target/aksi tetap di header dan field numerik100px. Seluruh hasil satu generasi tampil bersama; hasil antrean lama diabaikan. Template tema/fokus native tetap.
+
+Reset/keluar draft berubah memakai Buang simulasi sementara/Batal, tanpa pilihan Simpan palsu. Editor aktual dan skenario tersimpan tetap memakai guard Simpan/Buang/Batal yang sama seperti sebelumnya. Skenario tersimpan tetap view/model lama, termasuk CAS/review. Tidak ada autosave atau SQL dari WhatIfPane. Mode langsung/struktur invalid diarahkan ke workflow lama. Rincian alur/batas/bukti: WHAT_IF_PHASE_1.md. Layar belajar di bawah tidak diubah.
+
+---
+
 # Kontrak layar belajar — 19 November 2026
 
 - **Baca** adalah default saat memilih materi. Satu katalog (`learning-catalog`) menyatukan lokasi, bab/bidang dan materi; cabang lokasi dapat dilipat. Kontrol CRUD/urut/seed/reload hanya berada dalam **Kelola Daftar**, tidak ikut mengambil ruang di Baca. Tidak ada ScrollPane luar yang membungkus WebView saat Baca.

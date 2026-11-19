@@ -295,11 +295,8 @@ public final class GradePlanningService {
                             case ALREADY_REACHED ->
                                     "Target sudah tercapai; saran minimum komponen bebas 0.";
                             case IMPOSSIBLE ->
-                                    "Target tidak mungkin: kebutuhan "
-                                            + target.rawRequiredScore()
-                                                    .orElseThrow()
-                                                    .toPlainString()
-                                            + " > 100. Nilai maksimum akhir "
+                                    "Target tidak mungkin: kebutuhan komponen bebas > 100. Nilai"
+                                        + " maksimum akhir "
                                             + target.maximumFinalScore().toPlainString()
                                             + ".";
                             case NO_FREE_REACHED -> "Tidak ada bobot bebas (W=0); target tercapai.";
@@ -314,6 +311,49 @@ public final class GradePlanningService {
             explanation +=
                     " Kehadiran tidak terpenuhi: hasil efektif E/0; hasil asal tetap tersimpan.";
         return new ScenarioEvaluation.CourseEvaluation(input, grade, plan, explanation);
+    }
+
+    /** Override hanya menutupi aktual pada salinan evaluasi, bukan pada basis atau repository. */
+    public ScenarioEvaluation.CourseEvaluation whatIf(
+            ActualCourse basis,
+            BigDecimal target,
+            Map<String, BigDecimal> assumptions,
+            Set<String> overrides) {
+        session.requireNim();
+        Set<String> available = new HashSet<>();
+        List<AssessmentComponent> items = new ArrayList<>();
+        for (AssessmentComponent item : basis.components()) {
+            boolean overridden = overrides.contains(item.id());
+            if (overridden) {
+                if (basis.mode() != EvaluationMode.DETAIL
+                        || item.earned().isEmpty()
+                        || item.weight().signum() == 0)
+                    throw new IllegalArgumentException(
+                            "Override hanya untuk komponen aktual berbobot positif.");
+                available.add(item.id());
+                items.add(
+                        new AssessmentComponent(
+                                item.id(),
+                                item.name(),
+                                item.weight(),
+                                Optional.empty(),
+                                item.maximum(),
+                                item.position()));
+            } else items.add(item);
+        }
+        if (!available.equals(overrides))
+            throw new IllegalArgumentException("Komponen override tidak ada pada basis simulasi.");
+        ActualCourse temporary =
+                new ActualCourse(basis.course(), basis.mode(), basis.letter(), items);
+        return evaluateCourse(
+                new ScenarioCourse(
+                        temporary,
+                        basis.mode(),
+                        Optional.empty(),
+                        target,
+                        Optional.empty(),
+                        basis.course().attendance(),
+                        assumptions));
     }
 
     public String comparisonWarning(ScenarioEvaluation first, ScenarioEvaluation second) {

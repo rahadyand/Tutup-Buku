@@ -33,10 +33,16 @@ final class ActualGradePane extends BorderPane {
     private AssessmentComponent selected;
     private boolean filling, componentDirty, settingsDirty;
     private long semester;
+    private final Button whatIf = button("open-what-if", "Simulasi Target (What If)");
 
-    ActualGradePane(GradePlanningService service, UiTasks tasks) {
+    ActualGradePane(
+            GradePlanningService service,
+            UiTasks tasks,
+            java.util.function.Consumer<ActualCourse> onWhatIf) {
         this.service = service;
         this.tasks = tasks;
+        whatIf.getStyleClass().add("tb-primary");
+        whatIf.setOnAction(event -> guard(() -> onWhatIf.accept(current)));
         courses.setId("grade-courses");
         components.setId("assessment-components");
         mode.setId("actual-mode");
@@ -184,7 +190,7 @@ final class ActualGradePane extends BorderPane {
         split.setDividerPositions(0.25);
         setCenter(split);
         total.setPadding(new javafx.geometry.Insets(6));
-        setTop(total);
+        setTop(new FlowPane(8, 6, whatIf, total));
         status.setPadding(new javafx.geometry.Insets(6, 8, 6, 8));
         status.setMinHeight(Region.USE_PREF_SIZE);
         status.setMaxWidth(Double.MAX_VALUE);
@@ -210,6 +216,7 @@ final class ActualGradePane extends BorderPane {
 
     private void showCourse(ActualCourse value) {
         current = value;
+        whatIf.setDisable(value == null);
         filling = true;
         mode.setValue(value == null ? EvaluationMode.DETAIL : value.mode());
         letter.setValue(value == null ? null : value.letter().orElse(null));

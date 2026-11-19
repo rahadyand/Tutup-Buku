@@ -609,4 +609,166 @@ class GradePlanningPersistenceTest {
                 });
         assertEquals("Dua", academic.getProfile("002").name());
     }
+
+    @Test
+    void whatIfReusesTargetsAndNeverWritesActualOrSavedScenarios() {
+        three();
+        ActualCourse first = service.courses(semester).getFirst();
+        var free = service.whatIf(first, n("60"), Map.of(), Set.of());
+        assertEquals(3, free.targetPlan().orElseThrow().suggestedScores().size());
+        free.targetPlan()
+                .orElseThrow()
+                .suggestedScores()
+                .values()
+                .forEach(v -> equalNumber("60", v));
+        var locked = service.whatIf(first, n("60"), Map.of("tasks", n("80")), Set.of());
+        locked.targetPlan()
+                .orElseThrow()
+                .suggestedScores()
+                .values()
+                .forEach(v -> equalNumber("55", v));
+        item("uts", "UTS", "30", "30", "100", 1);
+        ActualCourse basis = service.courses(semester).getFirst();
+        SemesterScenario saved = service.save(draft());
+        var third = service.whatIf(basis, n("60"), Map.of("tasks", n("80")), Set.of());
+        equalNumber("70", third.targetPlan().orElseThrow().suggestedScores().get("uas"));
+        var override =
+                service.whatIf(
+                        basis, n("60"), Map.of("tasks", n("80"), "uts", n("60")), Set.of("uts"));
+        equalNumber("52", override.targetPlan().orElseThrow().suggestedScores().get("uas"));
+        assertTrue(override.grade().estimated());
+        assertEquals(basis, service.courses(semester).getFirst());
+        assertEquals(saved, service.open(saved.id()));
+        equalNumber(
+                "70",
+                service.whatIf(basis, n("60"), Map.of("tasks", n("80")), Set.of())
+                        .targetPlan()
+                        .orElseThrow()
+                        .suggestedScores()
+                        .get("uas"));
+        equalNumber("30", basis.components().get(1).earned().orElseThrow());
+        assertEquals(1, service.scenarios(semester).size());
+    }
+
+    @Test
+    void whatIfEarnedMaxAndMissingAreDifferentFromZero() {
+        three();
+        item("tasks", "Tugas", "20", "8", "10", 0);
+        item("uts", "UTS", "30", "30", "100", 1);
+        ActualCourse basis = service.courses(semester).getFirst();
+        equalNumber(
+                "70",
+                service.whatIf(basis, n("60"), Map.of(), Set.of())
+                        .targetPlan()
+                        .orElseThrow()
+                        .suggestedScores()
+                        .get("uas"));
+        assertTrue(service.actualResult(basis).underlyingScore().isEmpty());
+        item("uas", "UAS", "50", "0", "100", 2);
+        var zero =
+                service.whatIf(service.courses(semester).getFirst(), n("60"), Map.of(), Set.of());
+        assertEquals(
+                TargetPlan.Status.NO_FREE_NOT_REACHED, zero.targetPlan().orElseThrow().status());
+        equalNumber("25", zero.grade().underlyingScore().orElseThrow());
+    }
+
+    @Test
+    void whatIfExactLetterAndAttendancePreserveUnderlyingProjection() {
+        three();
+        var input = service.courses(semester).getFirst();
+        var precise = service.whatIf(input, n("84.5"), Map.of(), Set.of());
+        equalNumber("84.5", precise.grade().underlyingScore().orElseThrow());
+        assertEquals(LetterGrade.A_MINUS, precise.grade().underlyingLetter().orElseThrow());
+        service.saveActual(
+                course, EvaluationMode.DETAIL, Optional.empty(), new Attendance(false, true));
+        var failedAttendance =
+                service.whatIf(service.courses(semester).getFirst(), n("84.5"), Map.of(), Set.of());
+        equalNumber("84.5", failedAttendance.grade().underlyingScore().orElseThrow());
+        assertEquals(
+                LetterGrade.A_MINUS, failedAttendance.grade().underlyingLetter().orElseThrow());
+        assertEquals(LetterGrade.E, failedAttendance.grade().effectiveLetter().orElseThrow());
+        equalNumber("0", failedAttendance.grade().effectiveLetter().orElseThrow().gradePoint());
+    }
+
+    @Test
+    void whatIfImpossibleNoFreeAndZeroWeightUseExistingStatuses() {
+        three();
+        var input = service.courses(semester).getFirst();
+        var impossible = service.whatIf(input, n("100"), Map.of("tasks", n("0")), Set.of());
+        assertEquals(TargetPlan.Status.IMPOSSIBLE, impossible.targetPlan().orElseThrow().status());
+        equalNumber("125", impossible.targetPlan().orElseThrow().rawRequiredScore().orElseThrow());
+        assertTrue(impossible.targetPlan().orElseThrow().suggestedScores().isEmpty());
+        assertTrue(impossible.grade().underlyingScore().isEmpty());
+        var preciseImpossible =
+                service.whatIf(
+                        input,
+                        n("80.000000000000000000000000000000000001"),
+                        Map.of("tasks", n("0")),
+                        Set.of());
+        assertEquals(
+                TargetPlan.Status.IMPOSSIBLE,
+                preciseImpossible.targetPlan().orElseThrow().status());
+        assertTrue(preciseImpossible.explanation().contains("komponen bebas > 100"));
+        Map<String, java.math.BigDecimal> all =
+                Map.of("tasks", n("60"), "uts", n("60"), "uas", n("60"));
+        assertEquals(
+                TargetPlan.Status.NO_FREE_REACHED,
+                service.whatIf(input, n("60"), all, Set.of()).targetPlan().orElseThrow().status());
+        assertEquals(
+                TargetPlan.Status.NO_FREE_NOT_REACHED,
+                service.whatIf(input, n("61"), all, Set.of()).targetPlan().orElseThrow().status());
+        item("info", "Informasi", "0", "", "", 3);
+        var withZero =
+                service.whatIf(service.courses(semester).getFirst(), n("60"), Map.of(), Set.of());
+        assertFalse(withZero.targetPlan().orElseThrow().suggestedScores().containsKey("info"));
+        assertEquals(3, withZero.targetPlan().orElseThrow().suggestedScores().size());
+        var secured = service.whatIf(input, n("10"), Map.of("tasks", n("80")), Set.of());
+        assertEquals(
+                TargetPlan.Status.ALREADY_REACHED, secured.targetPlan().orElseThrow().status());
+        secured.targetPlan()
+                .orElseThrow()
+                .suggestedScores()
+                .values()
+                .forEach(v -> equalNumber("0", v));
+    }
+
+    @Test
+    void whatIfEmptyAndInexactWeightsCannotLookLikeACompleteGrade() {
+        ActualCourse empty = service.courses(semester).getFirst();
+        var result = service.whatIf(empty, n("60"), Map.of(), Set.of());
+        assertTrue(result.targetPlan().isEmpty());
+        assertTrue(result.grade().underlyingScore().isEmpty());
+        assertTrue(result.grade().effectiveLetter().isEmpty());
+        assertFalse(service.evaluate(draft()).gpa().issues().isEmpty());
+        three();
+        for (String last : List.of("49.99", "50.01")) {
+            item("uas", "UAS", last, "", "100", 2);
+            var invalid =
+                    service.whatIf(
+                            service.courses(semester).getFirst(), n("60"), Map.of(), Set.of());
+            assertTrue(invalid.targetPlan().isEmpty());
+            assertFalse(invalid.grade().issues().isEmpty());
+            assertTrue(invalid.grade().underlyingScore().isEmpty());
+        }
+    }
+
+    @Test
+    void whatIfRejectsUnknownOverridesAndKeepsDirectLettersWithoutFictionalScores() {
+        three();
+        ActualCourse input = service.courses(semester).getFirst();
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.whatIf(input, n("60"), Map.of(), Set.of("deleted")));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> service.whatIf(input, n("60"), Map.of("tasks", n("80")), Set.of("tasks")));
+        service.saveActual(
+                course, EvaluationMode.DIRECT, Optional.of(LetterGrade.B), Attendance.assumedMet());
+        ActualCourse direct = service.courses(semester).getFirst();
+        var result = service.whatIf(direct, n("84.5"), Map.of(), Set.of());
+        assertTrue(result.targetPlan().isEmpty());
+        assertTrue(result.grade().underlyingScore().isEmpty());
+        assertEquals(LetterGrade.B, result.grade().underlyingLetter().orElseThrow());
+        assertEquals(direct, service.courses(semester).getFirst());
+    }
 }

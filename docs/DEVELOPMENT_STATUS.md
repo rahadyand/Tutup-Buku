@@ -1,3 +1,13 @@
+# Phase 1 What If — 19 November2026 (WIB)
+
+**Implementasi dan gerbang source selesai**, baseline main/d77c8a7. Simulasi Target per-course kini tersedia dari editor aktual; angka/huruf satu target, baris asumsi/override/pulih, kalkulasi otomatis dengan generation guard dan hasil aktual/proyeksi/efektif terpisah. Nilai aktual dan skenario tersimpan tidak ditulis oleh mode sementara. Target60→55→70,84,5/A-, impossible/no-free/weight0/invalid/attendance dan guard/failure/retry diuji. Tidak mengubah engine/schema/dependency atau membuat paket baru. Skenario semester/CAS/stale tetap memakai workflow lama.
+
+Gerbang akhir: **185tes verify**, **4GUI regresi**, **2emulasi125%**, **1regresiM4 minimum760×480**, semuanya0gagal/error/skip. Enam PNG plan/empty diperiksa pada1366/1024/minimum dan emulasi125%; ini aplikasi produksi dalam tes JavaFX, bukan uji usability manusia. Percobaan akses jendela demo Windows tambahan gagal karena window minimized; klik/login native tambahan belum diverifikasi. H-02 historis dan DPI Windows nyata/keyboard fisik/screen reader/perangkat kedua/usability tetap pending. Tidak mengklaim paket0.5.5 lama sudah memuat perubahan source baru ini.
+
+Alur, perubahan berkas, layanan yang dipakai ulang, perintah dan batas: **WHAT_IF_PHASE_1.md**. Bukti lokal: tmp/what-if-phase1-20261119/{verify-final,gui-final,gui-scale,gui-minimum}.log dan screenshots.json. Perubahan Graphify/AGENTS/draf yang sudah ada dipertahankan terpisah; hanya prefix Phase1 ini yang akan masuk commit. Graphify update AST lokal dijalankan tanpa API; diagnostik1208node/4358relasi menemukan0endpoint yatim dan1self-loop (peringatan peta statis). Hash source/push setelah selesai berada di receipt lokal git-checkpoint.txt dan handoff. Berhenti di Phase1; Phase2 dan UI lain tidak dimulai.
+
+---
+
 # Penajaman bukti screenshot — 19 November 2026
 
 Pemeriksaan akhir setelah push menemukan satu PNG katalog tersembunyi1024 masih memakai texture WebView dari frame sebelum resize, walaupun ukuran Scene/DOM sudah benar. `LearningReadingFxCheck.readerLayout` kini menunggu tiga pulse render dan menegaskan reader memakai lebar Scene−maksimum24px saat katalog tersembunyi. Ini perubahan tes/capture saja; kode aplikasi, JAR dan ZIP tidak berubah. Tidak membangun ulang paket0.5.5 yang sama.
