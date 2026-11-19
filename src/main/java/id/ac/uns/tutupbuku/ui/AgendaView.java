@@ -28,7 +28,7 @@ final class AgendaView extends BorderPane {
     private final Label checklistHelp =
             note(
                     "Checklist tugas — centang langkah tidak otomatis menyelesaikan tugas. Status"
-                        + " tugas diubah dari daftar.");
+                            + " tugas diubah dari daftar.");
     private final ScrollPane listPage = scroll(items), editPage;
     private final TextField title = text("agenda-title", "Judul wajib"),
             time = text("agenda-time", "HH:mm");
@@ -220,6 +220,12 @@ final class AgendaView extends BorderPane {
     }
 
     void openGlobal() {
+        dashboardItem = null;
+        dashboardGroup = null;
+        showGlobal();
+    }
+
+    private void showGlobal() {
         scoped = false;
         locationControls.setVisible(true);
         locationControls.setManaged(true);
@@ -234,7 +240,27 @@ final class AgendaView extends BorderPane {
         openGlobal();
     }
 
+    private Long dashboardItem;
+    private AgendaSection dashboardGroup;
+
+    void openDashboard(Semester semester, AgendaSection group, Long item) {
+        viewed = semester;
+        dashboardItem = item;
+        dashboardGroup = group;
+        filling = true;
+        courses.setValue(new CourseChoice(null));
+        typeFilter.setValue(
+                group == AgendaSection.OVERDUE
+                        ? "Tugas"
+                        : group == AgendaSection.PAST_EXAMS ? "Ujian" : "Tugas & Ujian");
+        stateFilter.setValue("Belum selesai");
+        filling = false;
+        showGlobal();
+    }
+
     void openCourse(Semester semester, Course course) {
+        dashboardItem = null;
+        dashboardGroup = null;
         scoped = true;
         locationControls.setVisible(false);
         locationControls.setManaged(false);
@@ -346,6 +372,40 @@ final class AgendaView extends BorderPane {
                                                 "Tidak ada item untuk filter ini. Gunakan Tambah"
                                                         + " tugas / ujian atau ubah filter"
                                                         + " status/jenis."));
+                    if (dashboardItem != null) {
+                        long id = dashboardItem;
+                        dashboardItem = null;
+                        dashboardGroup = null;
+                        tasks.run(
+                                status,
+                                () -> service.open(id),
+                                item -> {
+                                    if (courseList.stream()
+                                            .noneMatch(c -> c.id() == item.courseId())) {
+                                        status.setText("Item tidak tersedia pada semester ini.");
+                                        return;
+                                    }
+                                    edit(item);
+                                });
+                    } else if (dashboardGroup != null) {
+                        var target = items.lookup("#agenda-section-" + dashboardGroup.name());
+                        dashboardGroup = null;
+                        if (target != null)
+                            javafx.application.Platform.runLater(
+                                    () -> {
+                                        items.applyCss();
+                                        items.layout();
+                                        double range =
+                                                items.getHeight()
+                                                        - listPage.getViewportBounds().getHeight();
+                                        if (range > 0)
+                                            listPage.setVvalue(
+                                                    Math.min(
+                                                            1,
+                                                            target.getBoundsInParent().getMinY()
+                                                                    / range));
+                                    });
+                    }
                     status.setText(
                             selected == 0
                                     ? "Agenda dimuat. Penyelesaian tidak mengubah nilai akademik."

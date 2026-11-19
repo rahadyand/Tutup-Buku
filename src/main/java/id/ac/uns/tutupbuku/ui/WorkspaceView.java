@@ -17,6 +17,12 @@ final class WorkspaceView extends BorderPane {
     private final AcademicView academicView;
     private final CourseHubView courseHub;
     private final AgendaView agendaView;
+    private Runnable refreshDate = () -> {};
+
+    void refreshDateIfNeeded() {
+        refreshDate.run();
+    }
+
     private AcademicService academicService;
     private UiTasks uiTasks;
     private java.util.function.Consumer<Runnable> profileGuard = Runnable::run;
@@ -47,11 +53,19 @@ final class WorkspaceView extends BorderPane {
                         learningView,
                         gradeView,
                         agendaView);
+        TodayDashboardView today =
+                new TodayDashboardView(
+                        new TodayDashboardService(auth, academic, learning, agenda, planning),
+                        tasks,
+                        this::requestLeave,
+                        profile.nim());
+        Runnable[] openAcademic = {() -> {}};
         Button logout = button("logout", "Keluar");
         logout.setOnAction(
                 event ->
                         requestLeave(
                                 () -> {
+                                    today.invalidate();
                                     learningView.suspend();
                                     auth.logout();
                                     onLogout.run();
@@ -158,7 +172,9 @@ final class WorkspaceView extends BorderPane {
                         learningView::refresh,
                         gradeView::refresh,
                         courseHub,
-                        agendaView);
+                        agendaView,
+                        today,
+                        () -> openAcademic[0].run());
         Tab dashboard = new Tab("Dashboard", dashboardContent);
         Tab profileTab =
                 new Tab(
@@ -204,6 +220,18 @@ final class WorkspaceView extends BorderPane {
                                         }
                                     });
                         });
+        openAcademic[0] =
+                () -> {
+                    selecting[0] = true;
+                    tabs.getSelectionModel().select(1);
+                    selecting[0] = false;
+                    academicView.refresh();
+                };
+        refreshDate =
+                () -> {
+                    if (tabs.getSelectionModel().getSelectedIndex() == 0)
+                        dashboardContent.refreshDateIfNeeded();
+                };
         java.util.function.IntConsumer shortcut =
                 index ->
                         requestLeave(
@@ -217,7 +245,7 @@ final class WorkspaceView extends BorderPane {
         openGrades.setOnAction(e -> shortcut.accept(1));
         showProfile(profile);
         academicView.refresh();
-        learningView.refresh();
+        dashboardContent.refreshCurrentArea();
     }
 
     private void showProfile(UserProfile profile) {

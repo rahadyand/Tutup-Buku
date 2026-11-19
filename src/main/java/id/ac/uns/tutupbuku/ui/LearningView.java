@@ -654,13 +654,7 @@ final class LearningView extends BorderPane {
         Long previousCourse = courses.getValue() == null ? null : courses.getValue().id();
         tasks.run(
                 status,
-                () -> {
-                    List<Semester> all = academic.semesters();
-                    Map<Long, List<Course>> allCourses = new LinkedHashMap<>();
-                    for (Semester semester : all)
-                        allCourses.put(semester.id(), academic.courses(semester.id()));
-                    return new Catalog(all, allCourses, learning.seedInitialized());
-                },
+                this::loadCatalog,
                 loaded -> {
                     catalog = loaded.courses();
                     filling = true;
@@ -876,64 +870,85 @@ final class LearningView extends BorderPane {
         tasks.run(
                 status,
                 () -> hubCourse == 0 ? learning.resume() : learning.resumeCourse(hubCourse),
-                result -> {
-                    if (result.previousLocation().isEmpty()) {
-                        status.setText(result.message());
-                        return;
+                this::showResume);
+    }
+
+    private Catalog loadCatalog() {
+        List<Semester> all = academic.semesters();
+        Map<Long, List<Course>> allCourses = new LinkedHashMap<>();
+        for (Semester semester : all)
+            allCourses.put(semester.id(), academic.courses(semester.id()));
+        return new Catalog(all, allCourses, learning.seedInitialized());
+    }
+
+    void openReading(ResumeResult result) {
+        courseScope(false);
+        showEditor();
+        editor.clear();
+        tasks.run(
+                status,
+                this::loadCatalog,
+                loaded -> {
+                    catalog = loaded.courses();
+                    filling = true;
+                    semesters.getItems().setAll(loaded.semesters());
+                    filling = false;
+                    seed.setDisable(loaded.seeded());
+                    showResume(result);
+                });
+    }
+
+    private void showResume(ResumeResult result) {
+        if (result.previousLocation().isEmpty()) {
+            status.setText(result.message());
+            return;
+        }
+        tasks.run(
+                status,
+                () -> learning.folder(result.previousLocation().orElseThrow()),
+                found -> {
+                    filling = true;
+                    path.setValue(
+                            result.previousLocation().orElseThrow().kind()
+                                            == LearningLocation.Kind.CHAPTER
+                                    ? "Kuliah"
+                                    : "Peminatan");
+                    semesters.setDisable(kind() == LearningLocation.Kind.INTEREST);
+                    courses.setDisable(kind() == LearningLocation.Kind.INTEREST);
+                    if (found.isPresent()
+                            && found.orElseThrow().kind() == LearningLocation.Kind.CHAPTER) {
+                        long courseId = found.orElseThrow().courseId();
+                        for (Semester semester : semesters.getItems())
+                            if (catalog.getOrDefault(semester.id(), List.of()).stream()
+                                    .anyMatch(course -> course.id() == courseId)) {
+                                semesters.setValue(semester);
+                                courses.getItems().setAll(catalog.get(semester.id()));
+                                courses.getSelectionModel()
+                                        .select(
+                                                courses.getItems().stream()
+                                                        .filter(course -> course.id() == courseId)
+                                                        .findFirst()
+                                                        .orElseThrow());
+                                break;
+                            }
                     }
-                    tasks.run(
-                            status,
-                            () -> learning.folder(result.previousLocation().orElseThrow()),
-                            found -> {
-                                filling = true;
-                                path.setValue(
-                                        result.previousLocation().orElseThrow().kind()
-                                                        == LearningLocation.Kind.CHAPTER
-                                                ? "Kuliah"
-                                                : "Peminatan");
-                                semesters.setDisable(kind() == LearningLocation.Kind.INTEREST);
-                                courses.setDisable(kind() == LearningLocation.Kind.INTEREST);
-                                if (found.isPresent()
-                                        && found.orElseThrow().kind()
-                                                == LearningLocation.Kind.CHAPTER) {
-                                    long courseId = found.orElseThrow().courseId();
-                                    for (Semester semester : semesters.getItems())
-                                        if (catalog.getOrDefault(semester.id(), List.of()).stream()
-                                                .anyMatch(course -> course.id() == courseId)) {
-                                            semesters.setValue(semester);
-                                            courses.getItems().setAll(catalog.get(semester.id()));
-                                            courses.getSelectionModel()
-                                                    .select(
-                                                            courses.getItems().stream()
-                                                                    .filter(
-                                                                            course ->
-                                                                                    course.id()
-                                                                                            == courseId)
-                                                                    .findFirst()
-                                                                    .orElseThrow());
-                                            break;
-                                        }
-                                }
-                                filling = false;
-                                editor.clear();
-                                loadFolders(
-                                        found.map(LearningFolder::id).orElse(0L),
-                                        () -> {
-                                            result.reading()
-                                                    .ifPresent(
-                                                            reading -> {
-                                                                filling = true;
-                                                                materials
-                                                                        .getSelectionModel()
-                                                                        .select(reading.material());
-                                                                filling = false;
-                                                                editor.load(
-                                                                        reading,
-                                                                        result.scrollRatio(),
-                                                                        true);
-                                                            });
-                                            status.setText(result.message());
-                                        });
+                    filling = false;
+                    editor.clear();
+                    loadFolders(
+                            found.map(LearningFolder::id).orElse(0L),
+                            () -> {
+                                result.reading()
+                                        .ifPresent(
+                                                reading -> {
+                                                    filling = true;
+                                                    materials
+                                                            .getSelectionModel()
+                                                            .select(reading.material());
+                                                    filling = false;
+                                                    editor.load(
+                                                            reading, result.scrollRatio(), true);
+                                                });
+                                status.setText(result.message());
                             });
                 });
     }

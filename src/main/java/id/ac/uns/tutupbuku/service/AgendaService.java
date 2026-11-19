@@ -27,6 +27,7 @@ public final class AgendaService {
     public LocalDate today() {
         return LocalDate.now(clock);
     }
+    public LocalDateTime now() { return LocalDateTime.now(clock); }
 
     public static LocalDate parseDate(String value) {
         try {
@@ -83,8 +84,11 @@ public final class AgendaService {
     }
 
     public Map<AgendaSection, List<AgendaItem>> group(List<AgendaItem> items) {
+        return group(items, now());
+    }
+
+    public Map<AgendaSection, List<AgendaItem>> group(List<AgendaItem> items, LocalDateTime now) {
         var result = new EnumMap<AgendaSection, List<AgendaItem>>(AgendaSection.class);
-        LocalDateTime now = LocalDateTime.now(clock);
         items.stream()
                 .sorted(chronological())
                 .forEach(

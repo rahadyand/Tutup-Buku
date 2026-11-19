@@ -82,6 +82,9 @@ class LearningReadingFxCheck extends FxTestSupport {
     private void mode(String action, String expected) throws Exception {
         click(action);
         await(() -> stage.getScene().lookup("#" + expected) != null);
+        // Isi tab dipasang oleh skin pada pulse/layout berikutnya.
+        if (expected.equals("material-tabs"))
+            await(() -> stage.getScene().lookup("#material-title") != null);
     }
 
     private long selected() {

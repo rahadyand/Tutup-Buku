@@ -1,5 +1,11 @@
 # Arsitektur Tutup Buku — M1–M5
 
+## Phase 5 — komposisi Hari Ini (schema tetap 7)
+
+TodayDashboardService menggabungkan AuthService/AcademicService/LearningService/AgendaService/GradePlanningService dan SemesterGpaService yang ada menjadi satu snapshot read-only; tidak memiliki repository/tabel/model penyimpanan baru. Nilai/IP hanya actualResult seluruh course, bukan snapshot skenario. Agenda grouping dan tanggal berbagi satu LocalDateTime WIB. resumeReference memakai pemeriksaan owner/lokasi/revisi lama pada bookmark tertentu, tanpa pengganti otomatis.
+
+TodayDashboardView memakai UiTasks dan token/komponen lama, generation serta pemeriksaan pemilik; gagal satu sumber menahan ringkasan halaman dengan retry. DashboardView menjadi koordinator pintasan eksplisit ke view tunggal lama; WorkspaceView memasang default Hari Ini dan guard yang sama. TutupBukuApplication memiliki satu listener fokus untuk pemeriksaan perubahan tanggal ketika Hari Ini terlihat, tanpa polling. Clock standar dapat disuntikkan untuk tes. Tidak mengubah rumus, schema/dependency atau data. Kontrak dan verifikasi: DASHBOARD_PHASE_5.md.
+
 ## Phase 4 — agenda bersama (schema 7)
 
 AgendaItem/ChecklistStep immutable beserta enum type/priority/section memakai composition sederhana. AgendaService mengatur parsing tanggal/jam, Clock WIB, grouping/urut dan konfirmasi completion, tanpa JavaFX/SQL. AgendaRepository/SqliteAgendaRepository memakai SqliteDatabase lama untuk owner, FK, CAS version dan transaksi header+children. Checklist tersimpan ber-ID UUID dan position sesuai urutan List; parent completion terpisah dan tidak memutasi langkah/nilai.

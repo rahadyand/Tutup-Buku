@@ -50,6 +50,12 @@ public final class LearningService {
         }
         return result;
     }
+    public ResumeResult resumeReference(ReadingBookmark reference) {
+        ResumeResult result = resume(session.requireNim(), Optional.of(reference));
+        if (result.reading().filter(r -> !r.material().location().equals(reference.location())).isPresent())
+            return new ResumeResult(Optional.empty(), Optional.of(reference.location()), 0, "Lokasi materi berubah. Muat ulang daftar bacaan.");
+        return result;
+    }
     private ResumeResult resume(String owner, Optional<ReadingBookmark> last) {
         if (last.isEmpty()) return new ResumeResult(Optional.empty(), Optional.empty(), 0, "Belum ada bacaan terakhir.");
         ReadingBookmark bookmark = last.orElseThrow(); Optional<MaterialReading> reading = repository.find(owner, bookmark.materialId());

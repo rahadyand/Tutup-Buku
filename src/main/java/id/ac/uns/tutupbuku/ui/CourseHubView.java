@@ -171,6 +171,15 @@ final class CourseHubView extends BorderPane {
         return selected;
     }
 
+    void openOverview(Semester semester, Course course) {
+        viewed = semester;
+        selected = course;
+        filling = true;
+        sections.getSelectionModel().select(0);
+        filling = false;
+        refresh();
+    }
+
     void openAgenda(Semester semester, Course course) {
         viewed = semester;
         selected = course;

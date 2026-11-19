@@ -17,6 +17,7 @@ import java.nio.file.Path;
 /** Entry point M2. Constructor Path memungkinkan tes menggunakan database sementara. */
 public final class TutupBukuApplication extends Application {
     private final Path databaseFile;
+    private final java.time.Clock clock;
     private SqliteDatabase database;
     private UiTasks tasks;
     private BorderPane root;
@@ -30,7 +31,12 @@ public final class TutupBukuApplication extends Application {
     }
 
     public TutupBukuApplication(Path databaseFile) {
+        this(databaseFile, java.time.Clock.system(java.time.ZoneId.of("Asia/Jakarta")));
+    }
+
+    public TutupBukuApplication(Path databaseFile, java.time.Clock clock) {
         this.databaseFile = databaseFile;
+        this.clock = clock;
     }
 
     @Override
@@ -79,6 +85,12 @@ public final class TutupBukuApplication extends Application {
                                 });
                     }
                 });
+        stage.focusedProperty()
+                .addListener(
+                        (o, old, focused) -> {
+                            if (focused && workspace != null && !root.isDisable())
+                                workspace.refreshDateIfNeeded();
+                        });
         stage.show();
         initializeStorage();
     }
@@ -122,7 +134,9 @@ public final class TutupBukuApplication extends Application {
                                             learning,
                                             planning,
                                             new AgendaService(
-                                                    new SqliteAgendaRepository(database), session),
+                                                    new SqliteAgendaRepository(database),
+                                                    session,
+                                                    clock),
                                             tasks,
                                             profile,
                                             link -> getHostServices().showDocument(link),

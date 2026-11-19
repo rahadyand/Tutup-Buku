@@ -96,6 +96,38 @@ final class GradeView extends BorderPane {
                 });
     }
 
+    void openDashboard(Semester semester, Course course, Entry entry) {
+        // Muat konteks eksplisit tanpa memilih skenario yang kebetulan terakhir disimpan.
+        courseScope(false);
+        actual.load(0, List.of());
+        scenarios.load(semester.id(), List.of());
+        tasks.run(
+                status,
+                () -> {
+                    var values = planning.courses(semester.id());
+                    if (course != null
+                            && values.stream().noneMatch(c -> c.course().id() == course.id()))
+                        throw new IllegalArgumentException(
+                                "Mata kuliah sudah dihapus. Kembali ke Hari Ini dan muat ulang.");
+                    return new Catalog(values, planning.scenarios(semester.id()));
+                },
+                value -> {
+                    filling = true;
+                    semesters.getItems().setAll(semester);
+                    semesters.setValue(semester);
+                    filling = false;
+                    actual.load(semester.id(), value.courses());
+                    if (course != null) actual.selectCourse(course.id());
+                    scenarios.preferCourse(course == null ? 0 : course.id());
+                    scenarios.load(semester.id(), value.scenarios());
+                    loadedSemester = semester.id();
+                    tabs.getSelectionModel()
+                            .select(entry == Entry.PLANNING ? scenarioTab : actualTab);
+                    if (entry == Entry.WHAT_IF) beginWhatIf(actual.selectedCourse());
+                    openGlobal();
+                });
+    }
+
     void openGlobal() {
         courseScope(false);
         Long viewed = semesters.getValue() == null ? null : semesters.getValue().id();

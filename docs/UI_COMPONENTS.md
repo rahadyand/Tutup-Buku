@@ -1,3 +1,13 @@
+# Hari Ini — Phase 5, 19 November 2026
+
+Halaman awal setelah login adalah Hari Ini (tab tambahan setelah Agenda; indeks lama tetap). Satu pemilih semester dilihat tanpa aktivasi, lalu Perlu perhatian → Lanjutkan membaca → Mata kuliah → Kondisi semester dalam satu ScrollPane utama. Agenda menampilkan satu per kelompok dengan jumlah keseluruhan dan tautan daftar berfilter. Bacaan maksimal tiga dari bookmark lama, peminatan berlabel lintas semester; course maksimal empat dengan jalur selector hub untuk lainnya. Empty/error/IP belum lengkap menyatakan data sebenarnya, bukan angka pengganti.
+
+Semua pintasan menuju instance reader/editor/hub/actual/What If/IP lama dengan semester/course/ID yang dimaksud. Guard workspace tetap satu kontrak Save/Buang/Batal; gagal save dan Batal menahan konteks/input. Resume tepat + revision fallback lama, catatan/completion/autosave tetap satu. Refresh melalui worker saat masuk/kembali/pemilih/retry dan perubahan tanggal ketika jendela difokuskan; tanpa polling. Kegagalan satu sumber menahan seluruh ringkasan dengan retry, generation/pemilik menolak respons usang. Sumber IP hanya nilai aktual seluruh course serta asumsi kehadiran tersimpan, tanpa auto-pilih skenario atau IP parsial.
+
+Detail, sumber data, bukti dan review manual: DASHBOARD_PHASE_5.md. Header global, tema dan urutan pintu lama tetap.
+
+---
+
 # Agenda tugas & ujian — Phase 4, 19 November 2026
 
 Tab Agenda global ditambahkan setelah tiga pintu lama; hub mendapat section Tugas & Ujian sesudah Nilai. Satu AgendaView/editor dipindahkan setelah melepas parent lama, dengan record/service yang sama. Global memilih semester/course/jenis/status (awal Belum selesai), hub mengunci course/semester; peralihan membawa context tanpa mengaktifkan arsip. Guard agenda digabung WorkspaceView.requestLeave: Save/Buang/Batal, input/selector/section lama tetap pada gagal/Batal, bersih tanpa dialog.

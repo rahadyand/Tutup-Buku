@@ -1,5 +1,7 @@
 # Tutup Buku — Kandidat Windows 0.5.5-rc1
 
+Source Phase 5 membuka **Hari Ini** setelah login: agenda yang perlu perhatian, lanjutkan bacaan, ringkasan course dan IP dari nilai aktual. Panduan menjalankan demo, sumber data, batas dan pemeriksaan: [DASHBOARD_PHASE_5](docs/DASHBOARD_PHASE_5.md). Schema tetap 7; paket kandidat lama tidak memuat Phase 1–5. Tidak membuat ZIP/installer baru pada fase ini.
+
 Layar belajar kini membuka materi langsung dalam mode **Baca**. Katalog kiri dapat ditutup; **Ubah Materi** membuka editor yang sama dan **Kelola Daftar** memuat semua pengelolaan. Catatan serta penanda selesai tetap tersedia sambil membaca. Kontrak dan bukti terbaru: [UI_COMPONENTS](docs/UI_COMPONENTS.md) dan [DEVELOPMENT_STATUS](docs/DEVELOPMENT_STATUS.md). Paket 0.5.4 adalah artefak lama, bukan build layar ini.
 
 Pemeriksaan maintainability: dua penyederhanaan internal tanpa perubahan UI/rumus/schema. Bukti dan batas di [PONYTAIL_FULL_REVIEW](docs/PONYTAIL_FULL_REVIEW.md).
