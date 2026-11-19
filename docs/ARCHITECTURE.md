@@ -1,10 +1,18 @@
 # Arsitektur Tutup Buku — M1–M5
 
+## Phase 4 — agenda bersama (schema 7)
+
+AgendaItem/ChecklistStep immutable beserta enum type/priority/section memakai composition sederhana. AgendaService mengatur parsing tanggal/jam, Clock WIB, grouping/urut dan konfirmasi completion, tanpa JavaFX/SQL. AgendaRepository/SqliteAgendaRepository memakai SqliteDatabase lama untuk owner, FK, CAS version dan transaksi header+children. Checklist tersimpan ber-ID UUID dan position sesuai urutan List; parent completion terpisah dan tidak memutasi langkah/nilai.
+
+Schema aktif7 menambahkan agenda_items/agenda_steps serta indeks dalam migrasi6→7 atomik. Opsional time disimpan NULL; date-only tidak diberi deadline tengah malam. FK course dan parent+owner mengisolasi akun dan mengikuti cascade live-data lama. Tidak mengubah tabel/revisi akademik, learning/resume/scenario atau RULE_VERSION1. Migrasi gagal/versi tak dikenal dilaporkan tanpa reset. Source schema6/EXE lama tidak mendukung DB7; cadangkan DB+aset sebelum upgrade.
+
+Satu AgendaView dipindahkan DashboardView/CourseHubView antara tab Agenda global dan section Tugas & Ujian. Context semester/course dibawa melalui objek domain lama; global filter semua course tetap tersedia, hub mengunci association. WorkspaceView.requestLeave menggabungkan guard agenda dengan seluruh guard lama. Save gagal/Batal menahan context/input, transisi bersih tanpa konfirmasi. Daftar dan form masing-masing satu ScrollPane, aksi editor/status tetap terjangkau. Tidak ada timer reminder, scheduling framework, UI redesign atau integration nilai. Detail semantik dan bukti di AGENDA_PHASE_4.md.
+
 ## Phase 3 — course hub dan resume per course (schema 6)
 
 CourseHubView adalah koordinator konteks UI Ringkasan/Materi/Nilai. Summary memakai AcademicService/LearningService/GradePlanningService dan hasil domain lama, tanpa SQL/rumus di UI. DashboardView memindahkan satu LearningView/GradeView antara pintu global dan hub; WorkspaceView.requestLeave menjaga draf materi/catatan/nilai/skenario/metadata/profil. Selector hub dikembalikan sebelum guard dan diterapkan setelah save berhasil; Batal/gagal tidak meneruskan perpindahan. Masuk dari konteks global baru tidak memilih skenario lama secara implisit. Rencana/IP tetap snapshot semester; membuka What If course lain dalam rencana memindahkan view sama ke pintu global dengan konteks jelas.
 
-Schema aktif6 menambah course_reading secara transaksional, memakai ReadingBookmark/ResumeResult lama. Schema5 hanya menyimpan satu last_reading per akun sehingga query saja tidak dapat melanjutkan A sesudah B/peminatan. Bookmark global dan course ditulis atomik; peminatan tetap global/terpisah; migrasi menyalin hanya referensi global yang dapat dipetakan. FK course cascade, referensi material terhapus tetap dapat dijelaskan; revisi berbeda fallback0, owner divalidasi tiap query. Semua data lama dan RULE_VERSION1 tetap. Source schema5/EXE lama tidak kompatibel dengan DB6; cadangkan DB+aset sebelum upgrade. Lihat COURSE_HUB_PHASE_3.md untuk kontrak/bukti.
+Schema saat Phase3 adalah6, menambah course_reading secara transaksional, memakai ReadingBookmark/ResumeResult lama. Schema5 hanya menyimpan satu last_reading per akun sehingga query saja tidak dapat melanjutkan A sesudah B/peminatan. Bookmark global dan course ditulis atomik; peminatan tetap global/terpisah; migrasi menyalin hanya referensi global yang dapat dipetakan. FK course cascade, referensi material terhapus tetap dapat dijelaskan; revisi berbeda fallback0, owner divalidasi tiap query. Semua data lama dan RULE_VERSION1 tetap. Source schema5/EXE lama tidak kompatibel dengan DB6; cadangkan DB+aset sebelum upgrade. Lihat COURSE_HUB_PHASE_3.md untuk kontrak/bukti.
 
 ## Phase 2 — snapshot What If (schema 5, 19 November 2026)
 

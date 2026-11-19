@@ -1,5 +1,12 @@
 # Backlog yang dipertahankan
 
+## Phase 4 — agenda tugas/ujian course
+
+Selesai atas instruksi pengguna: CRUD tugas/ujian, checklist manual berurutan, prioritas, completion/reopen, daftar agenda kronologis dan integrasi hub. Agenda tidak menulis nilai atau assessment; tenggat/target belajar khusus modul pada backlog lama tetap ditunda.
+
+Penundaan fase berikutnya tetap eksplisit: calendar grids, jadwal mingguan, recurrence/alternating-week, notifikasi sistem/background reminders, AI, cloud sync, sharing, attachments dan dashboard redesign. Klasifikasi waktu diperbarui saat membuka/filter/Muat ulang, tanpa background timer. Installer/ZIP baru, Windows DPI nyata dan usability tetap memerlukan pekerjaan/penerimaan terpisah; jangan mulai otomatis. Rincian di AGENDA_PHASE_4.md. Seluruh backlog PRD/historis di bawah dipertahankan.
+
+
 M1–M4 selesai: akun/akademik, belajar lokal, CRUD nilai, target, snapshot skenario/revisi/perbandingan/manual IP. Pemulihan gagal simpan sudah diuji per area. M5 menyiapkan kandidat ZIP Windows dengan runtime, integrasi, benchmark dan uji lokal. Gerbang produk yang masih wajib: penerimaan komputer kedua/offline fisik/Windows125% nyata/usability; bukan fitur opsional. Rincian di REQUIREMENTS.
 
 P1 bersyarat: F08G pengelompokan satu tingkat (hanya setelah engine dan skenario flat stabil), F14 pencarian judul, F15 backup/restore UI. Jika tak masuk sebelum pembekuan, tetap prioritas versi berikutnya.

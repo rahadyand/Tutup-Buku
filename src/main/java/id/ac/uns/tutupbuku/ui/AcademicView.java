@@ -439,10 +439,10 @@ final class AcademicView extends BorderPane {
                     if (!confirm(
                             this,
                             "Hapus semester?",
-                            "Hapus semester beserta mata kuliah, nilai aktual, skenario, bab,"
-                                + " materi kuliah, catatan dan progresnya? Semester lain dan"
-                                + " peminatan tetap. Pilihan aktif dikosongkan bila semester ini"
-                                + " aktif.")) return;
+                            "Hapus semester beserta tugas/ujian dan checklist, mata kuliah, nilai"
+                                + " aktual, skenario, bab, materi kuliah, catatan dan progresnya?"
+                                + " Semester lain dan peminatan tetap. Pilihan aktif dikosongkan"
+                                + " bila semester ini aktif.")) return;
                     long id = selectedSemester.id();
                     tasks.run(
                             semesterStatus,
@@ -466,8 +466,8 @@ final class AcademicView extends BorderPane {
         if (!confirm(
                 this,
                 "Hapus mata kuliah?",
-                "Hapus mata kuliah beserta komponen/nilai, bab, materi, catatan dan progres?"
-                        + " Snapshot skenario lama tetap historis.")) return;
+                "Hapus mata kuliah beserta tugas/ujian dan checklist, komponen/nilai, bab, materi,"
+                    + " catatan dan progres? Snapshot skenario lama tetap historis.")) return;
         long semester = selectedSemester.id(), id = selectedCourse.id();
         tasks.run(
                 courseStatus,

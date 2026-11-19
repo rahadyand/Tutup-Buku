@@ -1,3 +1,15 @@
+# Phase 4 — Agenda tugas & ujian, 19 November 2026 (WIB)
+
+**Implementasi source selesai**, baseline `main/11047086b237596a3d17725082a99ad3ad5f86d1`. Agenda global dan section Tugas & Ujian di hub memakai satu AgendaView/editor/service serta ID/record yang sama. CRUD, tanggal wajib/jam opsional, prioritas Normal/Tinggi/Rendah, checklist UUID berurutan, completion/reopen, filter semester/course/jenis/status dan kelompok waktu tersedia. Tanpa jam tetap SQL NULL; tugas date-only terlambat besok, timed sesudah tenggat, ujian lewat berlabel Sudah lewat. Clock WIB dapat diuji dan dibaca sekali per grouping. Checklist dan parent completion terpisah, unfinished completion perlu konfirmasi. Tidak ada penulisan assessment/nilai/Course.revision oleh agenda.
+
+Schema **6 → 7** aditif dalam transaksi menambah agenda_items/agenda_steps, FK owner+parent/course, indeks dan CAS version. Akun/akademik/belajar/nilai/skenario/resume/aset lama dipertahankan. Delete course/semester menghapus agenda live beserta langkah, mengikuti cascade lama; dialog menjelaskan efeknya. **Cadangkan DB+aset saat aplikasi tertutup sebelum memakai data sendiri; source schema6/EXE lama tidak membuka DB7.** Tidak ada dependency, kalkulasi akademik baru atau paket rilis.
+
+Gerbang final **216 tes non-GUI**, **10 GUI pada9kelas**, dan **2 emulasi JavaFX125%** lulus, semuanya0gagal/error/skip. Manifest28PNG final berukuran/hash tercatat di screenshots.json lokal. GUI produksi mencakup raw invalid input, prioritas, step reorder, larangan Task→Exam ber-checklist, save ganda, Save/Buang/Batal, save gagal/retry, global/hub ID sama, arsip tidak aktif, tiga akun/empty course, completion konfirmasi, restart dan nilai tetap. Screenshot native1366/1024/minimum760 diperiksa; Save/Batal tetap terlihat, daftar/form memakai gulir utama.
+
+Panduan, semantik waktu, migrasi, tes dan review: **AGENDA_PHASE_4.md**. Log lokal `tmp/agenda-phase4-20261119/`, PNG `target/verification/agenda-*.png`. Graphify diperbarui AST lokal tanpa API (1527node/5701relasi,0endpoint yatim,1self-loop statis lama); draf/perubahan instruksi/artifak awal tetap di luar commit. Commit/push normal hanya fase ini, hash remote dicatat setelah verifikasi. Calendar/schedules/recurrence/notifikasi/AI/cloud/share/attachment/dashboard redesign ditunda di BACKLOG. Tidak membuat installer/ZIP; paket0.5.5 lama tidak mewakili Phase1–4. Human DPI/usability/keyboard fisik/screen reader/perangkat kedua serta H-02 historis tetap pending. Berhenti di Phase4.
+
+---
+
 # Phase 3 — Ruang mata kuliah, 19 November 2026 (WIB)
 
 **Source Phase 3 selesai**, baseline `main/7f9455702c1c57cc64154b5c00da97d21c2290b7`. Tab Mata Kuliah menambahkan Ringkasan/Materi/Nilai tanpa mengganti dua pintu global. Konteks semester/course eksplisit, arsip tidak diaktifkan, progres/resume course dan hasil aktual memakai service lama. Reader/editor/notes dan grade/What If/scenario tetap instance tunggal yang dipindahkan, dengan guard Simpan/Buang/Batal. Save gagal/Batal menahan selector, section dan input; rencana semester menjelaskan cakupan IP dan tidak memilih skenario otomatis. Course yang dihapus di akademik diperiksa ulang saat kembali.

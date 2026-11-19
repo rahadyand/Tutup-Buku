@@ -48,6 +48,8 @@ class ScenarioMigrationTest {
             s.execute("ALTER TABLE scenario_items DROP COLUMN override_score");
             s.execute("ALTER TABLE scenario_courses DROP COLUMN projection_enabled");
             s.execute("DROP TABLE course_reading");
+            s.execute("DROP TABLE agenda_steps");
+            s.execute("DROP TABLE agenda_items");
             s.execute("PRAGMA user_version=4");
         }
         return saved;
@@ -71,7 +73,7 @@ class ScenarioMigrationTest {
                             try (var q = c.createStatement();
                                     var r = q.executeQuery("PRAGMA user_version")) {
                                 r.next();
-                                assertEquals(6, r.getInt(1));
+                                assertEquals(7, r.getInt(1));
                             }
                             return null;
                         });

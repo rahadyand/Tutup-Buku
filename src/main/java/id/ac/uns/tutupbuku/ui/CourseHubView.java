@@ -20,6 +20,7 @@ final class CourseHubView extends BorderPane {
     private final Consumer<Runnable> guard;
     private final LearningView learningView;
     private final GradeView gradeView;
+    private final AgendaView agendaView;
     private final ComboBox<Semester> semesters = new ComboBox<>();
     private final ComboBox<Course> courses = new ComboBox<>();
     private final Label context = note("Pilih semester dan mata kuliah."),
@@ -31,8 +32,9 @@ final class CourseHubView extends BorderPane {
             status = status("hub-status");
     private final Tab overview = new Tab("Ringkasan"),
             materials = new Tab("Materi"),
-            grades = new Tab("Nilai");
-    private final TabPane sections = new TabPane(overview, materials, grades);
+            grades = new Tab("Nilai"),
+            agenda = new Tab("Tugas & Ujian");
+    private final TabPane sections = new TabPane(overview, materials, grades, agenda);
     private final Button resume = button("hub-resume", "Lanjutkan membaca");
     private final List<Button> courseActions = new ArrayList<>();
     private Optional<Long> activeSemester = Optional.empty();
@@ -49,7 +51,8 @@ final class CourseHubView extends BorderPane {
             UiTasks tasks,
             Consumer<Runnable> guard,
             LearningView learningView,
-            GradeView gradeView) {
+            GradeView gradeView,
+            AgendaView agendaView) {
         this.academic = academic;
         this.learning = learning;
         this.planning = planning;
@@ -57,6 +60,7 @@ final class CourseHubView extends BorderPane {
         this.guard = guard;
         this.learningView = learningView;
         this.gradeView = gradeView;
+        this.agendaView = agendaView;
         materialPage.setId("hub-material-page");
         gradePage.setId("hub-grade-page");
         materialPage.setFitToHeight(true);
@@ -159,6 +163,23 @@ final class CourseHubView extends BorderPane {
         updateContext();
     }
 
+    Semester viewedSemester() {
+        return viewed;
+    }
+
+    Course selectedCourse() {
+        return selected;
+    }
+
+    void openAgenda(Semester semester, Course course) {
+        viewed = semester;
+        selected = course;
+        filling = true;
+        sections.getSelectionModel().select(agenda);
+        filling = false;
+        refresh();
+    }
+
     void releaseGlobal(Runnable action) {
         releaseGlobal = action;
     }
@@ -168,6 +189,7 @@ final class CourseHubView extends BorderPane {
         gradePage.setContent(null);
         materials.setContent(null);
         grades.setContent(null);
+        agenda.setContent(null);
     }
 
     private void navigate(Tab target, boolean continueReading, GradeView.Entry entry) {
@@ -191,6 +213,9 @@ final class CourseHubView extends BorderPane {
             gradePage.setContent(gradeView);
             grades.setContent(gradePage);
             gradeView.openCourse(viewed, selected, entry);
+        } else if (target == agenda) {
+            agenda.setContent(agendaView);
+            agendaView.openCourse(viewed, selected);
         } else if (selected != null) loadCourse(viewed, selected.id());
     }
 
@@ -272,6 +297,7 @@ final class CourseHubView extends BorderPane {
                     courseActions.forEach(b -> b.setDisable(false));
                     materials.setDisable(false);
                     grades.setDisable(false);
+                    agenda.setDisable(false);
                     updateContext();
                     learningStatus.setText(
                             summary.progress().display()
@@ -355,6 +381,7 @@ final class CourseHubView extends BorderPane {
         filling = false;
         materials.setDisable(true);
         grades.setDisable(true);
+        agenda.setDisable(true);
         courseActions.forEach(b -> b.setDisable(true));
         resume.setDisable(true);
         learningStatus.setText("Belum ada mata kuliah. Tambahkan melalui Semester & Mata Kuliah.");

@@ -46,6 +46,17 @@ public final class DashboardView extends VBox {
             Runnable refreshLearning,
             Runnable refreshGrades,
             CourseHubView hub) {
+        this(learningContent, gradeContent, guard, refreshLearning, refreshGrades, hub, null);
+    }
+
+    DashboardView(
+            Node learningContent,
+            Node gradeContent,
+            Consumer<Runnable> guard,
+            Runnable refreshLearning,
+            Runnable refreshGrades,
+            CourseHubView hub,
+            AgendaView agenda) {
         super(8);
         setPadding(new Insets(6));
         Tab learningTab =
@@ -66,21 +77,27 @@ public final class DashboardView extends VBox {
         Tab simulationTab = new Tab("Simulasi nilai", gradeContent);
         Node actualLearningContent = learningTab.getContent();
         TabPane tabs = new TabPane(learningTab, simulationTab);
+        Tab agendaTab = new Tab("Agenda");
         if (hub != null) {
             tabs.getTabs().add(new Tab("Mata Kuliah", hub));
             hub.releaseGlobal(
                     () -> {
                         learningTab.setContent(null);
                         simulationTab.setContent(null);
+                        agendaTab.setContent(null);
                     });
         }
+        if (agenda != null) tabs.getTabs().add(agendaTab);
         tabs.setId("main-tabs");
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         boolean[] selecting = {false};
+        int[] mounted = {0};
         refreshCurrent =
                 () -> {
                     if (hub != null && tabs.getSelectionModel().getSelectedIndex() == 2)
                         hub.refresh();
+                    else if (agenda != null && tabs.getSelectionModel().getSelectedIndex() == 3)
+                        agenda.openGlobal();
                     else {
                         refreshLearning.run();
                         refreshGrades.run();
@@ -88,11 +105,14 @@ public final class DashboardView extends VBox {
                 };
         java.util.function.IntConsumer mount =
                 index -> {
+                    int previous = mounted[0];
+                    mounted[0] = index;
                     boolean fromHub =
                             learningTab.getContent() == null || simulationTab.getContent() == null;
                     if (hub != null) hub.detach();
                     learningTab.setContent(null);
                     simulationTab.setContent(null);
+                    agendaTab.setContent(null);
                     if (index == 0) {
                         if (learningContent instanceof LearningView view) view.courseScope(false);
                         learningTab.setContent(actualLearningContent);
@@ -104,7 +124,16 @@ public final class DashboardView extends VBox {
                             if (fromHub) view.openGlobal();
                             else refreshGrades.run();
                         } else refreshGrades.run();
-                    } else if (hub != null) hub.refresh();
+                    } else if (index == 2 && hub != null) {
+                        if (previous == 3 && agenda != null && agenda.viewedSemester() != null)
+                            hub.openAgenda(agenda.viewedSemester(), agenda.filteredCourse());
+                        else hub.refresh();
+                    } else if (index == 3 && agenda != null) {
+                        agendaTab.setContent(agenda);
+                        if (previous == 2 && hub != null && hub.selectedCourse() != null)
+                            agenda.openGlobal(hub.viewedSemester(), hub.selectedCourse());
+                        else agenda.openGlobal();
+                    }
                 };
         tabs.getSelectionModel()
                 .selectedItemProperty()
@@ -134,6 +163,7 @@ public final class DashboardView extends VBox {
                     () -> {
                         if (hub != null) hub.detach();
                         simulationTab.setContent(gradeContent);
+                        mounted[0] = 1;
                         view.openGlobal();
                         selecting[0] = true;
                         tabs.getSelectionModel().select(simulationTab);

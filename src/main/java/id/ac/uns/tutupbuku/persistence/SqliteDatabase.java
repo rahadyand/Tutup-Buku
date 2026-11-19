@@ -50,7 +50,7 @@ public final class SqliteDatabase implements AutoCloseable {
                 result.next();
                 version = result.getInt(1);
             }
-            if (version > 6) throw new SQLException("Versi database lebih baru dari aplikasi.");
+            if (version > 7) throw new SQLException("Versi database lebih baru dari aplikasi.");
             if (version == 0) {
                 try (ResultSet result =
                         statement.executeQuery(
@@ -148,6 +148,8 @@ CREATE TABLE courses (
             GradeSchema.validatePlanning(database);
             if (version < 6) LearningSchema.migrateCourseReading(database);
             LearningSchema.validateCourseReading(database);
+            if (version < 7) AgendaSchema.migrate(database);
+            AgendaSchema.validate(database);
             try (ResultSet result = statement.executeQuery("PRAGMA foreign_key_check")) {
                 if (result.next()) throw new SQLException("Relasi database tidak konsisten.");
             }

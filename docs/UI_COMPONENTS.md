@@ -1,3 +1,13 @@
+# Agenda tugas & ujian — Phase 4, 19 November 2026
+
+Tab Agenda global ditambahkan setelah tiga pintu lama; hub mendapat section Tugas & Ujian sesudah Nilai. Satu AgendaView/editor dipindahkan setelah melepas parent lama, dengan record/service yang sama. Global memilih semester/course/jenis/status (awal Belum selesai), hub mengunci course/semester; peralihan membawa context tanpa mengaktifkan arsip. Guard agenda digabung WorkspaceView.requestLeave: Save/Buang/Batal, input/selector/section lama tetap pada gagal/Batal, bersih tanpa dialog.
+
+Daftar berupa kartu berkelompok Terlambat, Sudah lewat—ujian, Hari Ini, Mendatang, Selesai. Setiap kartu memiliki judul/jenis/course/tanggal/jam-atau-Tanpa-jam/prioritas-teks/status/progress dan aksi Ubah/Selesai-Reopen/Hapus. Satu scroll utama, tanpa calendar grid. Filter jenis/status eksplisit; selesai tidak hilang dari penyimpanan. Form pendek memakai field judul400/course280/tanggal150/jam110/jenis-prioritas110, deskripsi plaintext, serta langkah ber-ID stabil dengan centang/teks/up/down/hapus. Save/Batal/status di bawah tetap terlihat. Native focus diarahkan ke course kosong atau judul setelah form terpasang. Invalid raw date/time dipertahankan; tidak ada commit/format tanggal diam-diam saat blur.
+
+Checklist hanya Tugas; ganti Ujian ditahan bila ada langkah. Semua langkah dicentang tidak auto-complete parent. Parent dengan unfinished steps meminta Tetap selesaikan/Batal; reopen mempertahankan langkah. Hapus item/langkah memakai confirm lama. Konfirmasi hapus akademik mencantumkan tugas/ujian/checklist yang ikut cascade. Template FormSupport/GradeForms.guard/UiTasks dan token CSS lama dipakai; kalender, notifikasi dan hubungan nilai otomatis tidak ditambahkan. Detail/batas/bukti: AGENDA_PHASE_4.md.
+
+---
+
 # Ruang mata kuliah — Phase 3, 19 November 2026
 
 Dashboard mempertahankan pintu global Modul belajar/Simulasi nilai dan urutannya; tab Mata Kuliah menambahkan konteks semester dilihat/course serta Ringkasan/Materi/Nilai. Semester aktif tetap label terpisah dan tidak berubah saat browsing arsip. Ringkasan memiliki aksi nyata ke materi, resume course, aktual, What If dan rencana/IP semester; hasil aktual/proyeksi/unknown tidak dicampur. Tidak ada tab Tasks/Calendar/Schedule kosong.

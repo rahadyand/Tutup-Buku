@@ -121,6 +121,8 @@ public final class TutupBukuApplication extends Application {
                                             academic,
                                             learning,
                                             planning,
+                                            new AgendaService(
+                                                    new SqliteAgendaRepository(database), session),
                                             tasks,
                                             profile,
                                             link -> getHostServices().showDocument(link),

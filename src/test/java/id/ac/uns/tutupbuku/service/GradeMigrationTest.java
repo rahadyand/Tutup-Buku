@@ -68,6 +68,8 @@ class GradeMigrationTest {
                         "assessment_components"
                     }) s.execute("DROP TABLE " + table);
             s.execute("DROP TABLE course_reading");
+            s.execute("DROP TABLE agenda_steps");
+            s.execute("DROP TABLE agenda_items");
             s.execute("PRAGMA user_version=2");
         }
     }
@@ -111,7 +113,7 @@ class GradeMigrationTest {
                             try (var s = c.createStatement();
                                     var r = s.executeQuery("PRAGMA user_version")) {
                                 r.next();
-                                assertEquals(6, r.getInt(1));
+                                assertEquals(7, r.getInt(1));
                             }
                             return null;
                         });

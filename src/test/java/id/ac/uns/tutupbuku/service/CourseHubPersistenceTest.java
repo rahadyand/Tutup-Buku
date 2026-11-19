@@ -205,6 +205,8 @@ class CourseHubPersistenceTest {
         try (var c = DriverManager.getConnection("jdbc:sqlite:" + directory.resolve("hub.db"));
                 var s = c.createStatement()) {
             s.execute("DROP TABLE course_reading");
+            s.execute("DROP TABLE agenda_steps");
+            s.execute("DROP TABLE agenda_items");
             s.execute("PRAGMA user_version=5");
         }
     }
