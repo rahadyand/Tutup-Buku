@@ -16,6 +16,15 @@ import java.util.*;
 final class ScenarioPane extends BorderPane {
     private final GradePlanningService service;
     private final UiTasks tasks;
+
+    record CourseDraft(SemesterScenario scenario, long courseId, boolean modified) {}
+
+    private final java.util.function.Consumer<CourseDraft> editCourse;
+    private final CheckBox projectionEnabled =
+            new CheckBox("Gunakan target/asumsi sebagai proyeksi mata kuliah ini");
+    private final VBox ipSources = new VBox(6);
+    private final Button saveScenario = button("save-scenario", "Simpan skenario");
+    private boolean outdated;
     private final ListView<SemesterScenario> saved = new ListView<>();
     private final ComboBox<ScenarioCourse> courses = new ComboBox<>();
     private final TextField name = text("scenario-name", "Nama skenario"),
@@ -40,11 +49,17 @@ final class ScenarioPane extends BorderPane {
     private boolean filling, dirty;
     private final Label context = status("scenario-context");
 
-    private record LockRow(CheckBox locked, TextField score, Label suggestion) {}
+    private record LockRow(CheckBox locked, TextField score, Label suggestion, boolean actual) {}
 
-    ScenarioPane(GradePlanningService service, UiTasks tasks) {
+    ScenarioPane(
+            GradePlanningService service,
+            UiTasks tasks,
+            java.util.function.Consumer<CourseDraft> editCourse) {
         this.service = service;
         this.tasks = tasks;
+        this.editCourse = editCourse;
+        projectionEnabled.setId("scenario-projection");
+        projectionEnabled.selectedProperty().addListener((o, a, b) -> changed());
         saved.setId("saved-scenarios");
         courses.setId("scenario-course");
         mode.setId("scenario-mode");
@@ -126,9 +141,9 @@ final class ScenarioPane extends BorderPane {
                             }
                         });
         Button create = button("new-scenario", "Skenario baru"),
-                duplicate = button("duplicate-scenario", "Duplikasi"),
+                duplicate = button("duplicate-scenario", "Simpan salinan"),
                 delete = button("delete-scenario", "Hapus skenario"),
-                save = button("save-scenario", "Simpan skenario"),
+                save = saveScenario,
                 calculate = button("calculate-scenario", "Hitung target & IP"),
                 refresh = button("refresh-scenario", "Tinjau / perbarui basis"),
                 clearEstimate = button("clear-scenario-estimate", "Kosongkan estimasi"),
@@ -154,23 +169,25 @@ final class ScenarioPane extends BorderPane {
                                             });
                                 }));
         duplicate.setOnAction(
-                e ->
-                        guard(
-                                () -> {
-                                    if (draft == null || draft.id() == 0) {
-                                        status.setText("Simpan skenario sebelum menggandakan.");
-                                        return;
-                                    }
-                                    long id = draft.id();
-                                    String newName = draft.name() + " (salinan)";
-                                    tasks.run(
-                                            status,
-                                            () -> service.duplicate(id, newName),
-                                            value -> {
-                                                show(value);
-                                                reloadList();
-                                            });
-                                }));
+                e -> {
+                    try {
+                        capture();
+                        SemesterScenario input = draft;
+                        tasks.save(
+                                status,
+                                () -> service.saveCopy(input, input.name() + " (salinan)"),
+                                value -> {
+                                    show(value);
+                                    reloadList();
+                                    status.setText(
+                                            "Salinan independen tersimpan; skenario asal tidak"
+                                                    + " diubah.");
+                                },
+                                error -> {});
+                    } catch (IllegalArgumentException error) {
+                        status.setText(error.getMessage());
+                    }
+                });
         delete.setOnAction(
                 e ->
                         guard(
@@ -225,6 +242,26 @@ final class ScenarioPane extends BorderPane {
                                     + " atas 2 desimal; nilai aktual tidak dibulatkan untuk"
                                     + " konversi huruf."));
         formula.setExpanded(false);
+        Button edit = button("edit-scenario-what-if", "Buka What If mata kuliah");
+        edit.setOnAction(
+                e -> {
+                    try {
+                        capture();
+                        if (current == null)
+                            throw new IllegalArgumentException("Pilih mata kuliah.");
+                        CourseDraft input =
+                                new CourseDraft(draft, current.basis().course().id(), dirty);
+                        show(null); // Kepemilikan draf dipindahkan, bukan dua editor aktif untuk
+                        // record yang sama.
+                        editCourse.accept(input);
+                    } catch (IllegalArgumentException error) {
+                        status.setText(error.getMessage());
+                    }
+                });
+        TitledPane ipDetails = new TitledPane("Sumber hasil tiap mata kuliah untuk IP", ipSources);
+        ipDetails.setId("scenario-ip-sources");
+        ipDetails.setExpanded(false);
+        ipDetails.setAnimated(false);
         VBox body =
                 form(
                         heading("Rencana semester"),
@@ -237,7 +274,14 @@ final class ScenarioPane extends BorderPane {
                         new FlowPane(6, 6, save, calculate, refresh),
                         review,
                         gpaResult,
+                        note(
+                                "IP di sini memakai satu skenario semester lengkap, bukan gabungan"
+                                    + " otomatis skenario per mata kuliah. Hasil yang kosong tidak"
+                                    + " diganti E/0."),
+                        ipDetails,
                         field("Mata kuliah dalam snapshot", courses),
+                        edit,
+                        projectionEnabled,
                         field("Mode aktif skenario", mode),
                         field(
                                 "Estimasi huruf (dipakai hanya jika belum ada huruf aktual)",
@@ -310,8 +354,11 @@ final class ScenarioPane extends BorderPane {
         long courseId = current == null ? 0 : current.basis().course().id();
         draft = value;
         dirty = false;
+        outdated = false;
+        ipSources.getChildren().clear();
         current = null;
         filling = true;
+        if (value == null) saved.getSelectionModel().clearSelection();
         name.setText(value == null ? "" : value.name());
         gpaTarget.setText(value == null ? "3" : GradeForms.number(value.targetGpa()));
         courses.getItems().setAll(value == null ? List.of() : value.courses());
@@ -340,21 +387,43 @@ final class ScenarioPane extends BorderPane {
         if (value != null) calculate();
     }
 
-    private void showCourse(ScenarioCourse value) {
+    void showScenario(SemesterScenario value, long courseId, boolean modified) {
+        current =
+                value.courses().stream()
+                        .filter(c -> c.basis().course().id() == courseId)
+                        .findFirst()
+                        .orElse(null);
+        show(value);
+        dirty = modified;
+        updateContext();
+        reloadList();
+    }
+
+    void requestReview() {
+        refreshBasis();
+    }
+
+    private void updateContext() {
         context.setText(
-                value == null
+                draft == null
                         ? "Buat atau buka skenario."
-                        : "Skenario: "
-                                + name.getText()
+                        : (draft.id() == 0
+                                        ? "Sementara"
+                                        : dirty ? "Perubahan belum disimpan" : "Tersimpan")
                                 + " · "
-                                + value.basis().course().name()
-                                + " · Jumlah bobot "
-                                + GradeForms.number(value.basis().totalWeight())
-                                + "%");
+                                + name.getText()
+                                + (current == null ? "" : " · " + current.basis().course().name())
+                                + (outdated ? " · BASIS USANG" : ""));
+        saveScenario.setText(
+                draft != null && draft.id() != 0 ? "Perbarui skenario" : "Simpan skenario");
+    }
+
+    private void showCourse(ScenarioCourse value) {
         current = value;
         filling = true;
         locks.clear();
         rows.getChildren().clear();
+        projectionEnabled.setSelected(value == null || value.projectionEnabled());
         mode.setValue(value == null ? EvaluationMode.DETAIL : value.mode());
         estimate.setValue(value == null ? null : value.estimatedLetter().orElse(null));
         numericTarget.setText(value == null ? "60" : GradeForms.number(value.targetScore()));
@@ -366,19 +435,21 @@ final class ScenarioPane extends BorderPane {
         if (value != null)
             for (AssessmentComponent item : value.basis().components()) {
                 boolean actual = item.earned().isPresent(), zero = item.weight().signum() == 0;
-                CheckBox locked = new CheckBox("Kunci asumsi");
+                CheckBox locked = new CheckBox(actual ? "Override sementara" : "Kunci asumsi");
                 locked.setId("lock-" + item.id());
-                locked.setSelected(value.lockedScores().containsKey(item.id()));
-                locked.setDisable(actual || zero);
+                Map<String, BigDecimal> activeScores =
+                        actual ? value.overriddenScores() : value.lockedScores();
+                locked.setSelected(activeScores.containsKey(item.id()));
+                locked.setDisable(zero);
                 TextField score = text("assumption-" + item.id(), "Skor normalisasi 0–100");
                 score.setText(
-                        Optional.ofNullable(value.lockedScores().get(item.id()))
+                        Optional.ofNullable(activeScores.get(item.id()))
                                 .map(GradeForms::number)
                                 .orElse(""));
-                score.setDisable(actual || zero || !locked.isSelected());
+                score.setDisable(zero || !locked.isSelected());
                 Label suggestion = note("");
                 suggestion.setId("suggestion-" + item.id());
-                locks.put(item.id(), new LockRow(locked, score, suggestion));
+                locks.put(item.id(), new LockRow(locked, score, suggestion, actual));
                 String state =
                         actual
                                 ? "Aktual "
@@ -407,12 +478,13 @@ final class ScenarioPane extends BorderPane {
                 locked.selectedProperty()
                         .addListener(
                                 (o, a, b) -> {
-                                    score.setDisable(!b || actual || zero);
+                                    score.setDisable(!b || zero);
                                     changed();
                                 });
                 score.textProperty().addListener((o, a, b) -> changed());
             }
         filling = false;
+        updateContext();
         courseResult.setText(
                 value == null
                         ? "Pilih mata kuliah."
@@ -422,6 +494,10 @@ final class ScenarioPane extends BorderPane {
     private void changed() {
         if (!filling && draft != null) {
             dirty = true;
+            updateContext();
+            gpaResult.setText("IP belum diperbarui — tekan Hitung target & IP.");
+            courseResult.setText("Perubahan belum dihitung.");
+            locks.values().forEach(row -> row.suggestion().setText("Belum dihitung."));
             status.setText(
                     "Belum disimpan — hitung untuk melihat hasil terbaru, lalu Simpan skenario.");
         }
@@ -432,10 +508,14 @@ final class ScenarioPane extends BorderPane {
             throw new IllegalArgumentException("Buat atau buka skenario terlebih dahulu.");
         List<ScenarioCourse> values = new ArrayList<>(draft.courses());
         if (current != null) {
-            Map<String, BigDecimal> scores = new LinkedHashMap<>();
+            Map<String, BigDecimal> scores = new LinkedHashMap<>(),
+                    overrides = new LinkedHashMap<>();
             for (var row : locks.entrySet())
                 if (row.getValue().locked().isSelected() && !row.getValue().locked().isDisable())
-                    scores.put(row.getKey(), DecimalInput.parse(row.getValue().score().getText()));
+                    (row.getValue().actual() ? overrides : scores)
+                            .put(
+                                    row.getKey(),
+                                    DecimalInput.parse(row.getValue().score().getText()));
             Optional<LetterGrade> target =
                     "Huruf minimum".equals(targetKind.getValue())
                             ? Optional.ofNullable(targetLetter.getValue())
@@ -456,7 +536,9 @@ final class ScenarioPane extends BorderPane {
                                     .orElseGet(() -> DecimalInput.parse(numericTarget.getText())),
                             target,
                             chosen,
-                            scores);
+                            scores,
+                            overrides,
+                            projectionEnabled.isSelected());
             for (int i = 0; i < values.size(); i++)
                 if (values.get(i).basis().course().id() == current.basis().course().id()) {
                     values.set(i, input);
@@ -487,6 +569,22 @@ final class ScenarioPane extends BorderPane {
     }
 
     private void showEvaluation(ScenarioEvaluation value) {
+        outdated = value.review().outdated();
+        updateContext();
+        ipSources.getChildren().clear();
+        for (var course : value.courses()) {
+            Label source =
+                    note(
+                            course.input().basis().course().name()
+                                    + " · "
+                                    + GradeForms.number(course.input().basis().course().credits())
+                                    + " SKS · "
+                                    + service.resultSource(course)
+                                    + "\n"
+                                    + GradeForms.compactResult(course.grade()));
+            source.setId("ip-source-" + course.input().basis().course().id());
+            ipSources.getChildren().add(source);
+        }
         review.setText(
                 value.review().outdated()
                         ? "USANG / PERLU DITINJAU — hasil berikut adalah snapshot historis.\n"
@@ -494,7 +592,10 @@ final class ScenarioPane extends BorderPane {
                         : "Basis terkini. Hasil memakai snapshot yang sedang dibuka.");
         GpaResult gpa = value.gpa();
         gpaResult.setText(
-                (value.review().outdated() ? "Historis · " : "")
+                (gpa.value().isEmpty() ? "IP belum dapat dihitung lengkap.\n" : "")
+                        + (value.review().outdated()
+                                ? "Historis (bukan IP semester terkini) · "
+                                : "")
                         + gpa.label()
                         + ": "
                         + gpa.displayValue()
@@ -524,8 +625,13 @@ final class ScenarioPane extends BorderPane {
                                             row.suggestion()
                                                     .setText(
                                                             row.locked().isSelected()
-                                                                    ? "Asumsi terkunci (bukan"
-                                                                            + " aktual)"
+                                                                    ? (row.actual()
+                                                                            ? "Override terkunci"
+                                                                                  + " (aktual asli"
+                                                                                  + " tetap)"
+                                                                            : "Asumsi terkunci"
+                                                                                    + " (bukan"
+                                                                                    + " aktual)")
                                                                     : c.targetPlan()
                                                                             .map(
                                                                                     p ->
@@ -631,88 +737,268 @@ final class ScenarioPane extends BorderPane {
                 values -> {
                     var a = values.get(0);
                     var b = values.get(1);
+                    Label header =
+                            note(
+                                    "A: "
+                                            + a.scenario().name()
+                                            + " · Target IP "
+                                            + GradeForms.number(a.scenario().targetGpa())
+                                            + "\nB: "
+                                            + b.scenario().name()
+                                            + " · Target IP "
+                                            + GradeForms.number(b.scenario().targetGpa()));
+                    header.setId("comparison-context");
+                    comparisonContent
+                            .getChildren()
+                            .setAll(header, note(service.comparisonWarning(a, b)));
+                    if (a.scenario().semesterId() != b.scenario().semesterId()) return;
                     TableView<List<String>> table = new TableView<>();
                     table.setId("scenario-comparison-table");
                     String[] headings = {
                         "Mata kuliah",
                         "SKS A / B",
-                        a.scenario().name() + " · efektif",
-                        b.scenario().name() + " · efektif"
+                        a.scenario().name() + " · target/hasil",
+                        b.scenario().name() + " · target/hasil"
                     };
                     table.setTooltip(new Tooltip(String.join("\n", headings)));
                     for (int i = 0; i < headings.length; i++) {
-                        final int column = i;
+                        int column = i;
                         TableColumn<List<String>, String> col = new TableColumn<>(headings[i]);
                         col.setCellValueFactory(
                                 cell -> new ReadOnlyStringWrapper(cell.getValue().get(column)));
-                        col.setPrefWidth(i == 0 ? 180 : 150);
+                        col.setPrefWidth(i == 0 ? 140 : i == 1 ? 80 : 260);
+                        col.setMinWidth(i == 0 ? 100 : i == 1 ? 75 : 180);
+                        col.setCellFactory(
+                                c ->
+                                        new TableCell<>() {
+                                            private final Label content = note("");
+
+                                            {
+                                                content.prefWidthProperty()
+                                                        .bind(c.widthProperty().subtract(14));
+                                                content.textFillProperty().bind(textFillProperty());
+                                                prefHeightProperty()
+                                                        .bind(
+                                                                javafx.beans.binding.Bindings
+                                                                        .createDoubleBinding(
+                                                                                () ->
+                                                                                        content
+                                                                                                        .prefHeight(
+                                                                                                                Math
+                                                                                                                        .max(
+                                                                                                                                1,
+                                                                                                                                c
+                                                                                                                                                .getWidth()
+                                                                                                                                        - 14))
+                                                                                                + 12,
+                                                                                c.widthProperty(),
+                                                                                content
+                                                                                        .textProperty(),
+                                                                                content
+                                                                                        .fontProperty()));
+                                            }
+
+                                            @Override
+                                            protected void updateItem(String text, boolean empty) {
+                                                super.updateItem(text, empty);
+                                                setText(null);
+                                                content.setText(empty ? "" : text);
+                                                setGraphic(empty ? null : content);
+                                                setTooltip(empty ? null : new Tooltip(text));
+                                            }
+                                        });
                         table.getColumns().add(col);
                     }
-                    Map<Long, ScenarioEvaluation.CourseEvaluation> right = new LinkedHashMap<>();
+                    table.setColumnResizePolicy(
+                            TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+                    Map<Long, ScenarioEvaluation.CourseEvaluation> left = new LinkedHashMap<>(),
+                            right = new LinkedHashMap<>();
+                    a.courses().forEach(c -> left.put(c.input().basis().course().id(), c));
                     b.courses().forEach(c -> right.put(c.input().basis().course().id(), c));
-                    for (var left : a.courses()) {
-                        var other = right.remove(left.input().basis().course().id());
+                    Set<Long> ids = new LinkedHashSet<>(left.keySet());
+                    ids.addAll(right.keySet());
+                    VBox details = new VBox(8);
+                    details.setId("comparison-details");
+                    for (long id : ids) {
+                        var x = left.get(id);
+                        var y = right.get(id);
+                        var available = x == null ? y : x;
                         table.getItems()
                                 .add(
                                         List.of(
-                                                left.input().basis().course().name(),
-                                                GradeForms.number(
-                                                                left.input()
-                                                                        .basis()
-                                                                        .course()
-                                                                        .credits())
-                                                        + " / "
-                                                        + (other == null
-                                                                ? "—"
+                                                available.input().basis().course().name(),
+                                                (x == null
+                                                                ? "Tidak ada"
                                                                 : GradeForms.number(
-                                                                        other.input()
+                                                                        x.input()
+                                                                                .basis()
+                                                                                .course()
+                                                                                .credits()))
+                                                        + " / "
+                                                        + (y == null
+                                                                ? "Tidak ada"
+                                                                : GradeForms.number(
+                                                                        y.input()
                                                                                 .basis()
                                                                                 .course()
                                                                                 .credits())),
-                                                GradeForms.comparisonGrade(left.grade()),
-                                                other == null
-                                                        ? "Tidak ada"
-                                                        : GradeForms.comparisonGrade(
-                                                                other.grade())));
+                                                comparisonCourse(x),
+                                                comparisonCourse(y)));
+                        details.getChildren().add(componentComparison(x, y));
                     }
-                    right.values()
-                            .forEach(
-                                    c ->
-                                            table.getItems()
-                                                    .add(
-                                                            List.of(
-                                                                    c.input()
-                                                                            .basis()
-                                                                            .course()
-                                                                            .name(),
-                                                                    "— / "
-                                                                            + GradeForms.number(
-                                                                                    c.input()
-                                                                                            .basis()
-                                                                                            .course()
-                                                                                            .credits()),
-                                                                    "Tidak ada",
-                                                                    GradeForms.comparisonGrade(
-                                                                            c.grade()))));
-                    table.setPrefHeight(240);
+                    table.setPrefHeight(Math.min(360, 70 + ids.size() * 100));
                     comparisonContent
                             .getChildren()
-                            .setAll(
-                                    note(service.comparisonWarning(a, b)),
+                            .addAll(
                                     table,
                                     note(
-                                            a.scenario().name()
+                                            (a.review().outdated() ? "Historis · " : "")
+                                                    + a.scenario().name()
                                                     + ": "
                                                     + a.gpa().label()
                                                     + " "
                                                     + a.gpa().displayValue()
                                                     + "\n"
+                                                    + (b.review().outdated() ? "Historis · " : "")
                                                     + b.scenario().name()
                                                     + ": "
                                                     + b.gpa().label()
                                                     + " "
-                                                    + b.gpa().displayValue()));
+                                                    + b.gpa().displayValue()),
+                                    details);
                 });
+    }
+
+    private String comparisonCourse(ScenarioEvaluation.CourseEvaluation value) {
+        if (value == null) return "Tidak ada dalam snapshot";
+        ScenarioCourse input = value.input();
+        String target =
+                !input.projectionEnabled()
+                        ? "Hanya aktual (target tidak dipakai)"
+                        : input.mode() == EvaluationMode.DIRECT
+                                ? "Huruf langsung / estimasi"
+                                : "Target "
+                                        + GradeForms.number(input.targetScore())
+                                        + " / "
+                                        + LetterGrade.fromScore(input.targetScore()).label();
+        return target
+                + "\n"
+                + GradeForms.compactResult(value.grade())
+                + "\n"
+                + service.resultSource(value);
+    }
+
+    private TitledPane componentComparison(
+            ScenarioEvaluation.CourseEvaluation a, ScenarioEvaluation.CourseEvaluation b) {
+        ScenarioCourse x = a == null ? null : a.input(), y = b == null ? null : b.input();
+        var available = x == null ? y : x;
+        VBox body = new VBox(8);
+        body.getChildren()
+                .add(
+                        note(
+                                x == null || y == null
+                                        ? "Mata kuliah hanya ada pada satu snapshot; tidak"
+                                                + " disejajarkan berdasarkan urutan."
+                                        : x.basis().equals(y.basis())
+                                                ? "Basis aktual sama. Perbedaan di bawah berasal"
+                                                        + " dari rencana."
+                                                : "BASIS BERBEDA — hasil bukan perbandingan asumsi"
+                                                        + " saja. Revisi A/B: "
+                                                        + x.basis().course().revision()
+                                                        + " / "
+                                                        + y.basis().course().revision()
+                                                        + "; SKS: "
+                                                        + GradeForms.number(
+                                                                x.basis().course().credits())
+                                                        + " / "
+                                                        + GradeForms.number(
+                                                                y.basis().course().credits())));
+        body.getChildren()
+                .add(note("Kehadiran A: " + attendanceText(x) + " · B: " + attendanceText(y)));
+        Map<String, AssessmentComponent> left = new LinkedHashMap<>(),
+                right = new LinkedHashMap<>();
+        if (x != null) x.basis().components().forEach(c -> left.put(c.id(), c));
+        if (y != null) y.basis().components().forEach(c -> right.put(c.id(), c));
+        Set<String> ids = new LinkedHashSet<>(left.keySet());
+        ids.addAll(right.keySet());
+        for (String id : ids) {
+            var ca = left.get(id);
+            var cb = right.get(id);
+            String name = (ca == null ? cb : ca).name();
+            Label label =
+                    note(
+                            name
+                                    + " · Bobot A/B: "
+                                    + (ca == null ? "Tidak ada" : GradeForms.number(ca.weight()))
+                                    + " / "
+                                    + (cb == null ? "Tidak ada" : GradeForms.number(cb.weight()))
+                                    + "%\nAktual A: "
+                                    + actualText(ca)
+                                    + " · B: "
+                                    + actualText(cb)
+                                    + "\nA: "
+                                    + assumptionText(x, id)
+                                    + " · Kebutuhan: "
+                                    + requirement(a, id)
+                                    + "\nB: "
+                                    + assumptionText(y, id)
+                                    + " · Kebutuhan: "
+                                    + requirement(b, id));
+            label.setId("comparison-item-" + id);
+            label.setTooltip(new Tooltip("Identitas komponen: " + id));
+            body.getChildren().add(label);
+        }
+        TitledPane pane =
+                new TitledPane(
+                        available.basis().course().name() + " — rincian komponen/basis", body);
+        pane.setExpanded(false);
+        pane.setAnimated(false);
+        return pane;
+    }
+
+    private static String actualText(AssessmentComponent c) {
+        return c == null
+                ? "Tidak ada di snapshot"
+                : c.earned()
+                        .map(
+                                n ->
+                                        GradeForms.number(n)
+                                                + "/"
+                                                + GradeForms.number(c.maximum().orElseThrow()))
+                        .orElse("Kosong");
+    }
+
+    private static String assumptionText(ScenarioCourse c, String id) {
+        if (c == null || c.basis().components().stream().noneMatch(item -> item.id().equals(id)))
+            return "Tidak ada di snapshot";
+        if (!c.projectionEnabled()) return "Hanya aktual (asumsi tidak dipakai)";
+        if (c.overriddenScores().containsKey(id))
+            return "Override " + GradeForms.number(c.overriddenScores().get(id));
+        return c.lockedScores().containsKey(id)
+                ? "Kunci " + GradeForms.number(c.lockedScores().get(id))
+                : "Tanpa kunci/override";
+    }
+
+    private static String requirement(ScenarioEvaluation.CourseEvaluation c, String id) {
+        return c == null
+                ? "Tidak ada"
+                : c.targetPlan()
+                        .map(
+                                p ->
+                                        Optional.ofNullable(p.suggestedScores().get(id))
+                                                .map(GradeForms::number)
+                                                .orElse(
+                                                        p.status() == TargetPlan.Status.IMPOSSIBLE
+                                                                ? ">100 (mustahil)"
+                                                                : "—"))
+                        .orElse("Belum lengkap / tidak memakai target");
+    }
+
+    private static String attendanceText(ScenarioCourse c) {
+        if (c == null) return "Tidak ada";
+        Attendance a = c.attendance();
+        return (a.met() ? "Terpenuhi" : "Tidak terpenuhi → E/0")
+                + (a.confirmed() ? " (terverifikasi)" : " (asumsi)");
     }
 
     void guard(Runnable action) {

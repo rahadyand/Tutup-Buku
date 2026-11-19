@@ -1,3 +1,14 @@
+# Phase 2 What If — 19 November 2026 (WIB)
+
+**Implementasi source selesai**, baseline `main/eda5d315b72fb26cc1896ad034e2324f152b3b45`. Eksperimen kini dapat disimpan bernama, dibuka/diedit, diperbarui atau disalin independen, diserahkan ke layar skenario/IP yang sama, dan dibandingkan lewat ID stabil. Status sementara/tersimpan/berubah/usang, pulihkan tersimpan tanpa rebase, Simpan/Buang/Batal, save gagal/retry dan proteksi input dipertahankan. Mata kuliah lain pada rencana dari What If hanya memakai aktual sampai pengguna mengaktifkan proyeksi; IP tetap ditahan jika satu course wajib belum lengkap. Sumber hasil per course dan basis historis terlihat.
+
+Schema **4 → 5** aditif dalam transaksi diperlukan untuk `override_score` terpisah dari earned/max dan `projection_enabled`; skenario lama mempertahankan perilaku proyeksi lama. Engine, ambang, dependency, dashboard/modul belajar/navigasi global tidak diubah. **Cadangkan data+aset ketika aplikasi tertutup sebelum memakai source pada data sendiri; EXE schema 4 lama tidak mendukung database yang sudah bermigrasi ke schema 5.** Semua tes memakai TempDir, tanpa database pribadi.
+
+Gerbang aktual: **194 tes verify, 0 gagal/error/skip**. **5 GUI regresi** dan **2 emulasi JavaFX 125%** juga lulus, masing-masing 0 gagal/error/skip. Screenshot kondisi sementara/tersimpan/berubah/usang/perbandingan/IP lengkap-belum lengkap/kosong diperiksa pada 1366 dan 1024, termasuk hasil emulasi. Teks tabel dan pesan error simpan diperjelas setelah inspeksi; tes geometri melindungi pembungkusan. Ini bukan uji usability/DPI Windows nyata. Graphify AST diperbarui lokal (1280 node/4717 relasi, 0 endpoint yatim, 1 self-loop statis lama). Lihat **WHAT_IF_PHASE_2.md** untuk alur, perubahan layanan/skema, log, perintah run dan langkah review. Bukti lokal di `tmp/what-if-phase2-20261119/` dan `target/verification/phase2-*.png`.
+
+Tidak membuat paket baru: ZIP/EXE 0.5.5 lama tetap historis dan tidak mewakili source Phase 1/2. Usability manusia, keyboard fisik/screen reader, DPI Windows nyata dan perangkat kedua tetap pending; H-02 historis tidak diaudit ulang. Perubahan lokal AGENTS/Graphify/draf yang sudah ada dipertahankan di luar commit fase. Hash commit/push final dicatat pada receipt lokal dan handoff setelah remote diverifikasi. Berhenti di Phase 2.
+
+---
 # Phase 1 What If — 19 November2026 (WIB)
 
 **Implementasi dan gerbang source selesai**, baseline main/d77c8a7. Simulasi Target per-course kini tersedia dari editor aktual; angka/huruf satu target, baris asumsi/override/pulih, kalkulasi otomatis dengan generation guard dan hasil aktual/proyeksi/efektif terpisah. Nilai aktual dan skenario tersimpan tidak ditulis oleh mode sementara. Target60→55→70,84,5/A-, impossible/no-free/weight0/invalid/attendance dan guard/failure/retry diuji. Tidak mengubah engine/schema/dependency atau membuat paket baru. Skenario semester/CAS/stale tetap memakai workflow lama.

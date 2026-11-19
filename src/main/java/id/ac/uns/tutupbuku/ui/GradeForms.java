@@ -43,6 +43,19 @@ final class GradeForms {
                 + (grade.issues().isEmpty() ? "" : "\n" + String.join("\n", grade.issues()));
     }
 
+    static String compactResult(GradeResult grade) {
+        return "Asal: "
+                + grade.underlyingScore().map(GradeForms::approximation).orElse("—")
+                + " / "
+                + GradeForms.letter(grade.underlyingLetter())
+                + " · Efektif: "
+                + GradeForms.letter(grade.effectiveLetter())
+                + " · "
+                + grade.effectiveLetter()
+                        .map(g -> g.isPassing() ? "Lulus" : "Tidak lulus")
+                        .orElse("Belum lengkap");
+    }
+
     static ComboBox<LetterGrade> letters(String id) {
         ComboBox<LetterGrade> box = new ComboBox<>();
         box.setId(id);

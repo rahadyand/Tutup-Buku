@@ -34,7 +34,7 @@ public final class SqliteDatabase implements AutoCloseable {
                 }
             throw new StorageException(
                     "Penyimpanan lokal tidak dapat dibuka. Database tidak direset. Periksa"
-                        + " lokasi/izin lalu coba lagi.",
+                            + " lokasi/izin lalu coba lagi.",
                     error);
         }
     }
@@ -50,12 +50,12 @@ public final class SqliteDatabase implements AutoCloseable {
                 result.next();
                 version = result.getInt(1);
             }
-            if (version > 4) throw new SQLException("Versi database lebih baru dari aplikasi.");
+            if (version > 5) throw new SQLException("Versi database lebih baru dari aplikasi.");
             if (version == 0) {
                 try (ResultSet result =
                         statement.executeQuery(
                                 "SELECT name FROM sqlite_master WHERE type='table' AND name NOT"
-                                    + " LIKE 'sqlite_%'")) {
+                                        + " LIKE 'sqlite_%'")) {
                     if (result.next())
                         throw new SQLException(
                                 "Database versi 0 berisi tabel yang tidak dikenal; tidak ditimpa.");
@@ -107,7 +107,7 @@ CREATE TABLE courses (
 """);
                     statement.execute(
                             "CREATE INDEX courses_semester_owner ON courses(semester_id,"
-                                + " owner_nim)");
+                                    + " owner_nim)");
                     statement.execute("PRAGMA user_version = 1");
                     database.commit();
                 } catch (SQLException error) {
@@ -127,7 +127,7 @@ CREATE TABLE courses (
             statement
                     .executeQuery(
                             "SELECT id, owner_nim, semester_number, academic_year, period FROM"
-                                + " semesters LIMIT 0")
+                                    + " semesters LIMIT 0")
                     .close();
             statement
                     .executeQuery("SELECT owner_nim, semester_id FROM active_semesters LIMIT 0")
@@ -135,8 +135,8 @@ CREATE TABLE courses (
             statement
                     .executeQuery(
                             "SELECT id, owner_nim, semester_id, name, code, credits,"
-                                + " attendance_met, attendance_confirmed, attendance_reference,"
-                                + " revision FROM courses LIMIT 0")
+                                    + " attendance_met, attendance_confirmed, attendance_reference,"
+                                    + " revision FROM courses LIMIT 0")
                     .close();
             if (version < 2) LearningSchema.migrate(database);
             LearningSchema.validate(database);
@@ -144,6 +144,8 @@ CREATE TABLE courses (
             GradeSchema.validate(database);
             if (version < 4) SemesterSchema.migrate(database);
             statement.executeQuery("SELECT legacy FROM semesters LIMIT 0").close();
+            if (version < 5) GradeSchema.migratePlanning(database);
+            GradeSchema.validatePlanning(database);
             try (ResultSet result = statement.executeQuery("PRAGMA foreign_key_check")) {
                 if (result.next()) throw new SQLException("Relasi database tidak konsisten.");
             }
@@ -188,7 +190,7 @@ CREATE TABLE courses (
             }
             throw new StorageException(
                     "Perubahan gagal disimpan. Isian tetap dipertahankan; periksa penyimpanan lalu"
-                        + " coba lagi.",
+                            + " coba lagi.",
                     error);
         }
     }

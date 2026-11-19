@@ -72,13 +72,16 @@ public final class GradePlanningService {
     }
 
     public GradeResult actualResult(ActualCourse course) {
+        return actualResult(course, course.course().attendance());
+    }
+
+    private GradeResult actualResult(ActualCourse course, Attendance attendance) {
         if (course.mode() == EvaluationMode.DIRECT)
-            return calculator.direct(course.letter(), true, course.course().attendance());
+            return calculator.direct(course.letter(), true, attendance);
         try {
-            return calculator.weighted(
-                    course.items(), ScenarioAssumptions.none(), course.course().attendance());
+            return calculator.weighted(course.items(), ScenarioAssumptions.none(), attendance);
         } catch (IllegalArgumentException error) {
-            return invalid(course.course().attendance(), error.getMessage());
+            return invalid(attendance, error.getMessage());
         }
     }
 
@@ -117,10 +120,11 @@ public final class GradePlanningService {
     }
 
     public SemesterScenario duplicate(long id, String name) {
-        SemesterScenario source = open(id);
-        // Simpan salinan snapshot apa adanya; basis historis tidak diam-diam diperbarui.
-        return repository.saveScenario(
-                session.requireNim(),
+        return saveCopy(open(id), name);
+    }
+
+    public SemesterScenario saveCopy(SemesterScenario source, String name) {
+        return save(
                 new SemesterScenario(
                         0,
                         source.semesterId(),
@@ -129,8 +133,48 @@ public final class GradePlanningService {
                         0,
                         source.ruleVersion(),
                         Instant.now(),
-                        source.courses()),
-                suggestions(source));
+                        source.courses()));
+    }
+
+    /** Satu eksperimen menjadi satu rencana semester; course lain belum diberi target implisit. */
+    public SemesterScenario fromWhatIf(ScenarioCourse input, String name) {
+        long semester = input.basis().course().semesterId();
+        List<ActualCourse> live = courses(semester);
+        if (live.stream().noneMatch(c -> c.course().id() == input.basis().course().id()))
+            throw new IllegalArgumentException(
+                    "Mata kuliah sudah tidak tersedia; isian simulasi tetap dipertahankan.");
+        return new SemesterScenario(
+                0,
+                semester,
+                name,
+                new BigDecimal("3"),
+                0,
+                RULE_VERSION,
+                Instant.now(),
+                live.stream()
+                        .map(
+                                c ->
+                                        c.course().id() == input.basis().course().id()
+                                                ? input
+                                                : ScenarioCourse.actualOnly(c))
+                        .toList());
+    }
+
+    public SemesterScenario replaceCourse(SemesterScenario source, ScenarioCourse input) {
+        if (source.courses().stream()
+                .noneMatch(c -> c.basis().course().id() == input.basis().course().id()))
+            throw new IllegalArgumentException("Mata kuliah tidak ada dalam skenario ini.");
+        return rename(
+                source,
+                source.name(),
+                source.targetGpa(),
+                source.courses().stream()
+                        .map(
+                                c ->
+                                        c.basis().course().id() == input.basis().course().id()
+                                                ? input
+                                                : c)
+                        .toList());
     }
 
     public SemesterScenario save(SemesterScenario scenario) {
@@ -153,6 +197,8 @@ public final class GradePlanningService {
                 changes.add(name + ": mata kuliah telah dihapus.");
                 continue;
             }
+            reportDropped(changes, name, old, now, old.lockedScores(), false);
+            reportDropped(changes, name, old, now, old.overriddenScores(), true);
             if (now.course().revision() != old.basis().course().revision()) {
                 List<String> details = new ArrayList<>();
                 Course before = old.basis().course(), after = now.course();
@@ -197,15 +243,11 @@ public final class GradePlanningService {
         for (ActualCourse basis : courses(source.semesterId())) {
             ScenarioCourse before = old.get(basis.course().id());
             if (before == null) {
-                updated.add(ScenarioCourse.fromActual(basis));
+                updated.add(ScenarioCourse.actualOnly(basis));
                 continue;
             }
-            Map<String, BigDecimal> locks = new LinkedHashMap<>();
-            for (AssessmentComponent item : basis.components())
-                if (item.earned().isEmpty()
-                        && item.weight().signum() > 0
-                        && before.lockedScores().containsKey(item.id()))
-                    locks.put(item.id(), before.lockedScores().get(item.id()));
+            Map<String, BigDecimal> locks = retained(before.lockedScores(), basis, false);
+            Map<String, BigDecimal> overrides = retained(before.overriddenScores(), basis, true);
             Attendance attendance =
                     before.attendance().equals(before.basis().course().attendance())
                             ? basis.course().attendance()
@@ -220,7 +262,9 @@ public final class GradePlanningService {
                             before.targetScore(),
                             before.targetLetter(),
                             attendance,
-                            locks));
+                            locks,
+                            overrides,
+                            before.projectionEnabled()));
         }
         return new SemesterScenario(
                 source.id(),
@@ -248,6 +292,16 @@ public final class GradePlanningService {
                             Optional.of(course.credits()),
                             Optional.of(result.grade())));
         }
+        Set<Long> included = new HashSet<>();
+        scenario.courses().forEach(c -> included.add(c.basis().course().id()));
+        for (ActualCourse live : courses(scenario.semesterId()))
+            if (!included.contains(live.course().id()))
+                results.add(
+                        new CourseResult(
+                                Long.toString(live.course().id()),
+                                live.course().name() + " (belum ada di snapshot; tinjau basis)",
+                                Optional.of(live.course().credits()),
+                                Optional.empty()));
         return new ScenarioEvaluation(
                 scenario,
                 evaluated,
@@ -257,6 +311,13 @@ public final class GradePlanningService {
 
     public ScenarioEvaluation.CourseEvaluation evaluateCourse(ScenarioCourse input) {
         session.requireNim();
+        if (!input.projectionEnabled())
+            return new ScenarioEvaluation.CourseEvaluation(
+                    input,
+                    actualResult(input.basis(), input.attendance()),
+                    Optional.empty(),
+                    "Hanya hasil aktual pada basis ini; belum memakai proyeksi target. Nilai kosong"
+                            + " tetap belum lengkap.");
         GradeResult grade;
         Optional<TargetPlan> plan = Optional.empty();
         String explanation;
@@ -273,20 +334,32 @@ public final class GradePlanningService {
                             : "Estimasi huruf skenario; tanpa skor angka rekaan.";
         } else
             try {
+                List<AssessmentItem> items =
+                        input.basis().components().stream()
+                                .map(
+                                        item ->
+                                                input.overriddenScores().containsKey(item.id())
+                                                        ? new AssessmentItem(
+                                                                item.id(),
+                                                                item.name(),
+                                                                item.weight(),
+                                                                Optional.empty())
+                                                        : item.item())
+                                .toList();
+                Map<String, BigDecimal> fixed = new LinkedHashMap<>(input.lockedScores());
+                fixed.putAll(input.overriddenScores());
                 TargetPlan target =
                         planner.plan(
-                                input.basis().items(),
-                                new ScenarioAssumptions(input.lockedScores()),
+                                items,
+                                new ScenarioAssumptions(fixed),
                                 input.targetScore(),
                                 input.attendance());
                 plan = Optional.of(target);
-                Map<String, BigDecimal> assumptions = new LinkedHashMap<>(input.lockedScores());
+                Map<String, BigDecimal> assumptions = new LinkedHashMap<>(fixed);
                 assumptions.putAll(target.suggestedScores());
                 grade =
                         calculator.weighted(
-                                input.basis().items(),
-                                new ScenarioAssumptions(assumptions),
-                                input.attendance());
+                                items, new ScenarioAssumptions(assumptions), input.attendance());
                 explanation =
                         switch (target.status()) {
                             case ACHIEVABLE ->
@@ -296,7 +369,7 @@ public final class GradePlanningService {
                                     "Target sudah tercapai; saran minimum komponen bebas 0.";
                             case IMPOSSIBLE ->
                                     "Target tidak mungkin: kebutuhan komponen bebas > 100. Nilai"
-                                        + " maksimum akhir "
+                                            + " maksimum akhir "
                                             + target.maximumFinalScore().toPlainString()
                                             + ".";
                             case NO_FREE_REACHED -> "Tidak ada bobot bebas (W=0); target tercapai.";
@@ -319,41 +392,100 @@ public final class GradePlanningService {
             BigDecimal target,
             Map<String, BigDecimal> assumptions,
             Set<String> overrides) {
+        return evaluateCourse(whatIfInput(basis, target, assumptions, overrides));
+    }
+
+    public ScenarioCourse whatIfInput(
+            ActualCourse basis,
+            BigDecimal target,
+            Map<String, BigDecimal> assumptions,
+            Set<String> overrides) {
         session.requireNim();
-        Set<String> available = new HashSet<>();
-        List<AssessmentComponent> items = new ArrayList<>();
-        for (AssessmentComponent item : basis.components()) {
-            boolean overridden = overrides.contains(item.id());
-            if (overridden) {
-                if (basis.mode() != EvaluationMode.DETAIL
-                        || item.earned().isEmpty()
-                        || item.weight().signum() == 0)
-                    throw new IllegalArgumentException(
-                            "Override hanya untuk komponen aktual berbobot positif.");
-                available.add(item.id());
-                items.add(
-                        new AssessmentComponent(
-                                item.id(),
-                                item.name(),
-                                item.weight(),
-                                Optional.empty(),
-                                item.maximum(),
-                                item.position()));
-            } else items.add(item);
+        if (basis.mode() != EvaluationMode.DETAIL && !overrides.isEmpty())
+            throw new IllegalArgumentException("Mode huruf tidak memakai override komponen.");
+        Map<String, BigDecimal> locks = new LinkedHashMap<>(assumptions),
+                replaced = new LinkedHashMap<>();
+        for (String id : overrides) {
+            BigDecimal score = locks.remove(id);
+            if (score == null)
+                throw new IllegalArgumentException("Isi skor override terlebih dahulu.");
+            replaced.put(id, score);
         }
-        if (!available.equals(overrides))
-            throw new IllegalArgumentException("Komponen override tidak ada pada basis simulasi.");
-        ActualCourse temporary =
-                new ActualCourse(basis.course(), basis.mode(), basis.letter(), items);
-        return evaluateCourse(
-                new ScenarioCourse(
-                        temporary,
-                        basis.mode(),
-                        Optional.empty(),
-                        target,
-                        Optional.empty(),
-                        basis.course().attendance(),
-                        assumptions));
+        return new ScenarioCourse(
+                basis,
+                basis.mode(),
+                Optional.empty(),
+                target,
+                Optional.empty(),
+                basis.course().attendance(),
+                locks,
+                replaced,
+                true);
+    }
+
+    private static Map<String, BigDecimal> retained(
+            Map<String, BigDecimal> scores, ActualCourse basis, boolean override) {
+        Map<String, BigDecimal> result = new LinkedHashMap<>();
+        for (AssessmentComponent item : basis.components())
+            if (item.weight().signum() > 0
+                    && item.earned().isPresent() == override
+                    && scores.containsKey(item.id())) result.put(item.id(), scores.get(item.id()));
+        return result;
+    }
+
+    private static void reportDropped(
+            List<String> changes,
+            String name,
+            ScenarioCourse old,
+            ActualCourse now,
+            Map<String, BigDecimal> scores,
+            boolean override) {
+        Map<String, BigDecimal> kept = retained(scores, now, override);
+        for (String id : scores.keySet())
+            if (!kept.containsKey(id)) {
+                String component =
+                        old.basis().components().stream()
+                                .filter(c -> c.id().equals(id))
+                                .map(AssessmentComponent::name)
+                                .findFirst()
+                                .orElse(id);
+                changes.add(
+                        name
+                                + ": "
+                                + (override ? "override" : "kunci")
+                                + " “"
+                                + component
+                                + "” tidak kompatibel; dibuang hanya saat basis draf diperbarui.");
+            }
+    }
+
+    public String resultSource(ScenarioEvaluation.CourseEvaluation value) {
+        ScenarioCourse input = value.input();
+        String source;
+        if (!input.projectionEnabled())
+            source =
+                    input.basis().mode() == EvaluationMode.DIRECT
+                            ? "Huruf aktual langsung"
+                            : "Detail aktual";
+        else if (input.mode() == EvaluationMode.DIRECT)
+            source =
+                    input.basis().letter().isPresent()
+                            ? "Huruf aktual langsung"
+                            : "Estimasi huruf skenario";
+        else
+            source =
+                    !input.lockedScores().isEmpty()
+                                    || !input.overriddenScores().isEmpty()
+                                    || input.basis().components().stream()
+                                            .anyMatch(
+                                                    c ->
+                                                            c.weight().signum() > 0
+                                                                    && c.earned().isEmpty())
+                            ? "Proyeksi skenario"
+                            : "Detail aktual";
+        return (value.grade().effectiveLetter().isEmpty() ? "Belum lengkap · " : "")
+                + source
+                + (!value.grade().attendance().confirmed() ? " · kehadiran asumsi" : "");
     }
 
     public String comparisonWarning(ScenarioEvaluation first, ScenarioEvaluation second) {
@@ -362,16 +494,13 @@ public final class GradePlanningService {
         if (first.review().outdated() || second.review().outdated())
             return "Basis usang/perlu ditinjau. Angka di bawah adalah snapshot historis, bukan"
                     + " perbandingan basis terkini.";
-        Map<Long, Long> a = new HashMap<>(), b = new HashMap<>();
-        first.scenario()
-                .courses()
-                .forEach(c -> a.put(c.basis().course().id(), c.basis().course().revision()));
-        second.scenario()
-                .courses()
-                .forEach(c -> b.put(c.basis().course().id(), c.basis().course().revision()));
+        Map<Long, ActualCourse> a = new HashMap<>(), b = new HashMap<>();
+        first.scenario().courses().forEach(c -> a.put(c.basis().course().id(), c.basis()));
+        second.scenario().courses().forEach(c -> b.put(c.basis().course().id(), c.basis()));
         return a.equals(b)
                 ? "Basis kompatibel dan terkini."
-                : "Tidak kompatibel: struktur/revisi berbeda.";
+                : "Basis berbeda: tinjau struktur, revisi, dan aktual; hasil bukan perbandingan"
+                        + " asumsi saja.";
     }
 
     private Map<Long, Map<String, BigDecimal>> suggestions(SemesterScenario scenario) {

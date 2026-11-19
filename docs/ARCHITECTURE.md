@@ -1,6 +1,14 @@
 # Arsitektur Tutup Buku — M1–M5
 
-## Revision 001 — arsitektur saat ini (schema 4)
+## Phase 2 — snapshot What If (schema 5, 19 November 2026)
+
+Schema aktif adalah 5; bagian schema 1–4 di bawah merupakan riwayat. Dua kolom aditif `scenario_items.override_score` dan `scenario_courses.projection_enabled` menutup gap penyimpanan override/basis asli dan opt-in proyeksi. Migrasi 4→5 atomik, default proyeksi true untuk skenario lama, ID/data tetap, gagal rollback tanpa reset. Aplikasi lama schema 4 tidak membuka schema 5; cadangkan folder data+aset sebelum mencoba pada data sendiri.
+
+ScenarioCourse tetap immutable; constructor lama tetap tersedia. GradePlanningService memakai evaluator/solver/GPA M1, repository CAS M4, dan tambahan fromWhatIf/replaceCourse/saveCopy. Override menutupi aktual hanya pada salinan evaluasi; earned/max basis tidak diubah. Rencana dari satu eksperimen memakai actualOnly untuk course lain, bukan target otomatis. evaluate menahan IP jika course wajib belum ada di snapshot atau belum resolved. Tidak ada arsitektur penggabungan skenario per course.
+
+GradeView mengoordinasikan handoff satu draf semester/course ID/dirty state antara WhatIfPane dan ScenarioPane. Save eksplisit, Simpan/Buang/Batal dan kegagalan menahan transisi; state, reset tersimpan, review/refresh draf, sumber IP serta perbandingan ID stabil memakai kontrol dan worker lama. Perbandingan basis berbeda dilabeli historis/bukan asumsi saja. Engine, RULE_VERSION=1, tema, dependency dan workspace lain tetap. Lihat WHAT_IF_PHASE_2.md untuk bukti/migrasi/batas.
+
+## Revision 001 — arsitektur saat revisi tersebut (schema 4)
 
 AuthView memakai PasswordInput untuk dua representasi teks tersinkron; reset visibility pada sukses/keluar tab. NimGuidance hanya menguraikan konvensi L/01/02/tahun/identitas; AuthService tidak diberi pola wajib baru. Tidak ada lookup NIM akun lain atau pengisian prodi otomatis.
 

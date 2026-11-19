@@ -771,4 +771,308 @@ class GradePlanningPersistenceTest {
         assertEquals(LetterGrade.B, result.grade().underlyingLetter().orElseThrow());
         assertEquals(direct, service.courses(semester).getFirst());
     }
+
+    @Test
+    void phaseTwoRoundTripPreservesOverridesBasisAndDerivedInputsAfterRestart() {
+        three();
+        item("uts", "UTS", "30", "30", "100", 1);
+        ActualCourse baseline = service.courses(semester).getFirst();
+        ScenarioCourse experiment =
+                service.whatIfInput(
+                        baseline,
+                        n("60"),
+                        Map.of("tasks", n("80"), "uts", n("60")),
+                        java.util.Set.of("uts"));
+        SemesterScenario saved = service.save(service.fromWhatIf(experiment, "Nama sama"));
+        ScenarioCourse reopened = service.open(saved.id()).courses().getFirst();
+        assertEquals(experiment, reopened);
+        equalNumber(
+                "52",
+                service.evaluateCourse(reopened)
+                        .targetPlan()
+                        .orElseThrow()
+                        .suggestedScores()
+                        .get("uas"));
+        assertEquals(Map.of("tasks", n("80")), reopened.lockedScores());
+        assertEquals(Map.of("uts", n("60")), reopened.overriddenScores());
+        assertEquals(baseline, service.courses(semester).getFirst());
+        database.read(
+                c -> {
+                    try (var q =
+                            c.prepareStatement(
+                                    "SELECT earned,locked_score,suggested_score,override_score FROM"
+                                            + " scenario_items WHERE scenario_id=? AND"
+                                            + " item_id='uas'")) {
+                        q.setLong(1, saved.id());
+                        try (var rows = q.executeQuery()) {
+                            assertTrue(rows.next());
+                            assertNull(rows.getString(1));
+                            assertNull(rows.getString(2));
+                            equalNumber("52", new java.math.BigDecimal(rows.getString(3)));
+                            assertNull(rows.getString(4));
+                        }
+                    }
+                    return null;
+                });
+        database.close();
+        database = new SqliteDatabase(directory.resolve("grades.db"));
+        academic = new SqliteRepository(database);
+        connect();
+        assertEquals(saved, service.open(saved.id()));
+        SemesterScenario another = service.save(service.fromWhatIf(experiment, "Nama sama"));
+        assertNotEquals(saved.id(), another.id());
+        assertEquals(saved, service.open(saved.id()));
+        session.login("002");
+        assertThrows(IllegalArgumentException.class, () -> service.open(saved.id()));
+        session.login("001");
+        assertEquals(saved, service.open(saved.id()));
+    }
+
+    @Test
+    void phaseTwoUpdateAndSaveCopyAreIndependentAndDoNotWriteActual() {
+        three();
+        ActualCourse basis = service.courses(semester).getFirst();
+        var a =
+                service.save(
+                        service.fromWhatIf(
+                                service.whatIfInput(
+                                        basis,
+                                        n("60"),
+                                        Map.of("tasks", n("80")),
+                                        java.util.Set.of()),
+                                "A"));
+        var changed =
+                service.replaceCourse(
+                        a,
+                        service.whatIfInput(
+                                basis, n("84.5"), Map.of("tasks", n("80")), java.util.Set.of()));
+        var b = service.saveCopy(changed, "B");
+        assertNotEquals(a.id(), b.id());
+        assertEquals(a, service.open(a.id()));
+        assertEquals(
+                LetterGrade.A_MINUS,
+                service.evaluate(b).courses().getFirst().grade().underlyingLetter().orElseThrow());
+        var updated =
+                service.save(
+                        service.replaceCourse(
+                                b,
+                                service.whatIfInput(basis, n("85"), Map.of(), java.util.Set.of())));
+        assertEquals(b.id(), updated.id());
+        assertEquals(b.version() + 1, updated.version());
+        assertEquals(a, service.open(a.id()));
+        assertEquals(basis, service.courses(semester).getFirst());
+        assertTrue(
+                service.comparisonWarning(service.evaluate(a), service.evaluate(updated))
+                        .contains("kompatibel"));
+    }
+
+    @Test
+    void phaseTwoOtherCoursesUseActualUntilExplicitlyPlannedAndMissingCoursesBlockIp() {
+        three();
+        long unknown = addCourse("Belum direncanakan", "3"),
+                direct = addCourse("Huruf", "2"),
+                detail = addCourse("Detail", "3");
+        service.saveComponent(unknown, "unknown", "Proyek", "100", "", "100", 0);
+        service.saveComponent(detail, "detail", "Proyek", "100", "80", "100", 0);
+        service.saveActual(
+                direct,
+                EvaluationMode.DIRECT,
+                Optional.of(LetterGrade.B),
+                new Attendance(true, true));
+        ActualCourse selected =
+                service.courses(semester).stream()
+                        .filter(c -> c.course().id() == course)
+                        .findFirst()
+                        .orElseThrow();
+        var plan =
+                service.fromWhatIf(
+                        service.whatIfInput(selected, n("60"), Map.of(), java.util.Set.of()),
+                        "Semester");
+        assertTrue(
+                plan.courses().stream()
+                        .filter(c -> c.basis().course().id() != course)
+                        .noneMatch(ScenarioCourse::projectionEnabled));
+        var incomplete = service.evaluate(plan);
+        assertTrue(incomplete.gpa().value().isEmpty());
+        assertTrue(
+                incomplete.gpa().issues().stream().anyMatch(v -> v.contains("Belum direncanakan")));
+        var other =
+                plan.courses().stream()
+                        .filter(c -> c.basis().course().id() == unknown)
+                        .findFirst()
+                        .orElseThrow();
+        plan =
+                service.replaceCourse(
+                        plan,
+                        new ScenarioCourse(
+                                other.basis(),
+                                other.mode(),
+                                other.estimatedLetter(),
+                                n("85"),
+                                Optional.empty(),
+                                other.attendance(),
+                                Map.of(),
+                                Map.of(),
+                                true));
+        var complete = service.evaluate(plan);
+        assertEquals("3,19", complete.gpa().displayValue());
+        // Selected C=2, unknown A=4, detail A-=3.7, direct B=3: (6+12+11.1+6)/11.
+        assertTrue(
+                complete.courses().stream()
+                        .anyMatch(v -> service.resultSource(v).contains("Huruf aktual langsung")));
+        assertTrue(
+                complete.courses().stream()
+                        .anyMatch(v -> service.resultSource(v).contains("Detail aktual")));
+        assertTrue(
+                complete.courses().stream()
+                        .anyMatch(v -> service.resultSource(v).contains("Proyeksi skenario")));
+        var missing =
+                service.rename(
+                        plan,
+                        plan.name(),
+                        plan.targetGpa(),
+                        plan.courses().stream()
+                                .filter(c -> c.basis().course().id() != direct)
+                                .toList());
+        assertTrue(service.evaluate(missing).gpa().value().isEmpty());
+    }
+
+    @Test
+    void phaseTwoRefreshUsesStableIdsAndChangesOnlyDraftUntilSaved() {
+        three();
+        item("uts", "UTS", "30", "30", "100", 1);
+        var basis = service.courses(semester).getFirst();
+        var saved =
+                service.save(
+                        service.fromWhatIf(
+                                service.whatIfInput(
+                                        basis,
+                                        n("60"),
+                                        Map.of("tasks", n("80"), "uts", n("60")),
+                                        java.util.Set.of("uts")),
+                                "Lama"));
+        service.moveComponent(course, "uts", -1);
+        item("uts", "UTS", "30", "40", "100", 0);
+        assertTrue(service.review(saved).outdated());
+        var refreshed = service.refresh(saved);
+        var input = refreshed.courses().getFirst();
+        assertEquals(saved, service.open(saved.id()));
+        assertEquals(Map.of("tasks", n("80")), input.lockedScores());
+        assertEquals(Map.of("uts", n("60")), input.overriddenScores());
+        equalNumber(
+                "40",
+                input.basis().components().stream()
+                        .filter(c -> c.id().equals("uts"))
+                        .findFirst()
+                        .orElseThrow()
+                        .earned()
+                        .orElseThrow());
+        var persisted = service.save(refreshed);
+        assertEquals(saved.version() + 1, persisted.version());
+        service.deleteComponent(course, "uts");
+        assertTrue(service.review(persisted).message().contains("override"));
+        var removed = service.refresh(persisted);
+        assertTrue(removed.courses().getFirst().overriddenScores().isEmpty());
+        assertEquals(persisted, service.open(persisted.id()));
+        assertTrue(
+                service.comparisonWarning(service.evaluate(saved), service.evaluate(persisted))
+                        .contains("usang"));
+    }
+
+    @Test
+    void phaseTwoSaveFailureRollsBackHeaderAndOverridesThenRetryWorks() {
+        three();
+        item("uts", "UTS", "30", "30", "100", 1);
+        var basis = service.courses(semester).getFirst();
+        var saved =
+                service.save(
+                        service.fromWhatIf(
+                                service.whatIfInput(
+                                        basis,
+                                        n("60"),
+                                        Map.of("uts", n("60")),
+                                        java.util.Set.of("uts")),
+                                "Draf"));
+        var changed =
+                service.replaceCourse(
+                        saved,
+                        service.whatIfInput(
+                                basis, n("84.5"), Map.of("uts", n("75")), java.util.Set.of("uts")));
+        database.read(
+                c -> {
+                    try (var q = c.createStatement()) {
+                        q.execute(
+                                "CREATE TRIGGER fail_p2 BEFORE INSERT ON scenario_items BEGIN"
+                                        + " SELECT RAISE(ABORT,'failure'); END");
+                    }
+                    return null;
+                });
+        assertThrows(StorageException.class, () -> service.save(changed));
+        assertEquals(saved, service.open(saved.id()));
+        assertEquals(Map.of("uts", n("75")), changed.courses().getFirst().overriddenScores());
+        database.read(
+                c -> {
+                    try (var q = c.createStatement()) {
+                        q.execute("DROP TRIGGER fail_p2");
+                    }
+                    return null;
+                });
+        var retry = service.save(changed);
+        assertEquals(saved.version() + 1, retry.version());
+        assertEquals(basis, service.courses(semester).getFirst());
+    }
+
+    @Test
+    void phaseTwoAttendanceAffectsSavedIpWithoutErasingUnderlyingGrade() {
+        three();
+        var basis = service.courses(semester).getFirst();
+        var input =
+                new ScenarioCourse(
+                        basis,
+                        EvaluationMode.DETAIL,
+                        Optional.empty(),
+                        n("84.5"),
+                        Optional.empty(),
+                        new Attendance(false, false),
+                        Map.of(),
+                        Map.of(),
+                        true);
+        var saved = service.save(service.fromWhatIf(input, "Kehadiran"));
+        var result = service.evaluate(service.open(saved.id()));
+        equalNumber("84.5", result.courses().getFirst().grade().underlyingScore().orElseThrow());
+        assertEquals(
+                LetterGrade.E, result.courses().getFirst().grade().effectiveLetter().orElseThrow());
+        equalNumber("0", result.gpa().value().orElseThrow());
+        assertEquals(basis, service.courses(semester).getFirst());
+        item("tasks", "Tasks", "20", "84.5", "100", 0);
+        item("uts", "UTS", "30", "84.5", "100", 1);
+        item("uas", "UAS", "50", "84.5", "100", 2);
+        for (EvaluationMode mode : EvaluationMode.values()) {
+            service.saveActual(
+                    course, mode, Optional.of(LetterGrade.B), new Attendance(true, true));
+            var actual = service.courses(semester).getFirst();
+            var onlyActual = ScenarioCourse.actualOnly(actual);
+            var absent =
+                    new ScenarioCourse(
+                            actual,
+                            onlyActual.mode(),
+                            onlyActual.estimatedLetter(),
+                            onlyActual.targetScore(),
+                            onlyActual.targetLetter(),
+                            new Attendance(false, false),
+                            Map.of(),
+                            Map.of(),
+                            false);
+            var attendanceOnly = service.save(service.fromWhatIf(absent, "Tanpa target " + mode));
+            var evaluated = service.evaluate(attendanceOnly);
+            assertEquals(
+                    mode == EvaluationMode.DETAIL ? LetterGrade.A_MINUS : LetterGrade.B,
+                    evaluated.courses().getFirst().grade().underlyingLetter().orElseThrow());
+            assertEquals(
+                    LetterGrade.E,
+                    evaluated.courses().getFirst().grade().effectiveLetter().orElseThrow());
+            equalNumber("0", evaluated.gpa().value().orElseThrow());
+            assertEquals(actual, service.courses(semester).getFirst());
+        }
+    }
 }

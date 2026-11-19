@@ -34,8 +34,10 @@ final class GradeView extends BorderPane {
         this.planning = planning;
         this.tasks = tasks;
         actual = new ActualGradePane(planning, tasks, this::beginWhatIf);
-        scenarios = new ScenarioPane(planning, tasks);
-        whatIf = new WhatIfPane(planning, tasks, this::returnActual, this::openSaved);
+        scenarios = new ScenarioPane(planning, tasks, this::beginSavedWhatIf);
+        whatIf =
+                new WhatIfPane(
+                        planning, tasks, this::returnActual, this::openSaved, this::reviewSaved);
         semesters.setId("grade-semester");
         Button refresh = button("grade-refresh", "Muat ulang data");
         refresh.setOnAction(e -> guard(this::refresh));
@@ -64,6 +66,10 @@ final class GradeView extends BorderPane {
                             filling = true;
                             tabs.getSelectionModel().select(old);
                             filling = false;
+                            if (whatIf.hasScenario() && selected == scenarioTab) {
+                                openSaved();
+                                return;
+                            }
                             whatIf.guard(
                                     () -> {
                                         endWhatIf();
@@ -137,7 +143,7 @@ final class GradeView extends BorderPane {
                     actualTab.setContent(whatIf);
                     setBottom(
                             null); // Status kalkulasi berada di WhatIfPane; beri ruang untuk baris
-                                   // nilai.
+                    // nilai.
                 });
     }
 
@@ -145,12 +151,51 @@ final class GradeView extends BorderPane {
         whatIf.guard(this::endWhatIf);
     }
 
+    private void beginSavedWhatIf(ScenarioPane.CourseDraft input) {
+        var course =
+                input.scenario().courses().stream()
+                        .filter(c -> c.basis().course().id() == input.courseId())
+                        .findFirst()
+                        .orElseThrow();
+        whatIf.openScenario(input.scenario(), course, input.modified());
+        simulating = true;
+        actualTab.setContent(whatIf);
+        setBottom(null);
+        filling = true;
+        tabs.getSelectionModel().select(actualTab);
+        filling = false;
+    }
+
     private void openSaved() {
-        whatIf.guard(
+        openSaved(false);
+    }
+
+    private void reviewSaved() {
+        openSaved(true);
+    }
+
+    private void openSaved(boolean review) {
+        Runnable transfer =
                 () -> {
-                    endWhatIf();
-                    tabs.getSelectionModel().select(scenarioTab);
-                });
+                    try {
+                        SemesterScenario draft = whatIf.scenarioDraft();
+                        long course = whatIf.courseId();
+                        boolean modified = whatIf.dirty();
+                        scenarios.guard(
+                                () -> {
+                                    if (draft != null)
+                                        scenarios.showScenario(draft, course, modified);
+                                    endWhatIf();
+                                    tabs.getSelectionModel().select(scenarioTab);
+                                    if (review && draft != null) scenarios.requestReview();
+                                });
+                    } catch (IllegalArgumentException error) {
+                        whatIf.error(error.getMessage());
+                    }
+                };
+        if (whatIf.hasScenario())
+            transfer.run(); // Hand off the same draft, without discarding edits.
+        else whatIf.guard(transfer);
     }
 
     private void endWhatIf() {

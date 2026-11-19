@@ -20,7 +20,7 @@ CREATE TABLE assessment_components (
 """);
             statement.execute(
                     "CREATE INDEX assessment_course_owner ON"
-                        + " assessment_components(course_id,owner_nim)");
+                            + " assessment_components(course_id,owner_nim)");
             statement.execute(
                     """
 CREATE TABLE course_actual_grades (
@@ -72,7 +72,7 @@ CREATE TABLE scenario_items (
             for (String query :
                     new String[] {
                         "SELECT id,owner_nim,course_id,name,weight,earned,maximum,position FROM"
-                            + " assessment_components LIMIT 0",
+                                + " assessment_components LIMIT 0",
                         "SELECT owner_nim,course_id,mode,letter FROM course_actual_grades LIMIT 0",
                         "SELECT"
                             + " id,owner_nim,semester_id,name,target_gpa,version,rule_version,updated_at"
@@ -84,6 +84,34 @@ CREATE TABLE scenario_items (
                             + " scenario_id,owner_nim,course_id,item_id,weight,earned,maximum,locked_score,suggested_score"
                             + " FROM scenario_items LIMIT 0"
                     }) statement.executeQuery(query).close();
+        }
+    }
+
+    /** Migrasi aditif; basis earned/max lama dan semua ID tetap dipertahankan. */
+    static void migratePlanning(Connection connection) throws SQLException {
+        connection.setAutoCommit(false);
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("ALTER TABLE scenario_items ADD COLUMN override_score TEXT");
+            statement.execute(
+                    "ALTER TABLE scenario_courses ADD COLUMN projection_enabled INTEGER NOT NULL"
+                        + " DEFAULT 1 CHECK(projection_enabled IN (0,1))");
+            validatePlanning(connection);
+            statement.execute("PRAGMA user_version=5");
+            connection.commit();
+        } catch (SQLException error) {
+            connection.rollback();
+            throw error;
+        } finally {
+            connection.setAutoCommit(true);
+        }
+    }
+
+    static void validatePlanning(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            statement.executeQuery("SELECT override_score FROM scenario_items LIMIT 0").close();
+            statement
+                    .executeQuery("SELECT projection_enabled FROM scenario_courses LIMIT 0")
+                    .close();
         }
     }
 }

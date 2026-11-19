@@ -283,6 +283,7 @@ public final class SqliteGradeRepository implements GradeRepository {
                                     row.getLong("course_revision"));
                     List<AssessmentComponent> items = new ArrayList<>();
                     Map<String, BigDecimal> locks = new LinkedHashMap<>();
+                    Map<String, BigDecimal> overrides = new LinkedHashMap<>();
                     try (PreparedStatement a =
                                     prepare(
                                             c,
@@ -297,6 +298,9 @@ public final class SqliteGradeRepository implements GradeRepository {
                             items.add(component(item, "item_id"));
                             if (item.getString("locked_score") != null)
                                 locks.put(item.getString("item_id"), decimal(item, "locked_score"));
+                            if (item.getString("override_score") != null)
+                                overrides.put(
+                                        item.getString("item_id"), decimal(item, "override_score"));
                         }
                     }
                     ActualCourse basis =
@@ -315,7 +319,9 @@ public final class SqliteGradeRepository implements GradeRepository {
                                     new Attendance(
                                             row.getBoolean("attendance_met"),
                                             row.getBoolean("attendance_confirmed")),
-                                    locks));
+                                    locks,
+                                    overrides,
+                                    row.getBoolean("projection_enabled")));
                 }
             }
             return new SemesterScenario(
@@ -436,8 +442,8 @@ public final class SqliteGradeRepository implements GradeRepository {
                                 prepare(
                                         c,
                                         "INSERT INTO"
-                                            + " scenario_courses(scenario_id,owner_nim,course_id,course_name,code,credits,course_revision,base_attendance_met,base_attendance_confirmed,attendance_reference,actual_mode,actual_letter,active_mode,estimated_letter,target_score,target_letter,attendance_met,attendance_confirmed)"
-                                            + " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                                            + " scenario_courses(scenario_id,owner_nim,course_id,course_name,code,credits,course_revision,base_attendance_met,base_attendance_confirmed,attendance_reference,actual_mode,actual_letter,active_mode,estimated_letter,target_score,target_letter,attendance_met,attendance_confirmed,projection_enabled)"
+                                            + " VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                                         id,
                                         owner,
                                         course.id(),
@@ -455,7 +461,8 @@ public final class SqliteGradeRepository implements GradeRepository {
                                         input.targetScore(),
                                         input.targetLetter().orElse(null),
                                         input.attendance().met(),
-                                        input.attendance().confirmed())) {
+                                        input.attendance().confirmed(),
+                                        input.projectionEnabled())) {
                             s.executeUpdate();
                         }
                         for (AssessmentComponent item : basis.components())
@@ -463,8 +470,8 @@ public final class SqliteGradeRepository implements GradeRepository {
                                     prepare(
                                             c,
                                             "INSERT INTO"
-                                                + " scenario_items(scenario_id,owner_nim,course_id,item_id,name,weight,earned,maximum,position,locked_score,suggested_score)"
-                                                + " VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                                                + " scenario_items(scenario_id,owner_nim,course_id,item_id,name,weight,earned,maximum,position,locked_score,suggested_score,override_score)"
+                                                + " VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                                             id,
                                             owner,
                                             course.id(),
@@ -477,7 +484,8 @@ public final class SqliteGradeRepository implements GradeRepository {
                                             input.lockedScores().get(item.id()),
                                             suggestions
                                                     .getOrDefault(course.id(), Map.of())
-                                                    .get(item.id()))) {
+                                                    .get(item.id()),
+                                            input.overriddenScores().get(item.id()))) {
                                 s.executeUpdate();
                             }
                     }

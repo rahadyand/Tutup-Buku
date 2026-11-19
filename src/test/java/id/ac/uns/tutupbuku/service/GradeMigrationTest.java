@@ -110,7 +110,7 @@ class GradeMigrationTest {
                             try (var s = c.createStatement();
                                     var r = s.executeQuery("PRAGMA user_version")) {
                                 r.next();
-                                assertEquals(4, r.getInt(1));
+                                assertEquals(5, r.getInt(1));
                             }
                             return null;
                         });

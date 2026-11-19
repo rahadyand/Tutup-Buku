@@ -16,7 +16,7 @@
 - PBKDF2WithHmacSHA256 bawaan Java: 600.000 iterasi, salt acak 16 byte, hash 256 bit. Jangan menurunkan parameter untuk mempercepat tes. AuthService membersihkan buffer char[] setelah operasi; jangan mencetak password/hash.
 - UI meneruskan data ke service melalui worker UiTasks; pemilik query akademik berasal dari UserSession. Query matkul/semester wajib difilter pemilik bersama ID. Logout membuang sesi, bukan data.
 - Database default %LOCALAPPDATA%/TutupBuku/tutup-buku.db; TUTUP_BUKU_DATA_DIR untuk folder demo terisolasi. Semua tes memakai @TempDir atau in-memory, tidak boleh database default pengguna.
-- Skema memakai PRAGMA user_version (saat ini 4), FK aktif dan transaksi. Versi tak dikenal/korup/gagal simpan harus dilaporkan, tanpa reset atau database pengganti diam-diam. Migrasi berikutnya harus mempertahankan data.
+- Skema memakai PRAGMA user_version (saat ini 5), FK aktif dan transaksi. Versi tak dikenal/korup/gagal simpan harus dilaporkan, tanpa reset atau database pengganti diam-diam. Migrasi berikutnya harus mempertahankan data.
 - Konfirmasi sebelum hapus; simpan gagal mempertahankan form. Revision 001: UI memakai tahun tunggal4 digit (1000–9998), nomor semester positif; identitas baru nomor+tahun per akun. academic_year rentang/periode tetap internal untuk kompatibilitas, bukan input UI. Prodi Informatika/Sains Data sebagai panduan; profil lama tidak ditimpa otomatis.
 
 - M3: materi hanya memiliki chapter_id ATAU field_id; query dan FK tetap dibatasi owner_nim. Catatan/completion terpisah dari markdown; course progress berdasarkan jumlah semua materi, bukan rata-rata bab.

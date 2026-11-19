@@ -1,3 +1,12 @@
+# What If dan rencana semester — Phase 2, 19 November 2026
+
+Menggantikan kontrak Phase 1 untuk penyimpanan/guard; fitur kalkulasi dan layout dasar Phase 1 tetap. **Simpan sebagai skenario** membuat snapshot semester; course lain hanya aktual sampai opt-in proyeksi. State sementara/tersimpan/perubahan belum disimpan/BASIS USANG tampil dengan nama. Perbarui ID yang sama dan Simpan salinan terpisah. Reset sementara membersihkan asumsi pada basis masuk; Pulihkan tersimpan memuat versi tersimpan, tidak merebase aktual.
+
+WhatIfPane dan ScenarioPane menyerahkan satu draf semester beserta course ID dan dirty state melalui GradeView. IP & perbandingan dan Buka What If mata kuliah mempertahankan draf, tanpa guard buang yang redundan. Pergi dari workspace, ganti semester, kembali aktual, logout/close memakai Simpan/Buang/Batal. Save gagal mempertahankan input dan menahan transisi; Batal mempertahankan mode/seleksi. Kalkulasi background tetap memakai generation guard; tidak ada autosave skenario.
+
+Layar semester lama menyediakan projection opt-in per course, estimasi huruf, kehadiran, sumber hasil IP, review/refresh dan perbandingan. Sumber IP serta hasil asal/efektif dapat diperiksa per course; unresolved course selalu menahan IP, termasuk course baru yang belum masuk snapshot. Basis usang dilabeli historis, refresh hanya draf sampai save. Tabel perbandingan membungkus teks dan menghitung tinggi sel dari konten; rincian memakai TitledPane lama. Komponen disejajarkan lewat ID, bukan urutan, dengan earned/max, kunci, override, kebutuhan dan ketidaktersediaan eksplisit. Tidak ada CSS/dependency/navigasi global baru. Rincian/bukti: WHAT_IF_PHASE_2.md.
+
+---
 # Simulasi Target / What If — Phase 1,19 November2026
 
 Tombol pada Komponen & aktual membuka draft sementara satu mata kuliah dengan basis terbaru dan SKS/konteks tetap. Target angka/huruf tersinkron; input dan output kebutuhan terpisah. Baris menampilkan aktual asli, kunci asumsi, override/pulih serta kebutuhan; kosong bukan nol. Satu ScrollPane untuk hasil/baris, target/aksi tetap di header dan field numerik100px. Seluruh hasil satu generasi tampil bersama; hasil antrean lama diabaikan. Template tema/fokus native tetap.
