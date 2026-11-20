@@ -107,6 +107,7 @@ class ReusableComponentsFxCheck extends FxTestSupport {
                         application.start(stage);
                         return null;
                     });
+            openLogin();
             int[][] sizes =
                     System.getProperty("glass.win.uiScale") == null
                             ? new int[][] {{1366, 768}, {1024, 768}, {760, 480}}
@@ -125,6 +126,7 @@ class ReusableComponentsFxCheck extends FxTestSupport {
                             layout();
                             return null;
                         });
+                openLogin();
                 await(() -> stage.getScene().lookup("#login-nim") != null);
                 idle();
                 control("login-nim", 200);

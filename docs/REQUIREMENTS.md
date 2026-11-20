@@ -1,5 +1,7 @@
 # Checklist kebutuhan PRD v1.1
 
+**Perubahan ruang lingkup eksplisit pengguna, 20 November 2026:** login menjadi opsional. Startup membuka ruang kerja lokal persisten dengan seluruh fitur inti; Masuk/Daftar melalui Akun, Keluar mengembalikan ruang lokal. F01/ACC-01/02 tetap menjaga NIM teks, konfirmasi/password hash600.000 dan isolasi akun, tetapi bukan lagi gerbang pemakaian aplikasi. Pemilik tamu bukan NIM mahasiswa dan tidak dapat diautentikasi melalui form. F02–F13 memakai owner checks dan aturan lama untuk setiap ruang kerja; tidak ada transfer otomatis. Schema8 aditif mempertahankan data sebelumnya. Kontrak/bukti di OPTIONAL_LOGIN.md; tabel di bawah memuat riwayat PRD/milestone.
+
 Seluruh 25 halaman dibaca pada 8 November 2026 dan ditinjau ulang untuk M2–M5. P0 adalah target produk akhir, bukan klaim milestone 1 selesai. `parsial` berarti hanya bagian domain yang dicakup M1. Aturan akademik ini mengikuti PRD, belum diverifikasi sebagai kebijakan resmi fakultas.
 
 | ID fitur / rincian PRD | Prioritas | Perilaku yang wajib dipertahankan | Status / milestone |

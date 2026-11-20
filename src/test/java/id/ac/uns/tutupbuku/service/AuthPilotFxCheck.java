@@ -143,6 +143,7 @@ class AuthPilotFxCheck extends FxTestSupport {
                         application.start(stage);
                         return null;
                     });
+            openLogin();
             int[][] sizes =
                     exactCapture
                             ? new int[][] {{captureWidth, captureHeight}}
@@ -222,7 +223,7 @@ class AuthPilotFxCheck extends FxTestSupport {
                                         ((TabPane) node("main-tabs"))
                                                 .getSelectionModel()
                                                 .getSelectedIndex()));
-                click("logout");
+                click("logout"); openLogin();
             }
         } finally {
             fx(

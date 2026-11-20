@@ -31,6 +31,7 @@ class DashboardFxCheck extends FxTestSupport {
     }
 
     private void signIn(String nim) throws Exception {
+        openLogin();
         present("login-nim");
         text("login-nim", nim);
         text("login-password", "sandi-uji-lokal");

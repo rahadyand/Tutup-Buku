@@ -80,8 +80,12 @@ public final class TutupBukuApplication extends Application {
                         event.consume();
                         workspace.requestLeave(
                                 () -> {
-                                    closing = true;
-                                    stage.close();
+                                    workspace.suspend();
+                                    tasks.finish(
+                                            () -> {
+                                                closing = true;
+                                                stage.close();
+                                            });
                                 });
                     }
                 });
@@ -96,53 +100,105 @@ public final class TutupBukuApplication extends Application {
     }
 
     private void initializeStorage() {
+        if (database != null) {
+            openGuest();
+            return;
+        }
         tasks.run(
                 status,
                 () -> new SqliteDatabase(databaseFile),
                 opened -> {
                     database = opened;
-                    var repository = new SqliteRepository(database);
-                    session = new UserSession();
-                    var auth = new AuthService(repository, new PasswordHasher(), session);
-                    var academic = new AcademicService(repository, session);
-                    showLogin(auth, academic);
+                    openGuest();
                 });
     }
 
-    private void showLogin(AuthService auth, AcademicService academic) {
+    private AuthService newAuth() {
+        session = new UserSession();
+        return new AuthService(new SqliteRepository(database), new PasswordHasher(), session);
+    }
+
+    private void openGuest() {
+        var auth = newAuth();
+        tasks.run(
+                status,
+                auth::openGuest,
+                profile -> showWorkspace(auth, profile),
+                error -> {
+                    Button retry =
+                            button("retry-local-workspace", "Coba lagi membuka ruang kerja lokal");
+                    retry.setOnAction(e -> openGuest());
+                    root.setCenter(
+                            form(
+                                    heading("Ruang kerja lokal belum dapat dibuka"),
+                                    note("Data tidak direset. Periksa penyimpanan lalu coba lagi."),
+                                    retry));
+                });
+    }
+
+    private void switchTasks(Runnable next) {
+        if (workspace != null) workspace.suspend();
         workspace = null;
-        status.setText("");
+        root.setCenter(
+                form(
+                        heading("Membuka ruang kerja"),
+                        note("Menyelesaikan penyimpanan sebelum membuka ruang berikutnya…")));
+        tasks.finish(
+                () -> {
+                    tasks = new UiTasks(root);
+                    status.setText("");
+                    next.run();
+                });
+    }
+
+    private void showLogin(boolean registration) {
+        var auth = newAuth();
         root.setCenter(
                 new AuthView(
                         auth,
                         tasks,
-                        profile -> {
-                            status.setText("");
-                            var learning =
-                                    new LearningService(
-                                            new SqliteLearningRepository(database),
-                                            session,
-                                            new AssetStore(
-                                                    databaseFile.toAbsolutePath().getParent()));
-                            var planning =
-                                    new GradePlanningService(
-                                            new SqliteGradeRepository(database), session);
-                            workspace =
-                                    new WorkspaceView(
-                                            auth,
-                                            academic,
-                                            learning,
-                                            planning,
-                                            new AgendaService(
-                                                    new SqliteAgendaRepository(database),
-                                                    session,
-                                                    clock),
-                                            tasks,
-                                            profile,
-                                            link -> getHostServices().showDocument(link),
-                                            () -> showLogin(auth, academic));
-                            root.setCenter(workspace);
-                        }));
+                        profile -> switchTasks(() -> showWorkspace(auth, profile)),
+                        () ->
+                                switchTasks(
+                                        () -> {
+                                            auth.logout();
+                                            openGuest();
+                                        }),
+                        registration));
+    }
+
+    private void showWorkspace(AuthService auth, id.ac.uns.tutupbuku.domain.UserProfile profile) {
+        status.setText("");
+        var academic = new AcademicService(new SqliteRepository(database), session);
+        var learning =
+                new LearningService(
+                        new SqliteLearningRepository(database),
+                        session,
+                        new AssetStore(databaseFile.toAbsolutePath().getParent()));
+        var planning = new GradePlanningService(new SqliteGradeRepository(database), session);
+        workspace =
+                new WorkspaceView(
+                        auth,
+                        academic,
+                        learning,
+                        planning,
+                        new AgendaService(new SqliteAgendaRepository(database), session, clock),
+                        tasks,
+                        profile,
+                        link -> getHostServices().showDocument(link),
+                        () ->
+                                switchTasks(
+                                        () -> {
+                                            auth.logout();
+                                            openGuest();
+                                        }),
+                        registration ->
+                                switchTasks(
+                                        () -> {
+                                            auth.logout();
+                                            showLogin(registration);
+                                        }));
+        root.setCenter(workspace);
     }
 
     @Override

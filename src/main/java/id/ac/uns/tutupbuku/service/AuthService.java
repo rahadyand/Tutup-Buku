@@ -36,10 +36,17 @@ public final class AuthService {
         } finally { Arrays.fill(password, '\0'); }
     }
 
+    public UserProfile openGuest() {
+        UserProfile profile = accounts.localWorkspace();
+        session.enterGuest(profile.nim());
+        return profile;
+    }
+    public boolean isGuest() { return session.state() == UserSession.State.GUEST; }
     public void logout() { session.logout(); }
-    public UserProfile profile() { return accounts.getProfile(session.requireNim()); }
+    public UserProfile profile() { return accounts.getProfile(session.requireOwner()); }
     public void updateProfile(String name, String studyProgram) {
-        accounts.updateProfile(session.requireNim(), required(name, "Nama"), studyProgram == null ? "" : studyProgram.trim());
+        if (isGuest()) throw new IllegalStateException("Profil akun tersedia setelah masuk. Data lokal tetap tersimpan.");
+        accounts.updateProfile(session.requireOwner(), required(name, "Nama"), studyProgram == null ? "" : studyProgram.trim());
     }
     private static IllegalArgumentException invalidLogin() { return new IllegalArgumentException("NIM atau password salah."); }
     private static String required(String value, String label) {

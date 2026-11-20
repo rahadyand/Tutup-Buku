@@ -7,6 +7,7 @@ import java.util.Optional;
 public interface AccountRepository {
     Optional<StoredAccount> findAccount(String nim);
     UserProfile getProfile(String nim);
+    UserProfile localWorkspace();
     void createAccount(String nim, String name, PasswordHash hash);
     void updateProfile(String nim, String name, String studyProgram);
 }

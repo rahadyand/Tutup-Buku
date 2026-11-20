@@ -16,16 +16,16 @@ public final class AcademicService {
     }
 
     public List<Semester> semesters() {
-        return repository.listSemesters(session.requireNim());
+        return repository.listSemesters(session.requireOwner());
     }
 
     public Semester saveSemester(long id, int number, String year, SemesterPeriod period) {
         return repository.saveSemester(
-                session.requireNim(), new Semester(id, number, year, period));
+                session.requireOwner(), new Semester(id, number, year, period));
     }
 
     public void setActiveSemester(long id) {
-        repository.setActiveSemester(session.requireNim(), id);
+        repository.setActiveSemester(session.requireOwner(), id);
     }
 
     public Semester saveSemesterForm(long id, String number, String year, boolean activate) {
@@ -43,7 +43,7 @@ public final class AcademicService {
                     "Tahun harus 4 digit antara 1000–9998, misalnya 2026.");
         String internal = single + "/" + (Integer.parseInt(single) + 1);
         return repository.saveSemesterAndActivate(
-                session.requireNim(),
+                session.requireOwner(),
                 new Semester(
                         id,
                         parsed,
@@ -61,15 +61,15 @@ public final class AcademicService {
             throw new IllegalArgumentException("SKS wajib berupa angka lebih dari 0.");
         }
         return repository.saveCourseMetadata(
-                session.requireNim(), id, semester, name, code, parsed);
+                session.requireOwner(), id, semester, name, code, parsed);
     }
 
     public void deleteSemester(long id) {
-        repository.deleteSemester(session.requireNim(), id);
+        repository.deleteSemester(session.requireOwner(), id);
     }
 
     public List<Course> courses(long semesterId) {
-        return repository.listCourses(session.requireNim(), semesterId);
+        return repository.listCourses(session.requireOwner(), semesterId);
     }
 
     public Course saveCourse(
@@ -87,7 +87,7 @@ public final class AcademicService {
             throw new IllegalArgumentException(
                     "SKS wajib berupa angka lebih dari 0, misalnya 3 atau 2,5.");
         }
-        String owner = session.requireNim();
+        String owner = session.requireOwner();
         // Edit nama/SKS tidak membatalkan verifikasi kehadiran yang sudah dilakukan.
         // Mengubah centangnya tetap merupakan asumsi baru sampai diverifikasi di layar nilai.
         boolean confirmed =
@@ -114,6 +114,6 @@ public final class AcademicService {
     }
 
     public void deleteCourse(long semesterId, long id) {
-        repository.deleteCourse(session.requireNim(), semesterId, id);
+        repository.deleteCourse(session.requireOwner(), semesterId, id);
     }
 }

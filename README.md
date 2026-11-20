@@ -1,4 +1,6 @@
-# Tutup Buku — Kandidat Windows 0.5.5-rc1
+# Tutup Buku — source pengembangan
+
+**Login sekarang opsional.** Aplikasi langsung membuka ruang kerja lokal persisten dengan seluruh fitur inti. Buka Akun → Masuk/Daftar untuk data akun terpisah; Keluar kembali ke data lokal. Tidak ada transfer otomatis/cloud. Source kini schema8; paket0.5.5 lama tidak mewakili source terbaru dan tidak boleh membuka DB8. Tidak dibuat installer/ZIP baru. Setup demo, kompatibilitas dan bukti: [OPTIONAL_LOGIN](docs/OPTIONAL_LOGIN.md).
 
 Source Phase 5 membuka **Hari Ini** setelah login: agenda yang perlu perhatian, lanjutkan bacaan, ringkasan course dan IP dari nilai aktual. Panduan menjalankan demo, sumber data, batas dan pemeriksaan: [DASHBOARD_PHASE_5](docs/DASHBOARD_PHASE_5.md). Schema tetap 7; paket kandidat lama tidak memuat Phase 1–5. Tidak membuat ZIP/installer baru pada fase ini.
 

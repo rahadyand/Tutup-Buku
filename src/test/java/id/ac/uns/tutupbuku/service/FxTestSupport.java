@@ -186,7 +186,17 @@ abstract class FxTestSupport {
                 });
     }
 
+    void openLogin() throws Exception {
+        idle();
+        if (fx(() -> stage.getScene().lookup("#login-nim") != null)) return;
+        await(() -> stage.getScene().lookup("#workspace-tabs") != null);
+        tab("workspace-tabs", 2);
+        click("open-login");
+        await(() -> stage.getScene().lookup("#login-nim") != null);
+    }
+
     void login() throws Exception {
+        openLogin();
         await(() -> stage.getScene().lookup("#login-nim") != null);
         text("login-nim", "001");
         text("login-password", "sandi-uji-lokal");

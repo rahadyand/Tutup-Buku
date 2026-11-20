@@ -50,6 +50,8 @@ class ScenarioMigrationTest {
             s.execute("DROP TABLE course_reading");
             s.execute("DROP TABLE agenda_steps");
             s.execute("DROP TABLE agenda_items");
+            s.execute("DROP INDEX one_local_workspace");
+            s.execute("ALTER TABLE users DROP COLUMN account_kind");
             s.execute("PRAGMA user_version=4");
         }
         return saved;
@@ -73,7 +75,7 @@ class ScenarioMigrationTest {
                             try (var q = c.createStatement();
                                     var r = q.executeQuery("PRAGMA user_version")) {
                                 r.next();
-                                assertEquals(7, r.getInt(1));
+                                assertEquals(8, r.getInt(1));
                             }
                             return null;
                         });

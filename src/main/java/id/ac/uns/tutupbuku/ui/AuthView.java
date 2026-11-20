@@ -13,7 +13,12 @@ import java.util.List;
 import java.util.function.Consumer;
 
 final class AuthView extends StackPane {
-    AuthView(AuthService auth, UiTasks tasks, Consumer<UserProfile> onLogin) {
+    AuthView(
+            AuthService auth,
+            UiTasks tasks,
+            Consumer<UserProfile> onLogin,
+            Runnable onCancel,
+            boolean registration) {
         getStyleClass().addAll("tb-theme", "tb-auth-page");
         TextField loginNim = text("login-nim", "NIM Anda");
         TextField registerNim = text("register-nim", "NIM Anda");
@@ -141,6 +146,20 @@ final class AuthView extends StackPane {
         panel.setAlignment(Pos.CENTER);
         panel.setMaxWidth(640);
         VBox.setVgrow(tabs, Priority.ALWAYS);
+        if (onCancel != null) {
+            Button cancel = button("cancel-auth", "Kembali ke ruang kerja lokal");
+            cancel.setOnAction(
+                    e -> {
+                        loginPassword.clear();
+                        registerPassword.clear();
+                        confirmation.clear();
+                        onCancel.run();
+                    });
+            cancel.setAccessibleHelp(
+                    "Data ruang kerja lokal tetap tersimpan; kembali tanpa masuk akun.");
+            panel.getChildren().add(cancel);
+        }
+        if (registration) tabs.getSelectionModel().select(registerTab);
         getChildren().add(panel);
         setPadding(new Insets(12));
     }

@@ -43,6 +43,7 @@ class RevisionOneFxCheck extends FxTestSupport {
                         stage.setHeight(768 / stage.getOutputScaleY());
                         return null;
                     });
+            openLogin();
             idle();
             screenshot("r001-login-" + System.getProperty("glass.win.uiScale", "native") + ".png");
             text("login-nim", "L0125001");
@@ -204,6 +205,7 @@ class RevisionOneFxCheck extends FxTestSupport {
                     0,
                     fx(() -> ((TabPane) node("main-tabs")).getSelectionModel().getSelectedIndex()));
             click("logout");
+            openLogin();
             await(() -> stage.getScene().lookup("#login-password-visible") != null);
             assertFalse(fx(() -> node("login-password-visible").isManaged()));
             text("login-nim", "0001");

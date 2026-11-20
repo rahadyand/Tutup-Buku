@@ -44,6 +44,7 @@ public final class TodayDashboardService {
 
     public record Snapshot(
             UserProfile profile,
+            boolean guest,
             List<Semester> semesters,
             Optional<Semester> viewed,
             LocalDate date,
@@ -149,6 +150,7 @@ public final class TodayDashboardService {
             throw new IllegalStateException("Akun berubah saat memuat data. Buka ulang Hari Ini.");
         return new Snapshot(
                 profile,
+                auth.isGuest(),
                 List.copyOf(semesters),
                 viewed,
                 asOf.toLocalDate(),

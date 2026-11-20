@@ -50,13 +50,13 @@ public final class AgendaService {
     }
 
     public List<AgendaItem> items(long semester, long course) {
-        return repository.list(session.requireNim(), semester, course).stream()
+        return repository.list(session.requireOwner(), semester, course).stream()
                 .sorted(chronological())
                 .toList();
     }
 
     public AgendaItem open(long id) {
-        return repository.find(session.requireNim(), id);
+        return repository.find(session.requireOwner(), id);
     }
 
     public AgendaItem save(AgendaItem item) {
@@ -65,18 +65,18 @@ public final class AgendaService {
                 && (item.id() == 0 || !open(item.id()).completed()))
             throw new IllegalArgumentException(
                     "Konfirmasikan penyelesaian tugas yang masih memiliki langkah belum selesai.");
-        return repository.save(session.requireNim(), item);
+        return repository.save(session.requireOwner(), item);
     }
 
     public AgendaItem complete(AgendaItem item, boolean completed, boolean confirmUnfinished) {
         if (completed && item.completedSteps() != item.checklist().size() && !confirmUnfinished)
             throw new IllegalArgumentException(
                     "Masih ada langkah belum selesai. Konfirmasikan sebelum menyelesaikan tugas.");
-        return repository.save(session.requireNim(), item.withCompleted(completed));
+        return repository.save(session.requireOwner(), item.withCompleted(completed));
     }
 
     public void delete(AgendaItem item) {
-        repository.delete(session.requireNim(), item.id(), item.version());
+        repository.delete(session.requireOwner(), item.id(), item.version());
     }
 
     public AgendaSection section(AgendaItem item) {

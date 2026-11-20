@@ -22,7 +22,7 @@ public final class GradePlanningService {
     }
 
     public List<ActualCourse> courses(long semester) {
-        return repository.actualCourses(session.requireNim(), semester);
+        return repository.actualCourses(session.requireOwner(), semester);
     }
 
     public void saveComponent(
@@ -41,21 +41,21 @@ public final class GradePlanningService {
                         optionalNumber(earned),
                         optionalNumber(maximum),
                         position);
-        repository.saveComponent(session.requireNim(), course, item);
+        repository.saveComponent(session.requireOwner(), course, item);
     }
 
     public void deleteComponent(long course, String id) {
-        repository.deleteComponent(session.requireNim(), course, id);
+        repository.deleteComponent(session.requireOwner(), course, id);
     }
 
     public void moveComponent(long course, String id, int direction) {
-        repository.moveComponent(session.requireNim(), course, id, direction);
+        repository.moveComponent(session.requireOwner(), course, id, direction);
     }
 
     public void saveActual(
             long course, EvaluationMode mode, Optional<LetterGrade> letter, Attendance attendance) {
         if (mode == null) throw new IllegalArgumentException("Pilih mode penilaian.");
-        repository.saveActualSettings(session.requireNim(), course, mode, letter, attendance);
+        repository.saveActualSettings(session.requireOwner(), course, mode, letter, attendance);
     }
 
     public void saveActual(
@@ -68,7 +68,7 @@ public final class GradePlanningService {
         if (reference == null || reference.isBlank())
             throw new IllegalArgumentException("Acuan kehadiran wajib diisi.");
         repository.saveActualSettings(
-                session.requireNim(), course, mode, letter, attendance, reference.trim());
+                session.requireOwner(), course, mode, letter, attendance, reference.trim());
     }
 
     public GradeResult actualResult(ActualCourse course) {
@@ -86,11 +86,11 @@ public final class GradePlanningService {
     }
 
     public List<SemesterScenario> scenarios(long semester) {
-        return repository.scenarios(session.requireNim(), semester);
+        return repository.scenarios(session.requireOwner(), semester);
     }
 
     public SemesterScenario open(long id) {
-        return repository.loadScenario(session.requireNim(), id);
+        return repository.loadScenario(session.requireOwner(), id);
     }
 
     public SemesterScenario create(long semester, String name, BigDecimal targetGpa) {
@@ -107,7 +107,7 @@ public final class GradePlanningService {
 
     public SemesterScenario rename(
             SemesterScenario source, String name, BigDecimal target, List<ScenarioCourse> courses) {
-        session.requireNim();
+        session.requireOwner();
         return new SemesterScenario(
                 source.id(),
                 source.semesterId(),
@@ -178,11 +178,11 @@ public final class GradePlanningService {
     }
 
     public SemesterScenario save(SemesterScenario scenario) {
-        return repository.saveScenario(session.requireNim(), scenario, suggestions(scenario));
+        return repository.saveScenario(session.requireOwner(), scenario, suggestions(scenario));
     }
 
     public void delete(long id) {
-        repository.deleteScenario(session.requireNim(), id);
+        repository.deleteScenario(session.requireOwner(), id);
     }
 
     public ScenarioReview review(SemesterScenario scenario) {
@@ -278,7 +278,7 @@ public final class GradePlanningService {
     }
 
     public ScenarioEvaluation evaluate(SemesterScenario scenario) {
-        session.requireNim();
+        session.requireOwner();
         List<ScenarioEvaluation.CourseEvaluation> evaluated = new ArrayList<>();
         List<CourseResult> results = new ArrayList<>();
         for (ScenarioCourse input : scenario.courses()) {
@@ -310,7 +310,7 @@ public final class GradePlanningService {
     }
 
     public ScenarioEvaluation.CourseEvaluation evaluateCourse(ScenarioCourse input) {
-        session.requireNim();
+        session.requireOwner();
         if (!input.projectionEnabled())
             return new ScenarioEvaluation.CourseEvaluation(
                     input,
@@ -400,7 +400,7 @@ public final class GradePlanningService {
             BigDecimal target,
             Map<String, BigDecimal> assumptions,
             Set<String> overrides) {
-        session.requireNim();
+        session.requireOwner();
         if (basis.mode() != EvaluationMode.DETAIL && !overrides.isEmpty())
             throw new IllegalArgumentException("Mode huruf tidak memakai override komponen.");
         Map<String, BigDecimal> locks = new LinkedHashMap<>(assumptions),

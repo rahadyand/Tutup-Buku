@@ -119,7 +119,7 @@ class RevisionTwoFxCheck extends FxTestSupport {
     }
 
     void accessibilityAndKeyboard(String suffix) throws Exception {
-        click("logout");
+        click("logout"); openLogin();
         await(() -> stage.getScene().lookup("#login-nim") != null);
         associatedLabel("login-nim", "NIM");
         associatedLabel("login-password", "Password");
@@ -427,6 +427,7 @@ class RevisionTwoFxCheck extends FxTestSupport {
                         stage.setHeight(768 / stage.getOutputScaleY());
                         return null;
                     });
+            openLogin();
             idle();
             associatedLabel("login-nim", "NIM");
             text("login-nim", "L0125006");
@@ -587,7 +588,7 @@ class RevisionTwoFxCheck extends FxTestSupport {
                         return null;
                     });
             screenshot("r002-header-" + suffix + ".png");
-            click("logout");
+            click("logout"); openLogin();
             text("login-nim", "0002");
             text("login-password", "sandi-uji-lokal");
             click("login");
@@ -595,7 +596,7 @@ class RevisionTwoFxCheck extends FxTestSupport {
             await(() -> stage.getScene().lookup("#profile-program") != null);
             assertEquals(
                     "Sains Data", fx(() -> ((ComboBox<?>) node("profile-program")).getValue()));
-            click("logout");
+            click("logout"); openLogin();
             text("login-nim", "0003");
             text("login-password", "sandi-uji-lokal");
             click("login");

@@ -69,8 +69,11 @@ class MilestoneThreeFxCheck {
         });
     }
     private void login() throws Exception {
+        await(() -> stage.getScene().lookup("#workspace-tabs") != null);
+        fx(() -> {((TabPane)nodes().get("workspace-tabs")).getSelectionModel().select(2);return null;});
+        idle();click("open-login");
         await(() -> stage.getScene().lookup("#login-nim") != null);
-        text("login-nim", "001"); text("login-password", "sandi-uji-lokal"); click("login");
+        text("login-nim", "001"); text("login-password", "sandi-uji-lokal"); click("login"); click("open-learning");
     }
     @Test void learningEditorAutosaveFailureGuardProgressResumeAndReopen() throws Exception {
         Path file = directory.resolve("ui.db");

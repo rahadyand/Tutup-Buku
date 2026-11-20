@@ -571,7 +571,7 @@ class AgendaFxCheck extends FxTestSupport {
             assertEquals(before, grades.courses(semester));
             assertEquals(scenariosBefore, grades.scenarios(semester));
             assertEquals(semester, repo.getProfile("001").activeSemesterId().orElseThrow());
-            press("logout");
+            press("logout"); openLogin();
             text("login-nim", "002");
             text("login-password", "sandi-uji-lokal");
             press("login");
@@ -581,7 +581,7 @@ class AgendaFxCheck extends FxTestSupport {
             assertEquals(1, privateItems.size());
             present("agenda-item-" + privateItems.getFirst().id());
             assertTrue(card(privateItems.getFirst().id()).contains("Privat akun kedua"));
-            press("logout");
+            press("logout"); openLogin();
             text("login-nim", "003");
             text("login-password", "sandi-uji-lokal");
             press("login");
@@ -590,7 +590,7 @@ class AgendaFxCheck extends FxTestSupport {
             assertTrue(label("agenda-status").contains("mata kuliah"));
             assertNull(fx(() -> stage.getScene().lookup("#agenda-title")));
             shot("no-courses");
-            press("logout");
+            press("logout"); openLogin();
             fx(
                     () -> {
                         stage.hide();

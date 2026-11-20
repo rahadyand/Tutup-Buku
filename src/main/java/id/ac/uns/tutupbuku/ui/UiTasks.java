@@ -14,6 +14,7 @@ final class UiTasks implements AutoCloseable {
         Thread thread = new Thread(task, "tutup-buku-storage"); thread.setDaemon(true); return thread;
     });
     private volatile boolean closed;
+    private volatile boolean retiring;
     private int blockingCount;
     UiTasks(Node root) { this.root = root; }
     <T> void run(Label status, Supplier<T> action, Consumer<T> success) {
@@ -29,10 +30,11 @@ final class UiTasks implements AutoCloseable {
         execute(status, null, false, action, success, ignored -> { });
     }
     private <T> void execute(Label status, String progress, boolean blocking, Supplier<T> action, Consumer<T> success, Consumer<Throwable> failure) {
+        if (closed || retiring) return;
         if (blocking) { blockingCount++; root.setDisable(true); }
         if (progress != null) status.setText(progress);
         CompletableFuture.supplyAsync(action, worker).whenComplete((value, error) -> Platform.runLater(() -> {
-            if (closed) return;
+            if (closed || retiring) return;
             if (blocking) { blockingCount--; root.setDisable(blockingCount > 0); }
             if (error != null) {
                 Throwable cause = error instanceof CompletionException ? error.getCause() : error;
@@ -44,6 +46,18 @@ final class UiTasks implements AutoCloseable {
                 if (blocking) status.setText("Berhasil.");
                 success.accept(value);
             }
+        }));
+    }
+    /** Hentikan callback lama, selesaikan operasi yang sudah antre sebelum mengganti pemilik. */
+    void finish(Runnable next) {
+        if (closed || retiring) throw new IllegalStateException("Ruang kerja sedang ditutup.");
+        retiring = true;
+        root.setDisable(true);
+        worker.execute(() -> Platform.runLater(() -> {
+            closed = true;
+            worker.shutdown();
+            root.setDisable(false);
+            next.run();
         }));
     }
     @Override public void close() { closed = true; worker.shutdown(); }

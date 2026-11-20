@@ -1,5 +1,15 @@
 # Arsitektur Tutup Buku — M1–M5
 
+## Login opsional — schema 8
+
+UserSession memiliki SIGNED_OUT/GUEST/ACCOUNT dan requireOwner; requireNim dipertahankan sebagai adapter pemanggil lama. AuthService.openGuest meminta SqliteRepository.localWorkspace secara transaksional lalu memasuki sesi GUEST; akun tetap melalui login/hash lama. Migrasi7→8 hanya menambah users.account_kind (default REGISTERED) dan unique partial index untuk satu LOCAL. Owner lokal berupa UUID berprefiks internal dalam kolom nim historis agar semua FK/query pemilik/aset tetap berlaku; nama metadata adalah label workspace. LOCAL memakai penanda NO_LOGIN dengan salt/hash kosong pada kolom wajib historis, bukan sandi/hash yang bisa dipakai. findAccount selalu memfilter REGISTERED sebelum membentuk PasswordHash, INSERT akun tidak dapat mengambil key yang sudah ada, dan edit profil juga dibatasi REGISTERED. Tidak menambah repository paralel atau mengubah engine.
+
+TutupBukuApplication selalu memulai openGuest, tanpa menyimpan identitas akun terakhir. Workspace lokal menampilkan Akun (Masuk/Daftar), tanpa profil mahasiswa/Keluar; accountProfile lama tetap dipakai pada ACCOUNT. AuthView mempertahankan pendaftaran→login eksplisit dan menambah batal kembali lokal. TodayDashboardService membawa flag guest untuk sapaan yang sesuai, bukan key internal.
+
+Transisi memakai guard workspace lama, suspend timer reader/autosave, lalu UiTasks.finish. finish menutup penerimaan tugas/callback lama dan mengantre sentinel setelah pekerjaan yang sudah diterima; pekerjaan tersebut masih memakai sesi pemilik asal. Setelah sentinel, worker/sesi/view baru dibuat; baru sesi lama dibersihkan. Ini mencegah hasil/header/autosave/selection lama masuk ke ruang baru. Login sukses juga mengganti worker auth; pembatalan dan logout membangun ulang workspace lokal dari data/resume/semester miliknya. Tidak ada framework event/pemindahan data/cache lintas owner. Close normal juga menguras worker setelah guard.
+
+Migrasi dan guest init gagal tetap dilaporkan; retry startup memakai DB terbuka yang sama, tanpa reset atau koneksi pengganti diam-diam. Detail, pengujian dan batas: OPTIONAL_LOGIN.md.
+
 ## Phase 5 — komposisi Hari Ini (schema tetap 7)
 
 TodayDashboardService menggabungkan AuthService/AcademicService/LearningService/AgendaService/GradePlanningService dan SemesterGpaService yang ada menjadi satu snapshot read-only; tidak memiliki repository/tabel/model penyimpanan baru. Nilai/IP hanya actualResult seluruh course, bukan snapshot skenario. Agenda grouping dan tanggal berbagi satu LocalDateTime WIB. resumeReference memakai pemeriksaan owner/lokasi/revisi lama pada bookmark tertentu, tanpa pengganti otomatis.

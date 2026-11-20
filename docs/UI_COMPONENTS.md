@@ -1,3 +1,11 @@
+# Login opsional — 20 November 2026
+
+Startup membuka Hari Ini pada ruang lokal persisten. Identitas header menyatakan Ruang kerja lokal · Mode tamu, tanpa NIM/prodi/nama mahasiswa rekaan; Keluar tidak visible/managed. Tab ketiga menjadi Akun untuk tamu: informasi penyimpanan lokal dan tombol Masuk/Daftar. Pada akun terdaftar, header/Keluar/Profil dan form lama tetap. Auth memakai view lama dengan tab awal sesuai tombol serta Kembali ke ruang kerja lokal yang selalu terjangkau; password dibersihkan saat batal. Pendaftaran tetap menuju form login, bukan auto-login/import.
+
+Peralihan workspace melewati guard lama; Batal/gagal Save mempertahankan input/context. Sesudah guard, timer belajar dihentikan dan worker lama dikuras sebelum sesi/worker/view baru dipasang. Tidak ada draf, filter, selector course atau callback yang dibawa lintas pemilik. Dashboard lokal tetap memakai empat bagian/layanan Phase5; sapaan workspace mengganti sapaan profil. Tema/header akun/navigasi lainnya tetap, tanpa CSS/dependency baru. Kontrak/bukti: OPTIONAL_LOGIN.md.
+
+---
+
 # Hari Ini — Phase 5, 19 November 2026
 
 Halaman awal setelah login adalah Hari Ini (tab tambahan setelah Agenda; indeks lama tetap). Satu pemilih semester dilihat tanpa aktivasi, lalu Perlu perhatian → Lanjutkan membaca → Mata kuliah → Kondisi semester dalam satu ScrollPane utama. Agenda menampilkan satu per kelompok dengan jumlah keseluruhan dan tautan daftar berfilter. Bacaan maksimal tiga dari bookmark lama, peminatan berlabel lintas semester; course maksimal empat dengan jalur selector hub untuk lainnya. Empty/error/IP belum lengkap menyatakan data sebenarnya, bukan angka pengganti.

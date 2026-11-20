@@ -109,11 +109,15 @@ final class TodayDashboardView extends BorderPane {
                 snapshot -> {
                     if (request != generation || !owner.equals(snapshot.profile().nim())) return;
                     loadedDate = snapshot.date();
+                    String hello =
+                            snapshot.guest()
+                                    ? "Ruang kerja lokal"
+                                    : "Halo, "
+                                            + (snapshot.profile().name().isBlank()
+                                                    ? "teman belajar"
+                                                    : snapshot.profile().name());
                     greeting.setText(
-                            "Halo, "
-                                    + (snapshot.profile().name().isBlank()
-                                            ? "teman belajar"
-                                            : snapshot.profile().name())
+                            hello
                                     + " · "
                                     + snapshot.date()
                                             .format(
@@ -183,8 +187,8 @@ final class TodayDashboardView extends BorderPane {
                             section(
                                     "Mulai semester Anda",
                                     note(
-                                            "Belum ada semester. Data belajar dan nilai Anda tetap"
-                                                    + " tersimpan pada akun ini."),
+                                            "Belum ada semester. Buat semester untuk menata materi"
+                                                    + " dan nilai Anda."),
                                     action(
                                             "today-create-semester",
                                             "Buat semester",
@@ -365,7 +369,7 @@ final class TodayDashboardView extends BorderPane {
             reading.getChildren()
                     .add(
                             note(
-                                    "Bacaan terakhir akun jika sesuai konteks, lalu riwayat per"
+                                    "Bacaan terakhir ruang kerja jika sesuai konteks, lalu riwayat per"
                                             + " mata kuliah; maksimal 3 bacaan."));
         for (var link : data.readings().stream().limit(3).toList()) {
             long id = link.bookmark().materialId();

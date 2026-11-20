@@ -525,14 +525,14 @@ class CourseHubFxCheck extends FxTestSupport {
                     actualBefore.stream().filter(c -> c.course().id() != empty).toList(),
                     grades.courses(currentSemester));
             assertEquals(currentSemester, repo.getProfile("001").activeSemesterId().orElseThrow());
-            press("logout");
+            press("logout"); openLogin();
             text("login-nim", "002");
             text("login-password", "sandi-uji-lokal");
             press("login");
             tab("main-tabs", 2);
             assertTrue(label("hub-context").contains("Pilih mata kuliah"));
             assertTrue(fx(() -> ((ComboBox<?>) node("hub-course")).getItems().isEmpty()));
-            press("logout");
+            press("logout"); openLogin();
             fx(
                     () -> {
                         stage.hide();

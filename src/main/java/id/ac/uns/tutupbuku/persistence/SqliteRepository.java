@@ -26,7 +26,9 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
     public Optional<StoredAccount> findAccount(String nim) {
         return database.read(
                 connection -> {
-                    try (PreparedStatement statement = connection.prepareStatement(PROFILE_QUERY)) {
+                    try (PreparedStatement statement =
+                            connection.prepareStatement(
+                                    PROFILE_QUERY + " AND u.account_kind='REGISTERED'")) {
                         statement.setString(1, nim);
                         try (ResultSet result = statement.executeQuery()) {
                             if (!result.next()) return Optional.empty();
@@ -55,12 +57,47 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
 
     @Override
     public UserProfile getProfile(String nim) {
-        return findAccount(nim)
-                .orElseThrow(
-                        () ->
-                                new IllegalArgumentException(
-                                        "Akun tidak ditemukan. Silakan masuk kembali."))
-                .profile();
+        return database.read(
+                connection -> {
+                    try (var statement = connection.prepareStatement(PROFILE_QUERY)) {
+                        statement.setString(1, nim);
+                        try (var result = statement.executeQuery()) {
+                            if (!result.next())
+                                throw new IllegalArgumentException(
+                                        "Ruang kerja tidak ditemukan. Buka ulang aplikasi.");
+                            return profile(result);
+                        }
+                    }
+                });
+    }
+
+    @Override
+    public UserProfile localWorkspace() {
+        String owner =
+                database.write(
+                        connection -> {
+                            try (var statement =
+                                            connection.prepareStatement(
+                                                    "SELECT nim FROM users WHERE"
+                                                        + " account_kind='LOCAL'");
+                                    var result = statement.executeQuery()) {
+                                if (result.next()) return result.getString(1);
+                            }
+                            String key = "local-workspace:" + java.util.UUID.randomUUID();
+                            // Kolom kredensial lama wajib terisi; penanda ini bukan hash/sandi dan
+                            // tidak dipakai autentikasi.
+                            try (var statement =
+                                    connection.prepareStatement(
+                                            "INSERT INTO"
+                                                + " users(nim,name,password_algorithm,password_iterations,password_salt,password_hash,account_kind)"
+                                                + " VALUES(?,'Ruang kerja"
+                                                + " lokal','NO_LOGIN',600000,'','','LOCAL')")) {
+                                statement.setString(1, key);
+                                statement.executeUpdate();
+                            }
+                            return key;
+                        });
+        return getProfile(owner);
     }
 
     @Override
@@ -90,7 +127,8 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                 connection -> {
                     try (PreparedStatement statement =
                             connection.prepareStatement(
-                                    "UPDATE users SET name=?,study_program=? WHERE nim=?")) {
+                                    "UPDATE users SET name=?,study_program=? WHERE nim=? AND"
+                                        + " account_kind='REGISTERED'")) {
                         statement.setString(1, name);
                         statement.setString(2, studyProgram);
                         statement.setString(3, nim);
@@ -128,7 +166,7 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                     try (PreparedStatement check =
                             connection.prepareStatement(
                                     "SELECT 1 FROM semesters WHERE owner_nim=? AND academic_year=?"
-                                        + " AND period=? AND id<>?")) {
+                                            + " AND period=? AND id<>?")) {
                         check.setString(1, ownerNim);
                         check.setString(2, semester.academicYear());
                         check.setString(3, semester.period().name());
@@ -137,7 +175,7 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                             if (row.next())
                                 throw new IllegalArgumentException(
                                         "Tahun akademik dan periode tersebut sudah ada pada akun"
-                                            + " ini.");
+                                                + " ini.");
                         }
                     }
                     boolean creating = semester.id() == 0;
@@ -147,8 +185,8 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                                           + " semesters(semester_number,academic_year,period,owner_nim)"
                                           + " VALUES(?,?,?,?)"
                                     : "UPDATE semesters SET"
-                                          + " semester_number=?,academic_year=?,period=? WHERE"
-                                          + " owner_nim=? AND id=?";
+                                            + " semester_number=?,academic_year=?,period=? WHERE"
+                                            + " owner_nim=? AND id=?";
                     try (PreparedStatement statement = connection.prepareStatement(sql)) {
                         statement.setInt(1, semester.number());
                         statement.setString(2, semester.academicYear());
@@ -209,7 +247,7 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                                 if (rows.next())
                                     throw new IllegalArgumentException(
                                             "Nomor semester dan tahun tersebut sudah ada. Pilih"
-                                                + " semester tersimpan untuk mengedit.");
+                                                    + " semester tersimpan untuk mengedit.");
                             }
                         }
                     }
@@ -315,7 +353,7 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                     try (var query =
                             connection.prepareStatement(
                                     "SELECT * FROM courses WHERE owner_nim=? AND semester_id=? AND"
-                                        + " id=?")) {
+                                            + " id=?")) {
                         query.setString(1, owner);
                         query.setLong(2, semesterId);
                         query.setLong(3, courseId);
@@ -335,8 +373,8 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                     try (PreparedStatement statement =
                             connection.prepareStatement(
                                     "INSERT INTO active_semesters(owner_nim,semester_id)"
-                                        + " VALUES(?,?) ON CONFLICT(owner_nim) DO UPDATE SET"
-                                        + " semester_id=excluded.semester_id")) {
+                                            + " VALUES(?,?) ON CONFLICT(owner_nim) DO UPDATE SET"
+                                            + " semester_id=excluded.semester_id")) {
                         statement.setString(1, ownerNim);
                         statement.setLong(2, semesterId);
                         statement.executeUpdate();
@@ -369,7 +407,7 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                     try (PreparedStatement statement =
                             connection.prepareStatement(
                                     "SELECT * FROM courses WHERE owner_nim=? AND semester_id=?"
-                                        + " ORDER BY name COLLATE NOCASE,id")) {
+                                            + " ORDER BY name COLLATE NOCASE,id")) {
                         statement.setString(1, ownerNim);
                         statement.setLong(2, semesterId);
                         try (ResultSet result = statement.executeQuery()) {
@@ -424,7 +462,7 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                         try (PreparedStatement select =
                                 connection.prepareStatement(
                                         "SELECT * FROM courses WHERE owner_nim=? AND semester_id=?"
-                                            + " AND id=?")) {
+                                                + " AND id=?")) {
                             select.setString(1, ownerNim);
                             select.setLong(2, course.semesterId());
                             select.setLong(3, id);
@@ -445,7 +483,7 @@ public final class SqliteRepository implements AccountRepository, AcademicReposi
                     try (PreparedStatement statement =
                             connection.prepareStatement(
                                     "DELETE FROM courses WHERE owner_nim=? AND semester_id=? AND"
-                                        + " id=?")) {
+                                            + " id=?")) {
                         statement.setString(1, ownerNim);
                         statement.setLong(2, semesterId);
                         statement.setLong(3, courseId);

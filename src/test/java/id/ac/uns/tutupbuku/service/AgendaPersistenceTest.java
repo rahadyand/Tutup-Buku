@@ -334,6 +334,8 @@ class AgendaPersistenceTest {
                 var s = c.createStatement()) {
             s.execute("DROP TABLE agenda_steps");
             s.execute("DROP TABLE agenda_items");
+            s.execute("DROP INDEX one_local_workspace");
+            s.execute("ALTER TABLE users DROP COLUMN account_kind");
             s.execute("PRAGMA user_version=6");
         }
     }

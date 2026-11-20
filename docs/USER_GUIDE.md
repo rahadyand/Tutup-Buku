@@ -1,5 +1,12 @@
 # Panduan Tutup Buku 0.5.5-rc1 — Windows x64
 
+## Source terbaru — login opsional
+
+Source schema8 membuka **Ruang kerja lokal / Mode tamu** langsung. Semester, course, materi/gambar, catatan, progres/resume, nilai, What If, skenario dan agenda tersimpan pada perangkat tanpa wajib akun. Buka tab **Akun → Masuk/Daftar** untuk data akun terpisah. Daftar tetap diikuti login eksplisit; Kembali ke ruang kerja lokal membatalkan auth. Saat sudah masuk, Profil tetap dapat diedit dan **Keluar** kembali ke data lokal. Guard Simpan/Buang/Batal tetap berlaku; simpan gagal menahan perpindahan.
+
+Data tamu tidak dipindahkan/disalin ke akun dan tidak disinkronkan ke cloud. Jangan jalankan EXE lama/schema7 pada DB8. Tidak ada paket baru; petunjuk paket di bawah adalah riwayat kandidat0.5.5. Setup/demo terisolasi, kompatibilitas dan review: [OPTIONAL_LOGIN](OPTIONAL_LOGIN.md).
+
+
 ## Membuka paket
 1. Ekstrak seluruh ZIP memakai **Extract All**, misalnya ke `D:\Aplikasi Saya\TutupBuku`. Jangan menjalankan EXE langsung dari tampilan ZIP.
 2. Buka folder hasil ekstraksi **TutupBuku**, lalu klik **TutupBuku.exe**. Java, Maven dan IDE tidak perlu dipasang. Folder runtime dan app harus tetap bersama EXE.

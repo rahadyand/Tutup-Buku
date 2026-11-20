@@ -283,7 +283,7 @@ class MilestoneFourFxCheck extends FxTestSupport {
                 click("save-scenario");
             }
             screenshot("m4-scenarios.png");
-            click("logout");
+            click("logout"); openLogin();
             fx(
                     () -> {
                         stage.close();

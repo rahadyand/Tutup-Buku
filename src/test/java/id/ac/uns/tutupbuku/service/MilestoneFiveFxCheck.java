@@ -75,7 +75,7 @@ class MilestoneFiveFxCheck extends FxTestSupport {
                         return null;
                     });
             idle();
-            tab("auth-tabs", 1);
+            openLogin(); tab("auth-tabs", 1);
             text("register-nim", "001");
             text("register-name", "Demo Terhubung");
             text("register-password", "sandi-uji-lokal");
@@ -276,8 +276,8 @@ class MilestoneFiveFxCheck extends FxTestSupport {
             assertTrue(label("scenario-review").contains("SKS"));
             dialog(() -> ((Button) node("refresh-scenario")).fire(), ButtonBar.ButtonData.OK_DONE);
             click("save-scenario");
-            click("logout");
-            tab("auth-tabs", 1);
+            click("logout"); openLogin();
+            openLogin(); tab("auth-tabs", 1);
             text("register-nim", "002");
             text("register-name", "Akun Dua");
             text("register-password", "sandi-uji-lokal");
@@ -288,7 +288,7 @@ class MilestoneFiveFxCheck extends FxTestSupport {
             click("login");
             click("open-simulation");
             assertEquals(0, fx(() -> ((ComboBox<?>) node("grade-semester")).getItems().size()));
-            click("logout");
+            click("logout"); openLogin();
             fx(
                     () -> {
                         stage.close();

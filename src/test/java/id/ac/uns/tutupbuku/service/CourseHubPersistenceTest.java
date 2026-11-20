@@ -207,6 +207,8 @@ class CourseHubPersistenceTest {
             s.execute("DROP TABLE course_reading");
             s.execute("DROP TABLE agenda_steps");
             s.execute("DROP TABLE agenda_items");
+            s.execute("DROP INDEX one_local_workspace");
+            s.execute("ALTER TABLE users DROP COLUMN account_kind");
             s.execute("PRAGMA user_version=5");
         }
     }

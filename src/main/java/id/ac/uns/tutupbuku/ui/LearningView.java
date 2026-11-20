@@ -421,7 +421,7 @@ final class LearningView extends BorderPane {
                                                             + course.name()
                                                             + " dan 2 materi peminatan? Koleksi"
                                                             + " contoh tidak mewakili mata kuliah"
-                                                            + " lengkap; disalin sekali per akun.",
+                                                            + " lengkap; disalin sekali per ruang kerja.",
                                                     copy,
                                                     cancel);
                                     confirm.initOwner(getScene().getWindow());
@@ -447,7 +447,7 @@ final class LearningView extends BorderPane {
                                                                                       + " untuk"
                                                                                       + " membaca."
                                                                                 : "Koleksi contoh"
-                                                                                      + " akun ini"
+                                                                                      + " ruang kerja ini"
                                                                                       + " sudah"
                                                                                       + " pernah"
                                                                                       + " disalin;"

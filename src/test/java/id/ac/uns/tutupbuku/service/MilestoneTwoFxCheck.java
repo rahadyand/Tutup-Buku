@@ -137,7 +137,17 @@ class MilestoneTwoFxCheck {
                                                 .isBlank())) click("view-courses");
     }
 
+    private void openLogin() throws Exception {
+        idle();
+        if(fx(() -> stage.getScene().lookup("#login-nim") != null))return;
+        await(() -> stage.getScene().lookup("#workspace-tabs") != null);
+        tab("workspace-tabs", 2);
+        click("open-login");
+        await(() -> stage.getScene().lookup("#login-nim") != null);
+    }
+
     private void register(String nim, String name) throws Exception {
+        openLogin();
         tab("auth-tabs", 1);
         text("register-nim", nim);
         text("register-name", name);
@@ -147,6 +157,7 @@ class MilestoneTwoFxCheck {
     }
 
     private void login(String nim) throws Exception {
+        openLogin();
         tab("auth-tabs", 0);
         text("login-nim", nim);
         text("login-password", "sandi-uji-lokal");
@@ -247,6 +258,7 @@ class MilestoneTwoFxCheck {
     void registrationProfileAcademicPersistenceIsolationAndSafeDeleteFlow() throws Exception {
         Path file = directory.resolve("ui.db");
         open(file);
+        openLogin();
         snapshot("m2-login.png");
         register(" 001234 ", "Pengguna Demo");
         assertTrue(label("login-status").contains("Akun berhasil"));

@@ -1,5 +1,9 @@
 # Backlog yang dipertahankan
 
+## Login opsional — 20 November 2026
+
+Ruang kerja lokal persisten dan pemisahan akun diimplementasikan atas instruksi pengguna. **Transfer/merge tamu→akun tetap ditunda**, termasuk pemetaan konflik identitas dan aset; tidak ada penyalinan diam-diam. Cloud/sync/email/recovery/remember-me/auto-login akun, kontrol hapus/reset ruang tamu, fitur akademik baru dan installer/ZIP tidak termasuk perubahan ini. Jangan mulai otomatis.
+
 ## Phase 4 — agenda tugas/ujian course
 
 Selesai atas instruksi pengguna: CRUD tugas/ujian, checklist manual berurutan, prioritas, completion/reopen, daftar agenda kronologis dan integrasi hub. Agenda tidak menulis nilai atau assessment; tenggat/target belajar khusus modul pada backlog lama tetap ditunda.

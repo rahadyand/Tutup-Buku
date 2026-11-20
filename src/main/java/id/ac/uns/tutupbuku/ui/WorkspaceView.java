@@ -18,6 +18,12 @@ final class WorkspaceView extends BorderPane {
     private final CourseHubView courseHub;
     private final AgendaView agendaView;
     private Runnable refreshDate = () -> {};
+    private Runnable suspendWork = () -> {};
+    private final boolean guest;
+
+    void suspend() {
+        suspendWork.run();
+    }
 
     void refreshDateIfNeeded() {
         refreshDate.run();
@@ -36,7 +42,9 @@ final class WorkspaceView extends BorderPane {
             UiTasks tasks,
             UserProfile profile,
             java.util.function.Consumer<String> browser,
-            Runnable onLogout) {
+            Runnable onLogout,
+            java.util.function.Consumer<Boolean> onAccount) {
+        guest = auth.isGuest();
         getStyleClass().add("tb-workspace");
         academicService = academic;
         uiTasks = tasks;
@@ -61,15 +69,14 @@ final class WorkspaceView extends BorderPane {
                         profile.nim());
         Runnable[] openAcademic = {() -> {}};
         Button logout = button("logout", "Keluar");
-        logout.setOnAction(
-                event ->
-                        requestLeave(
-                                () -> {
-                                    today.invalidate();
-                                    learningView.suspend();
-                                    auth.logout();
-                                    onLogout.run();
-                                }));
+        suspendWork =
+                () -> {
+                    today.invalidate();
+                    learningView.suspend();
+                };
+        logout.setOnAction(event -> requestLeave(onLogout));
+        logout.setVisible(!guest);
+        logout.setManaged(!guest);
         identity.setWrapText(true);
         Label tagline = note("Materi tertata, target terencana.");
         tagline.visibleProperty().bind(heightProperty().greaterThanOrEqualTo(600));
@@ -100,6 +107,83 @@ final class WorkspaceView extends BorderPane {
         header.setPadding(new Insets(8));
         setTop(header);
 
+        academicView = new AcademicView(auth, academic, tasks, this::showProfile);
+        DashboardView dashboardContent =
+                new DashboardView(
+                        learningView,
+                        gradeView,
+                        this::requestLeave,
+                        learningView::refresh,
+                        gradeView::refresh,
+                        courseHub,
+                        agendaView,
+                        today,
+                        () -> openAcademic[0].run());
+        Tab dashboard = new Tab("Dashboard", dashboardContent);
+        Tab profileTab =
+                new Tab(
+                        guest ? "Akun" : "Profil",
+                        guest ? localProfile(onAccount) : accountProfile(auth, profile, tasks));
+        TabPane tabs =
+                new TabPane(dashboard, new Tab("Semester & Mata Kuliah", academicView), profileTab);
+        tabs.setId("workspace-tabs");
+        tabs.setAccessibleText("Navigasi ruang kerja");
+        tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        setCenter(tabs);
+        boolean[] selecting = {false};
+        tabs.getSelectionModel()
+                .selectedItemProperty()
+                .addListener(
+                        (obs, old, selected) -> {
+                            if (selecting[0]) return;
+                            selecting[0] = true;
+                            tabs.getSelectionModel().select(old);
+                            selecting[0] = false;
+                            requestLeave(
+                                    () -> {
+                                        selecting[0] = true;
+                                        tabs.getSelectionModel().select(selected);
+                                        selecting[0] = false;
+                                        if (selected == dashboard) {
+                                            dashboardContent.refreshCurrentArea();
+                                        } else if (selected.getContent() == academicView) {
+                                            // Kehadiran juga bisa diubah di editor aktual. Muat
+                                            // ulang
+                                            // setelah guard agar form lama tidak menimpanya saat
+                                            // edit SKS.
+                                            academicView.refresh();
+                                        }
+                                    });
+                        });
+        openAcademic[0] =
+                () -> {
+                    selecting[0] = true;
+                    tabs.getSelectionModel().select(1);
+                    selecting[0] = false;
+                    academicView.refresh();
+                };
+        refreshDate =
+                () -> {
+                    if (tabs.getSelectionModel().getSelectedIndex() == 0)
+                        dashboardContent.refreshDateIfNeeded();
+                };
+        java.util.function.IntConsumer shortcut =
+                index ->
+                        requestLeave(
+                                () -> {
+                                    selecting[0] = true;
+                                    tabs.getSelectionModel().select(dashboard);
+                                    selecting[0] = false;
+                                    dashboardContent.openArea(index);
+                                });
+        openLearning.setOnAction(e -> shortcut.accept(0));
+        openGrades.setOnAction(e -> shortcut.accept(1));
+        showProfile(profile);
+        academicView.refresh();
+        dashboardContent.refreshCurrentArea();
+    }
+
+    private javafx.scene.Node accountProfile(AuthService auth, UserProfile profile, UiTasks tasks) {
         TextField nim = text("profile-nim", "");
         nim.setText(profile.nim());
         nim.setEditable(false);
@@ -163,89 +247,38 @@ final class WorkspaceView extends BorderPane {
                                 },
                                 saveProfile,
                                 action);
-        academicView = new AcademicView(auth, academic, tasks, this::showProfile);
-        DashboardView dashboardContent =
-                new DashboardView(
-                        learningView,
-                        gradeView,
-                        this::requestLeave,
-                        learningView::refresh,
-                        gradeView::refresh,
-                        courseHub,
-                        agendaView,
-                        today,
-                        () -> openAcademic[0].run());
-        Tab dashboard = new Tab("Dashboard", dashboardContent);
-        Tab profileTab =
-                new Tab(
-                        "Profil",
-                        centeredPage(
-                                centeredForm(
-                                        heading("Profil"),
-                                        fieldCentered("NIM (tidak dapat diubah)", nim),
-                                        fieldCentered("Nama", name),
-                                        fieldCentered("Program studi", program),
-                                        programHelp,
-                                        save,
-                                        profileStatus),
-                                460));
-        TabPane tabs =
-                new TabPane(dashboard, new Tab("Semester & Mata Kuliah", academicView), profileTab);
-        tabs.setId("workspace-tabs");
-        tabs.setAccessibleText("Navigasi ruang kerja");
-        tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-        setCenter(tabs);
-        boolean[] selecting = {false};
-        tabs.getSelectionModel()
-                .selectedItemProperty()
-                .addListener(
-                        (obs, old, selected) -> {
-                            if (selecting[0]) return;
-                            selecting[0] = true;
-                            tabs.getSelectionModel().select(old);
-                            selecting[0] = false;
-                            requestLeave(
-                                    () -> {
-                                        selecting[0] = true;
-                                        tabs.getSelectionModel().select(selected);
-                                        selecting[0] = false;
-                                        if (selected == dashboard) {
-                                            dashboardContent.refreshCurrentArea();
-                                        } else if (selected.getContent() == academicView) {
-                                            // Kehadiran juga bisa diubah di editor aktual. Muat
-                                            // ulang
-                                            // setelah guard agar form lama tidak menimpanya saat
-                                            // edit SKS.
-                                            academicView.refresh();
-                                        }
-                                    });
-                        });
-        openAcademic[0] =
-                () -> {
-                    selecting[0] = true;
-                    tabs.getSelectionModel().select(1);
-                    selecting[0] = false;
-                    academicView.refresh();
-                };
-        refreshDate =
-                () -> {
-                    if (tabs.getSelectionModel().getSelectedIndex() == 0)
-                        dashboardContent.refreshDateIfNeeded();
-                };
-        java.util.function.IntConsumer shortcut =
-                index ->
-                        requestLeave(
-                                () -> {
-                                    selecting[0] = true;
-                                    tabs.getSelectionModel().select(dashboard);
-                                    selecting[0] = false;
-                                    dashboardContent.openArea(index);
-                                });
-        openLearning.setOnAction(e -> shortcut.accept(0));
-        openGrades.setOnAction(e -> shortcut.accept(1));
-        showProfile(profile);
-        academicView.refresh();
-        dashboardContent.refreshCurrentArea();
+        return centeredPage(
+                centeredForm(
+                        heading("Profil"),
+                        fieldCentered("NIM (tidak dapat diubah)", nim),
+                        fieldCentered("Nama", name),
+                        fieldCentered("Program studi", program),
+                        programHelp,
+                        save,
+                        profileStatus),
+                460);
+    }
+
+    private javafx.scene.Node localProfile(java.util.function.Consumer<Boolean> onAccount) {
+        Button login = button("open-login", "Masuk"), register = button("open-register", "Daftar");
+        login.getStyleClass().add("tb-primary");
+        login.setOnAction(e -> requestLeave(() -> onAccount.accept(false)));
+        register.setOnAction(e -> requestLeave(() -> onAccount.accept(true)));
+        var page =
+                centeredPage(
+                        centeredForm(
+                                heading("Ruang kerja lokal"),
+                                note(
+                                        "Mode tamu · semua fitur tersedia tanpa akun. Data ruang"
+                                            + " kerja lokal tetap tersimpan pada perangkat ini."
+                                            + " Masuk untuk membuka data akun Anda."),
+                                new FlowPane(8, 6, login, register),
+                                note(
+                                        "Data lokal dan akun terpisah. Tidak ada pemindahan"
+                                            + " otomatis atau sinkronisasi cloud.")),
+                        520);
+        page.setId("local-account-page");
+        return page;
     }
 
     private void showProfile(UserProfile profile) {
@@ -253,11 +286,16 @@ final class WorkspaceView extends BorderPane {
         gradeView.preferSemester(profile.activeSemesterId());
         courseHub.activeSemester(profile.activeSemesterId());
         agendaView.activeSemester(profile.activeSemesterId());
-        identity.setText("Selamat datang, " + profile.name() + " · NIM " + profile.nim());
+        identity.setText(
+                guest
+                        ? "Ruang kerja lokal · Mode tamu"
+                        : "Selamat datang, " + profile.name() + " · NIM " + profile.nim());
         String program =
-                profile.studyProgram().isBlank()
-                        ? "Program studi belum diisi"
-                        : profile.studyProgram();
+                guest
+                        ? "Data tersimpan di perangkat ini"
+                        : profile.studyProgram().isBlank()
+                                ? "Program studi belum diisi"
+                                : profile.studyProgram();
         if (profile.activeSemesterId().isEmpty()) {
             active.setText(
                     program + " · Belum ada semester aktif. Atur semester untuk mulai belajar.");
